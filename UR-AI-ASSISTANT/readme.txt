@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.5.1
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,6 +31,7 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 前台 AI 問答 shortcode。
 * FAQ 知識庫管理。
 * FAQ 優先命中回答。
+* 知識庫瀏覽（獨立搜尋／分類篩選常見問題，不需先問 AI）。
 * AI API 回答補位。
 * 問答紀錄管理。
 * AI 問答轉 FAQ 草稿。
@@ -82,6 +83,8 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * `popular_limit`：熱門問題顯示數量。
 * `group_limit`：每組分類熱門問題顯示數量。
 * `placeholder`：自訂輸入框提示文字。
+* `show_kb_browse`：是否顯示知識庫瀏覽區塊（需另於後台「功能設定」啟用知識庫瀏覽，此參數才有作用），1 為顯示，0 為不顯示。
+* `kb_browse_limit`：知識庫瀏覽每頁筆數，留空則採用後台設定值。
 
 == Frequently Asked Questions ==
 
@@ -115,6 +118,10 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.6.0 =
+* 新增前台「知識庫瀏覽」功能：可直接搜尋／分類篩選並瀏覽已啟用的常見問題，不需先向 AI 提問、也不經過 AI 比對演算法。
+* 後台新增「知識庫瀏覽」開關與每頁筆數設定（預設關閉，需手動啟用）。
 
 = 1.5.1 =
 * 修正解除安裝時漏刪計算機名單表（含個資）的問題。
@@ -169,6 +176,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.6.0 =
+新增知識庫瀏覽功能，預設關閉。若要啟用，請至「功能設定 → 知識庫瀏覽」勾選開啟。
 
 = 1.5.1 =
 建議更新。修正一項解除安裝漏刪個資表的問題，以及數項計算機／相關頁面推薦的正確性與效能問題。

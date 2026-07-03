@@ -378,6 +378,27 @@ class UR_AI_FAQ_Repository {
     }
 
     /**
+     * 取得目前有啟用中 FAQ 使用的分類清單（去重，依名稱排序）。
+     *
+     * 供前台知識庫瀏覽的分類篩選使用，只列出「實際有作用中問答」的分類，
+     * 而非 UR_AI_Schema_FAQs::get_default_categories() 那份建議清單。
+     *
+     * @return array 分類名稱字串陣列。
+     */
+    public function get_active_categories() {
+        global $wpdb;
+
+        $rows = $wpdb->get_col(
+            "SELECT DISTINCT category
+             FROM {$this->table_name}
+             WHERE status = 'active' AND category != ''
+             ORDER BY category ASC"
+        );
+
+        return is_array($rows) ? $rows : array();
+    }
+
+    /**
      * 增加 FAQ 命中次數。
      *
      * @param int $id FAQ ID。

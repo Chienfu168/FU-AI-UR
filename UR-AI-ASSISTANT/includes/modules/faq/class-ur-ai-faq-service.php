@@ -26,6 +26,13 @@ class UR_AI_FAQ_Service {
     const ACTIVE_FAQS_CACHE_PREFIX = 'ur_ai_active_faqs_';
 
     /**
+     * active FAQ 分類清單快取 key（供知識庫瀏覽的分類篩選使用）。
+     *
+     * @var string
+     */
+    const ACTIVE_CATEGORIES_CACHE_KEY = 'ur_ai_active_faq_categories';
+
+    /**
      * 預設快取存活秒數（TTL）。
      *
      * 可透過 filter 'ur_ai_active_faqs_cache_ttl' 調整。
@@ -333,6 +340,95 @@ class UR_AI_FAQ_Service {
         $this->register_cache_key($cache_key);
 
         return $faqs;
+    }
+
+    /**
+     * 取得目前有啟用中 FAQ 使用的分類清單（供前台知識庫瀏覽的分類篩選）。
+     *
+     * 快取方式與 get_active_faqs() 相同：內容類寫入會清除此快取。
+     *
+     * @return array
+     */
+    public function get_active_categories() {
+        if (!$this->repository instanceof UR_AI_FAQ_Repository) {
+            return array();
+        }
+
+        $cache_key = self::ACTIVE_CATEGORIES_CACHE_KEY;
+        $cached    = get_transient($cache_key);
+
+        if (false !== $cached && is_array($cached)) {
+            return $cached;
+        }
+
+        $categories = $this->repository->get_active_categories();
+
+        if (!is_array($categories)) {
+            return $categories;
+        }
+
+        set_transient($cache_key, $categories, $this->get_active_faqs_cache_ttl());
+        $this->register_cache_key($cache_key);
+
+        return $categories;
+    }
+
+    /**
+     * 前台知識庫瀏覽查詢：僅限 active 狀態，支援關鍵字＋分類篩選與分頁。
+     *
+     * 直接回傳問答內容本身（不經過 FAQ 比對演算法、不呼叫 AI），
+     * 供獨立的「瀏覽／搜尋知識庫」功能使用。刻意不快取查詢結果本身
+     * （查詢條件組合多變，快取效益低），僅快取上面的分類清單。
+     *
+     * @param array $args {
+     *     @type string $search   關鍵字（可留空）。
+     *     @type string $category 分類篩選（可留空＝不篩選）。
+     *     @type int    $paged    頁碼（從 1 起）。
+     *     @type int    $per_page 每頁筆數。
+     * }
+     * @return array{ items: array, total: int, per_page: int, paged: int, total_pages: int }
+     */
+    public function browse($args = array()) {
+        $empty_result = array(
+            'items'       => array(),
+            'total'       => 0,
+            'per_page'    => 0,
+            'paged'       => 1,
+            'total_pages' => 0,
+        );
+
+        if (!$this->repository instanceof UR_AI_FAQ_Repository) {
+            return $empty_result;
+        }
+
+        $args = is_array($args) ? $args : array();
+
+        $per_page = isset($args['per_page']) ? absint($args['per_page']) : 10;
+        $per_page = UR_AI_Security::int_range($per_page, 1, 50, 10);
+
+        $paged = isset($args['paged']) ? absint($args['paged']) : 1;
+        $paged = $paged > 0 ? $paged : 1;
+
+        $query_args = array(
+            'status'   => 'active',
+            'category' => isset($args['category']) ? (string) $args['category'] : '',
+            'search'   => isset($args['search']) ? (string) $args['search'] : '',
+            'orderby'  => 'sort_order',
+            'order'    => 'ASC',
+            'limit'    => $per_page,
+            'offset'   => ($paged - 1) * $per_page,
+        );
+
+        $total = $this->repository->count($query_args);
+        $items = $this->repository->query($query_args);
+
+        return array(
+            'items'       => $this->format_many_for_frontend($items),
+            'total'       => absint($total),
+            'per_page'    => $per_page,
+            'paged'       => $paged,
+            'total_pages' => $per_page > 0 ? (int) ceil($total / $per_page) : 0,
+        );
     }
 
     /**

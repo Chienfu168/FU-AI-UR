@@ -1917,3 +1917,146 @@
 .ur-ai-loading.is-active {
     display: block;
 }
+
+/* =========================================================
+ * 知識庫瀏覽（獨立搜尋 FAQ，不經 AI 比對）
+ * ========================================================= */
+
+.ur-ai-kb-browse {
+    margin-bottom: 20px;
+}
+
+.ur-ai-kb-search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ur-ai-kb-search-input {
+    flex: 1 1 220px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.ur-ai-kb-category-select {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #ffffff;
+}
+
+.ur-ai-kb-search-submit {
+    flex: 0 0 auto;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ur-ai-kb-search-submit:hover,
+.ur-ai-kb-search-submit:focus {
+    background: #1d4ed8;
+    outline: none;
+}
+
+.ur-ai-kb-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ur-ai-kb-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.ur-ai-kb-item-question {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ur-ai-kb-item-category {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.ur-ai-kb-item-question-text {
+    flex: 1 1 auto;
+}
+
+.ur-ai-kb-item-answer {
+    display: none;
+    padding: 0 14px 14px;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.ur-ai-kb-item.is-open .ur-ai-kb-item-answer {
+    display: block;
+}
+
+.ur-ai-kb-loading,
+.ur-ai-kb-empty,
+.ur-ai-kb-error {
+    padding: 14px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-kb-error {
+    color: #dc2626;
+}
+
+.ur-ai-kb-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.ur-ai-kb-page-link {
+    padding: 6px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ur-ai-kb-page-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ur-ai-kb-page-info {
+    color: #6b7280;
+    font-size: 13px;
+}

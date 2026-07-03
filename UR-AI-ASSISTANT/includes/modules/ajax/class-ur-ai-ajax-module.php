@@ -24,6 +24,13 @@ class UR_AI_Ajax_Module {
     private $answer_service = null;
 
     /**
+     * FAQ Service（供知識庫瀏覽使用）。
+     *
+     * @var UR_AI_FAQ_Service|null
+     */
+    private $faq_service = null;
+
+    /**
      * 註冊 WordPress hooks。
      *
      * @return void
@@ -31,6 +38,9 @@ class UR_AI_Ajax_Module {
     public function register() {
         add_action('wp_ajax_ur_ai_ask', array($this, 'handle_ask'));
         add_action('wp_ajax_nopriv_ur_ai_ask', array($this, 'handle_ask'));
+
+        add_action('wp_ajax_ur_ai_faq_browse', array($this, 'handle_faq_browse'));
+        add_action('wp_ajax_nopriv_ur_ai_faq_browse', array($this, 'handle_faq_browse'));
     }
 
     /**
@@ -140,6 +150,115 @@ class UR_AI_Ajax_Module {
         wp_send_json_success(
             $this->format_response($result)
         );
+    }
+
+    /**
+     * 處理前台「知識庫瀏覽」AJAX。
+     *
+     * 直接查詢並回傳 active 狀態的 FAQ 問答內容，不經過 FAQ 比對演算法，
+     * 也不會呼叫 AI——與 handle_ask() 是完全獨立的路徑。
+     *
+     * @return void
+     */
+    public function handle_faq_browse() {
+        $this->verify_public_nonce();
+
+        if (!$this->is_kb_browse_enabled()) {
+            wp_send_json_error(
+                array(
+                    'message' => __('知識庫瀏覽功能目前未啟用。', 'ur-ai-assistant'),
+                ),
+                403
+            );
+        }
+
+        if (!$this->faq_service instanceof UR_AI_FAQ_Service && class_exists('UR_AI_FAQ_Service')) {
+            $this->faq_service = new UR_AI_FAQ_Service();
+        }
+
+        if (!$this->faq_service instanceof UR_AI_FAQ_Service) {
+            wp_send_json_error(
+                array(
+                    'message' => __('知識庫服務尚未正確載入，請稍後再試。', 'ur-ai-assistant'),
+                ),
+                500
+            );
+        }
+
+        $search   = isset($_POST['search']) ? $this->sanitize_question(wp_unslash($_POST['search'])) : '';
+        $category = isset($_POST['category']) ? sanitize_text_field(wp_unslash($_POST['category'])) : '';
+        $paged    = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
+
+        $per_page = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_kb_browse_per_page() : 10;
+
+        $result = $this->faq_service->browse(
+            array(
+                'search'   => $search,
+                'category' => $category,
+                'paged'    => $paged,
+                'per_page' => $per_page,
+            )
+        );
+
+        wp_send_json_success(
+            array(
+                'items'       => $this->format_kb_items($result['items']),
+                'total'       => absint($result['total']),
+                'per_page'    => absint($result['per_page']),
+                'paged'       => absint($result['paged']),
+                'total_pages' => absint($result['total_pages']),
+            )
+        );
+    }
+
+    /**
+     * 格式化知識庫瀏覽項目給前台 JS（含將答案轉為安全 HTML）。
+     *
+     * @param array $items UR_AI_FAQ_Service::browse() 回傳的 items。
+     * @return array
+     */
+    private function format_kb_items($items) {
+        if (!is_array($items)) {
+            return array();
+        }
+
+        $formatted = array();
+
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $id       = isset($item['id']) ? absint($item['id']) : 0;
+            $question = isset($item['question']) ? (string) $item['question'] : '';
+            $answer   = isset($item['answer']) ? (string) $item['answer'] : '';
+
+            if ($id <= 0 || '' === trim($question) || '' === trim($answer)) {
+                continue;
+            }
+
+            $formatted[] = array(
+                'id'          => $id,
+                'category'    => isset($item['category']) ? sanitize_text_field($item['category']) : '',
+                'question'    => $question,
+                'answer_html' => $this->format_answer_html($answer),
+            );
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * 判斷知識庫瀏覽是否啟用。
+     *
+     * @return bool
+     */
+    private function is_kb_browse_enabled() {
+        if (class_exists('UR_AI_Settings')) {
+            return UR_AI_Settings::is_kb_browse_enabled();
+        }
+
+        return false;
     }
 
     /**

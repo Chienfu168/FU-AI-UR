@@ -268,6 +268,37 @@ class UR_AI_Settings {
     }
 
     /**
+     * 知識庫瀏覽（獨立搜尋 FAQ，不經比對／AI）是否啟用。
+     *
+     * 預設關閉：這是既有安裝升級後新增的前台區塊，避免既有網站在更新後
+     * 未經確認就多出新的可見 UI。
+     *
+     * @return bool
+     */
+    public static function is_kb_browse_enabled() {
+        return self::truthy(self::get('kb_browse_enabled', 0));
+    }
+
+    /**
+     * 知識庫瀏覽每頁筆數。
+     *
+     * @return int
+     */
+    public static function get_kb_browse_per_page() {
+        $per_page = absint(self::get('kb_browse_per_page', 10));
+
+        if ($per_page <= 0) {
+            $per_page = 10;
+        }
+
+        if ($per_page > 50) {
+            $per_page = 50;
+        }
+
+        return $per_page;
+    }
+
+    /**
      * 問答紀錄是否啟用。
      *
      * @return bool
@@ -303,6 +334,8 @@ class UR_AI_Settings {
             'related_enabled'     => 1,
             'popular_enabled'     => 1,
             'logging_enabled'     => 1,
+            'kb_browse_enabled'   => 0,
+            'kb_browse_per_page'  => 10,
         );
     }
 
@@ -382,7 +415,21 @@ class UR_AI_Settings {
             case 'related_enabled':
             case 'popular_enabled':
             case 'logging_enabled':
+            case 'kb_browse_enabled':
                 return !empty($value) ? 1 : 0;
+
+            case 'kb_browse_per_page':
+                $per_page = absint($value);
+
+                if ($per_page < 1) {
+                    $per_page = 1;
+                }
+
+                if ($per_page > 50) {
+                    $per_page = 50;
+                }
+
+                return $per_page;
 
             case 'max_question_length':
                 $length = absint($value);

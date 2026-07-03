@@ -75,6 +75,8 @@ if (
         'related_enabled'     => !empty($_POST['related_enabled']) ? 1 : 0,
         'popular_enabled'     => !empty($_POST['popular_enabled']) ? 1 : 0,
         'logging_enabled'     => !empty($_POST['logging_enabled']) ? 1 : 0,
+        'kb_browse_enabled'   => !empty($_POST['kb_browse_enabled']) ? 1 : 0,
+        'kb_browse_per_page'  => isset($_POST['kb_browse_per_page']) ? wp_unslash($_POST['kb_browse_per_page']) : '',
     );
 
     $updated = UR_AI_Settings::update_many($settings_to_save);
@@ -104,6 +106,9 @@ $faq_enabled     = UR_AI_Settings::is_faq_enabled();
 $related_enabled = UR_AI_Settings::is_related_enabled();
 $popular_enabled = UR_AI_Settings::is_popular_enabled();
 $logging_enabled = UR_AI_Settings::is_logging_enabled();
+
+$kb_browse_enabled  = UR_AI_Settings::is_kb_browse_enabled();
+$kb_browse_per_page = UR_AI_Settings::get_kb_browse_per_page();
 
 ?>
 
@@ -385,6 +390,43 @@ $logging_enabled = UR_AI_Settings::is_logging_enabled();
                         <?php echo esc_html__('啟用熱門問題與主題導覽', 'ur-ai-assistant'); ?>
                     </label>
                 </div>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <div class="ur-ai-card-header">
+                <div>
+                    <h2 class="ur-ai-card-title"><?php echo esc_html__('知識庫瀏覽', 'ur-ai-assistant'); ?></h2>
+                    <p class="ur-ai-card-description">
+                        <?php echo esc_html__('讓使用者不必先問 AI，就能直接搜尋／瀏覽已啟用的 FAQ 問答內容。此功能不經過 FAQ 比對，也不會呼叫 AI。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <div class="ur-ai-form-row">
+                <label>
+                    <input
+                        type="checkbox"
+                        name="kb_browse_enabled"
+                        value="1"
+                        <?php checked($kb_browse_enabled); ?>
+                    >
+                    <?php echo esc_html__('啟用前台知識庫瀏覽區塊', 'ur-ai-assistant'); ?>
+                </label>
+                <p class="ur-ai-form-help"><?php echo esc_html__('預設關閉，啟用後會在前台 AI 助理下方新增可搜尋的常見問題列表。', 'ur-ai-assistant'); ?></p>
+            </div>
+
+            <div class="ur-ai-form-row">
+                <label for="kb_browse_per_page"><?php echo esc_html__('每頁筆數', 'ur-ai-assistant'); ?></label>
+                <input
+                    type="number"
+                    id="kb_browse_per_page"
+                    name="kb_browse_per_page"
+                    value="<?php echo esc_attr($kb_browse_per_page); ?>"
+                    min="1"
+                    max="50"
+                    class="small-text"
+                >
             </div>
         </div>
 

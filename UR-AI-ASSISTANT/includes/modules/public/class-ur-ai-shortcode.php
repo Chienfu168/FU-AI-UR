@@ -25,13 +25,15 @@ class UR_AI_Shortcode {
     public function render($atts = array()) {
         $atts = shortcode_atts(
             array(
-                'title'         => '',
-                'subtitle'      => '',
-                'show_popular'  => '1',
-                'show_groups'   => '0',
-                'popular_limit' => '6',
-                'group_limit'   => '4',
-                'placeholder'   => '',
+                'title'           => '',
+                'subtitle'        => '',
+                'show_popular'    => '1',
+                'show_groups'     => '0',
+                'popular_limit'   => '6',
+                'group_limit'     => '4',
+                'placeholder'     => '',
+                'show_kb_browse'  => '1',
+                'kb_browse_limit' => '',
             ),
             is_array($atts) ? $atts : array(),
             'ur_ai_assistant'
@@ -136,15 +138,46 @@ class UR_AI_Shortcode {
             }
         }
 
+        $show_kb_browse    = $this->truthy(isset($atts['show_kb_browse']) ? $atts['show_kb_browse'] : '1');
+        $kb_browse_enabled = $show_kb_browse && $this->is_kb_browse_enabled();
+
+        $kb_browse_categories = array();
+        $kb_browse_per_page   = isset($atts['kb_browse_limit']) ? absint($atts['kb_browse_limit']) : 0;
+
+        if ($kb_browse_per_page <= 0) {
+            $kb_browse_per_page = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_kb_browse_per_page() : 10;
+        }
+
+        if ($kb_browse_enabled && class_exists('UR_AI_FAQ_Service')) {
+            $faq_service          = new UR_AI_FAQ_Service();
+            $kb_browse_categories = $faq_service->get_active_categories();
+        }
+
         return array(
-            'title'               => $title,
-            'subtitle'            => $subtitle,
-            'disclaimer'          => $disclaimer,
-            'popular_questions'   => $popular_questions,
-            'popular_groups'      => $popular_groups,
-            'max_question_length' => $max_question_length,
-            'placeholder'         => $placeholder,
+            'title'                => $title,
+            'subtitle'             => $subtitle,
+            'disclaimer'           => $disclaimer,
+            'popular_questions'    => $popular_questions,
+            'popular_groups'       => $popular_groups,
+            'max_question_length'  => $max_question_length,
+            'placeholder'          => $placeholder,
+            'kb_browse_enabled'    => $kb_browse_enabled,
+            'kb_browse_categories' => $kb_browse_categories,
+            'kb_browse_per_page'   => $kb_browse_per_page,
         );
+    }
+
+    /**
+     * 判斷知識庫瀏覽是否啟用。
+     *
+     * @return bool
+     */
+    private function is_kb_browse_enabled() {
+        if (class_exists('UR_AI_Settings')) {
+            return UR_AI_Settings::is_kb_browse_enabled();
+        }
+
+        return false;
     }
 
     /**

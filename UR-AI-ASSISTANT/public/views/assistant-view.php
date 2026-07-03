@@ -19,6 +19,10 @@ $popular_groups     = isset($args['popular_groups']) && is_array($args['popular_
 $max_question_length = isset($args['max_question_length']) ? absint($args['max_question_length']) : 500;
 $placeholder        = isset($args['placeholder']) ? (string) $args['placeholder'] : __('請輸入您想了解的都市更新、危老重建、更新會、權利變換或協議合建問題。', 'ur-ai-assistant');
 
+$kb_browse_enabled    = !empty($args['kb_browse_enabled']);
+$kb_browse_categories = isset($args['kb_browse_categories']) && is_array($args['kb_browse_categories']) ? $args['kb_browse_categories'] : array();
+$kb_browse_per_page   = isset($args['kb_browse_per_page']) ? absint($args['kb_browse_per_page']) : 10;
+
 if ('' === trim($title)) {
     $title = __('都更危老 AI 助理', 'ur-ai-assistant');
 }
@@ -145,6 +149,45 @@ $instance_id = 'ur-ai-assistant-' . wp_rand(1000, 999999);
                             </div>
                         <?php endforeach; ?>
                     </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($kb_browse_enabled) : ?>
+                <div class="ur-ai-section ur-ai-kb-browse" data-kb-per-page="<?php echo esc_attr($kb_browse_per_page); ?>">
+                    <h3 class="ur-ai-section-title">
+                        <?php echo esc_html__('瀏覽全部常見問題', 'ur-ai-assistant'); ?>
+                    </h3>
+
+                    <form class="ur-ai-kb-search-form">
+                        <label class="screen-reader-text" for="<?php echo esc_attr($instance_id); ?>-kb-search">
+                            <?php echo esc_html__('搜尋常見問題', 'ur-ai-assistant'); ?>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="<?php echo esc_attr($instance_id); ?>-kb-search"
+                            class="ur-ai-kb-search-input"
+                            placeholder="<?php echo esc_attr__('輸入關鍵字搜尋常見問題…', 'ur-ai-assistant'); ?>"
+                        >
+
+                        <?php if (!empty($kb_browse_categories)) : ?>
+                            <select class="ur-ai-kb-category-select">
+                                <option value=""><?php echo esc_html__('全部分類', 'ur-ai-assistant'); ?></option>
+                                <?php foreach ($kb_browse_categories as $category_name) : ?>
+                                    <option value="<?php echo esc_attr($category_name); ?>">
+                                        <?php echo esc_html($category_name); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+
+                        <button type="submit" class="ur-ai-kb-search-submit">
+                            <?php echo esc_html__('搜尋', 'ur-ai-assistant'); ?>
+                        </button>
+                    </form>
+
+                    <div class="ur-ai-kb-results" aria-live="polite"></div>
+                    <div class="ur-ai-kb-pagination"></div>
                 </div>
             <?php endif; ?>
 

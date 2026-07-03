@@ -18,7 +18,16 @@
         feedbackReason: '.ur-ai-feedback-reason-select',
         feedbackComment: '.ur-ai-feedback-comment',
         feedbackSubmit: '.ur-ai-feedback-submit',
-        printButton: '.ur-ai-print-button'
+        printButton: '.ur-ai-print-button',
+        kbBrowse: '.ur-ai-kb-browse',
+        kbSearchForm: '.ur-ai-kb-search-form',
+        kbSearchInput: '.ur-ai-kb-search-input',
+        kbCategorySelect: '.ur-ai-kb-category-select',
+        kbResults: '.ur-ai-kb-results',
+        kbPagination: '.ur-ai-kb-pagination',
+        kbItem: '.ur-ai-kb-item',
+        kbItemQuestion: '.ur-ai-kb-item-question',
+        kbPageLink: '.ur-ai-kb-page-link'
     };
 
     function getConfig() {
@@ -553,6 +562,155 @@
         });
     }
 
+    function getKbPerPage($kbSection) {
+        const value = parseInt($kbSection.data('kb-per-page'), 10);
+
+        return Number.isNaN(value) || value <= 0 ? 10 : value;
+    }
+
+    function renderKbItem(item) {
+        const question = item.question || '';
+        const answerHtml = item.answer_html || '';
+        const category = item.category || '';
+
+        let html = '';
+
+        html += '<div class="ur-ai-kb-item">';
+        html += '<button type="button" class="ur-ai-kb-item-question">';
+
+        if (category) {
+            html += '<span class="ur-ai-kb-item-category">' + escapeHtml(category) + '</span>';
+        }
+
+        html += '<span class="ur-ai-kb-item-question-text">' + escapeHtml(question) + '</span>';
+        html += '</button>';
+        html += '<div class="ur-ai-kb-item-answer">' + answerHtml + '</div>';
+        html += '</div>';
+
+        return html;
+    }
+
+    function renderKbPagination($kbSection, data) {
+        const paged = parseInt(data.paged, 10) || 1;
+        const totalPages = parseInt(data.total_pages, 10) || 0;
+        const $pagination = $kbSection.find(selectors.kbPagination);
+
+        if (totalPages <= 1) {
+            $pagination.empty();
+            return;
+        }
+
+        let html = '';
+
+        html += '<button type="button" class="ur-ai-kb-page-link" data-page="' + (paged - 1) + '"' + (paged <= 1 ? ' disabled' : '') + '>';
+        html += escapeHtml(getI18n('kb_prev', '上一頁'));
+        html += '</button>';
+
+        const pageInfoTemplate = getI18n('kb_page_info', '第 %1$s／%2$s 頁（共 %3$s 筆）');
+        const pageInfo = pageInfoTemplate
+            .replace('%1$s', paged)
+            .replace('%2$s', totalPages)
+            .replace('%3$s', data.total || 0);
+
+        html += '<span class="ur-ai-kb-page-info">' + escapeHtml(pageInfo) + '</span>';
+
+        html += '<button type="button" class="ur-ai-kb-page-link" data-page="' + (paged + 1) + '"' + (paged >= totalPages ? ' disabled' : '') + '>';
+        html += escapeHtml(getI18n('kb_next', '下一頁'));
+        html += '</button>';
+
+        $pagination.html(html);
+    }
+
+    function fetchKbList($kbSection, page) {
+        const $results = $kbSection.find(selectors.kbResults);
+        const search = $kbSection.find(selectors.kbSearchInput).val() || '';
+        const category = $kbSection.find(selectors.kbCategorySelect).val() || '';
+
+        $kbSection.data('kb-page', page);
+        $results.html('<p class="ur-ai-kb-loading">' + escapeHtml(getI18n('kb_loading', '載入中…')) + '</p>');
+
+        $.ajax({
+            url: getAjaxUrl(),
+            method: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'ur_ai_faq_browse',
+                nonce: getNonce(),
+                search: search,
+                category: category,
+                paged: page,
+                per_page: getKbPerPage($kbSection)
+            }
+        })
+            .done(function (response) {
+                if (!response || !response.success || !response.data) {
+                    const message = response && response.data && response.data.message
+                        ? response.data.message
+                        : getI18n('kb_error', '知識庫載入失敗，請稍後再試。');
+
+                    $results.html('<p class="ur-ai-kb-error">' + escapeHtml(message) + '</p>');
+                    $kbSection.find(selectors.kbPagination).empty();
+                    return;
+                }
+
+                const data = response.data;
+                const items = Array.isArray(data.items) ? data.items : [];
+
+                if (items.length === 0) {
+                    $results.html('<p class="ur-ai-kb-empty">' + escapeHtml(getI18n('kb_no_results', '找不到符合的常見問題，可以直接在下方向 AI 助理提問。')) + '</p>');
+                    $kbSection.find(selectors.kbPagination).empty();
+                    return;
+                }
+
+                let html = '';
+                items.forEach(function (item) {
+                    html += renderKbItem(item);
+                });
+
+                $results.html(html);
+                renderKbPagination($kbSection, data);
+            })
+            .fail(function () {
+                $results.html('<p class="ur-ai-kb-error">' + escapeHtml(getI18n('network_error', '連線失敗，請稍後再試。')) + '</p>');
+                $kbSection.find(selectors.kbPagination).empty();
+            });
+    }
+
+    function handleKbSearchSubmit(event) {
+        event.preventDefault();
+
+        const $kbSection = $(this).closest(selectors.kbBrowse);
+
+        fetchKbList($kbSection, 1);
+    }
+
+    function handleKbItemToggle(event) {
+        event.preventDefault();
+
+        $(this).closest(selectors.kbItem).toggleClass('is-open');
+    }
+
+    function handleKbPageLinkClick(event) {
+        event.preventDefault();
+
+        const $link = $(this);
+
+        if ($link.is('[disabled]')) {
+            return;
+        }
+
+        const $kbSection = $link.closest(selectors.kbBrowse);
+        const page = parseInt($link.data('page'), 10) || 1;
+
+        fetchKbList($kbSection, page);
+    }
+
+    function initKbBrowse() {
+        $(selectors.kbBrowse).each(function () {
+            fetchKbList($(this), 1);
+        });
+    }
+
     function handleRelatedClick() {
         const $link = $(this);
         const pageId = parseInt($link.data('related-page-id'), 10) || 0;
@@ -810,6 +968,9 @@
         $(document).on('click', selectors.feedbackButton, handleFeedbackButtonClick);
         $(document).on('click', selectors.feedbackSubmit, handleFeedbackSubmit);
         $(document).on('click', selectors.printButton, handlePrintClick);
+        $(document).on('submit', selectors.kbSearchForm, handleKbSearchSubmit);
+        $(document).on('click', selectors.kbItemQuestion, handleKbItemToggle);
+        $(document).on('click', selectors.kbPageLink, handleKbPageLinkClick);
 
         $(document).on('input', selectors.input, function () {
             const $wrapper = $(this).closest(selectors.wrapper);
@@ -826,6 +987,7 @@
     function init() {
         bindEvents();
         initCounters();
+        initKbBrowse();
     }
 
     $(document).ready(init);

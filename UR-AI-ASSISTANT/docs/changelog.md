@@ -1088,6 +1088,98 @@ ur-ai-assistant.php
 
 ---
 
+## v1.6.0
+
+更新日期
+2026-07-03
+
+版本定位
+
+新增前台「知識庫瀏覽」功能。既有的「AI 問答」流程中，FAQ 只有在使用者
+提問文字剛好被比對演算法命中（分數 ≥ 45）時才會顯示，命中率受限於使用者
+措辭，效益不高；使用者也無從得知知識庫裡實際收錄哪些問題。本版新增獨立的
+搜尋／分類瀏覽入口，直接呈現問答內容，不經過比對演算法、也不呼叫 AI。
+
+一、主要新增功能
+
+1. 前台知識庫瀏覽區塊（預設關閉，需後台啟用）
+  於 AI 助理 widget 內新增「瀏覽全部常見問題」區塊：關鍵字搜尋（送出才查，
+  非即時搜尋）＋分類篩選下拉＋可展開的手風琴式問答列表＋上一頁／下一頁。
+  頁面載入時會自動載入第一頁（無篩選條件），之後的搜尋／換頁才各觸發 1 次
+  AJAX 請求。
+
+2. 新 AJAX 端點 ur_ai_faq_browse
+  獨立於既有的 ur_ai_ask：直接查詢 status=active 的 FAQ 並回傳問答內容，
+  完全不經過 UR_AI_FAQ_Matcher 的比對演算法，也不會在無命中時退回呼叫 AI。
+  沿用既有的前台 public nonce 驗證。
+
+3. 後台設定
+  「功能設定」新增「知識庫瀏覽」卡片：啟用開關（預設關閉，避免既有網站
+  更新後未經確認就多出新 UI）與每頁筆數（預設 10，可調 1~50）。
+
+4. Shortcode 新參數
+  `show_kb_browse`（預設 1，需搭配後台啟用開關）、`kb_browse_limit`
+  （留空則採後台設定值）。
+
+二、後端變更（不影響既有 FAQ 比對／AI 問答流程）
+
+includes/modules/faq/class-ur-ai-faq-repository.php
+  - 新增 get_active_categories()：取得目前有 active FAQ 使用的分類清單
+    （去重、排序），供前台分類篩選使用；區別於既有的
+    UR_AI_Schema_FAQs::get_default_categories() 建議清單。
+
+includes/modules/faq/class-ur-ai-faq-service.php
+  - 新增 get_active_categories()：transient 快取包裝，快取失效時機與
+    get_active_faqs() 共用同一套清除邏輯（内容寫入時清除）。
+  - 新增 browse()：知識庫瀏覽的查詢包裝，強制 status=active，支援關鍵字
+    ＋分類篩選＋分頁，回傳 items／total／per_page／paged／total_pages。
+    查詢結果本身不快取（篩選組合多變，快取效益低）。
+
+includes/modules/ajax/class-ur-ai-ajax-module.php
+  - 新增 handle_faq_browse()：驗證 nonce、檢查 kb_browse_enabled 設定，
+    呼叫 UR_AI_FAQ_Service::browse()，並將每筆答案轉為安全 HTML
+    （沿用既有的 format_answer_html()）後回傳。
+
+includes/shared/class-ur-ai-settings.php
+  - 新增 kb_browse_enabled（預設 0）、kb_browse_per_page（預設 10）
+    設定與對應的 is_kb_browse_enabled() / get_kb_browse_per_page()。
+
+includes/modules/public/class-ur-ai-shortcode.php
+  - build_view_args() 新增知識庫瀏覽相關參數解析（含分類清單查詢）。
+
+三、前台變更
+
+public/views/assistant-view.php
+  - 新增 .ur-ai-kb-browse 區塊（搜尋表單＋結果列表＋分頁），受
+    kb_browse_enabled 控制。
+
+public/assets/js/public.js
+  - 新增 fetchKbList()／renderKbItem()／renderKbPagination()／
+    handleKbSearchSubmit()／handleKbItemToggle()／handleKbPageLinkClick()／
+    initKbBrowse()，頁面載入時自動載入第一頁。
+
+public/assets/css/public.css
+  - 新增 .ur-ai-kb-* 樣式，沿用既有配色與圓角視覺語言。
+
+admin/pages/settings-page.php
+  - 新增「知識庫瀏覽」設定卡片（啟用開關＋每頁筆數）。
+
+ur-ai-assistant.php
+  - 版本號 1.5.1 → 1.6.0。
+
+四、資料表變更
+
+無。kb_browse_enabled／kb_browse_per_page 為既有 ur_ai_assistant_settings
+option 內新增的鍵，非新資料表／欄位。
+
+五、是否建議上正式站
+
+建議先於測試站確認：搜尋／分類篩選／分頁／答案展開皆正常，且確認在
+「功能設定」手動啟用後才會出現此區塊（預設關閉，不影響既有網站的
+既有外觀）。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

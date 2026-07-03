@@ -202,6 +202,13 @@ class UR_AI_Public_Assets {
             'reason_too_general'          => __('內容太籠統', 'ur-ai-assistant'),
             'reason_need_examples'        => __('需要更多實務說明', 'ur-ai-assistant'),
             'reason_other'                => __('其他', 'ur-ai-assistant'),
+
+            'kb_loading'                  => __('載入中…', 'ur-ai-assistant'),
+            'kb_no_results'               => __('找不到符合的常見問題，可以直接在下方向 AI 助理提問。', 'ur-ai-assistant'),
+            'kb_error'                    => __('知識庫載入失敗，請稍後再試。', 'ur-ai-assistant'),
+            'kb_prev'                     => __('上一頁', 'ur-ai-assistant'),
+            'kb_next'                     => __('下一頁', 'ur-ai-assistant'),
+            'kb_page_info'                => __('第 %1$s／%2$s 頁（共 %3$s 筆）', 'ur-ai-assistant'),
         );
     }
 }
