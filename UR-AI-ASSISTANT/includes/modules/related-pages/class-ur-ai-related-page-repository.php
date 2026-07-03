@@ -292,6 +292,78 @@ class UR_AI_Related_Page_Repository {
     }
 
     /**
+     * 批次依來源文章 ID 查詢既有推薦頁面（一次查詢取代逐筆查詢）。
+     *
+     * 供匯入流程（掃描／批次匯入多篇文章）使用，避免每篇文章各自查詢一次。
+     *
+     * @param array $post_ids 文章 ID 陣列。
+     * @return array source_post_id => object
+     */
+    public function find_existing_by_source_post_ids($post_ids) {
+        global $wpdb;
+
+        $post_ids = array_values(array_unique(array_filter(array_map('absint', (array) $post_ids))));
+
+        if (empty($post_ids)) {
+            return array();
+        }
+
+        $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->table_name} WHERE source_post_id IN ({$placeholders})",
+                $post_ids
+            )
+        );
+
+        $map = array();
+
+        foreach ((array) $rows as $row) {
+            if (isset($row->source_post_id)) {
+                $map[(int) $row->source_post_id] = $row;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
+     * 批次依 URL 查詢既有推薦頁面（一次查詢取代逐筆查詢）。
+     *
+     * @param array $urls URL 陣列。
+     * @return array url => object
+     */
+    public function find_existing_by_urls($urls) {
+        global $wpdb;
+
+        $urls = array_values(array_unique(array_filter(array_map('esc_url_raw', (array) $urls))));
+
+        if (empty($urls)) {
+            return array();
+        }
+
+        $placeholders = implode(',', array_fill(0, count($urls), '%s'));
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->table_name} WHERE url IN ({$placeholders})",
+                $urls
+            )
+        );
+
+        $map = array();
+
+        foreach ((array) $rows as $row) {
+            if (isset($row->url)) {
+                $map[$row->url] = $row;
+            }
+        }
+
+        return $map;
+    }
+
+    /**
      * 查詢推薦頁面列表。
      *
      * @param array $args 查詢參數。

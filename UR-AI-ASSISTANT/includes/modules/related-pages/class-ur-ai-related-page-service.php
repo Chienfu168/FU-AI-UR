@@ -279,6 +279,34 @@ class UR_AI_Related_Page_Service {
     }
 
     /**
+     * 批次依來源文章 ID 查詢既有推薦頁面（一次查詢取代逐筆查詢）。
+     *
+     * @param array $post_ids 文章 ID 陣列。
+     * @return array source_post_id => object
+     */
+    public function find_existing_by_source_post_ids($post_ids) {
+        if (!$this->repository instanceof UR_AI_Related_Page_Repository) {
+            return array();
+        }
+
+        return $this->repository->find_existing_by_source_post_ids($post_ids);
+    }
+
+    /**
+     * 批次依 URL 查詢既有推薦頁面（一次查詢取代逐筆查詢）。
+     *
+     * @param array $urls URL 陣列。
+     * @return array url => object
+     */
+    public function find_existing_by_urls($urls) {
+        if (!$this->repository instanceof UR_AI_Related_Page_Repository) {
+            return array();
+        }
+
+        return $this->repository->find_existing_by_urls($urls);
+    }
+
+    /**
      * 查詢推薦頁面列表。
      *
      * @param array $args 查詢參數。
