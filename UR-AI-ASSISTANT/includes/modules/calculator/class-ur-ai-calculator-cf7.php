@@ -91,7 +91,9 @@ class UR_AI_Calculator_CF7 {
 
         $data = $this->build_lead_data($posted, $context, $target_id);
 
-        $this->repository->insert($data);
+        if (false === $this->repository->insert($data)) {
+            error_log('UR AI Assistant: failed to insert calculator lead for CF7 form ID ' . $target_id);
+        }
     }
 
     /**
