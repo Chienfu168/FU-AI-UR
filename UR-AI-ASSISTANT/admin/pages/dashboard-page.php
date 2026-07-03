@@ -1,0 +1,442 @@
+<?php
+/**
+ * UR AI Assistant Dashboard Page
+ *
+ * 後台總覽頁。
+ *
+ * @package UR_AI_Assistant
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+if (class_exists('UR_AI_Permissions')) {
+    UR_AI_Permissions::require_view_dashboard();
+} elseif (!current_user_can('manage_options')) {
+    wp_die(
+        esc_html__('您沒有權限檢視此頁面。', 'ur-ai-assistant'),
+        esc_html__('權限不足', 'ur-ai-assistant'),
+        array(
+            'response' => 403,
+        )
+    );
+}
+
+$faq_summary = array(
+    'total'    => 0,
+    'active'   => 0,
+    'inactive' => 0,
+);
+
+$log_summary = array(
+    'total'           => 0,
+    'faq'             => 0,
+    'ai'              => 0,
+    'error'           => 0,
+    'tokens_used'     => 0,
+    'with_related'    => 0,
+    'without_related' => 0,
+);
+
+$related_summary = array(
+    'total'             => 0,
+    'active'            => 0,
+    'inactive'          => 0,
+    'total_show_count'  => 0,
+    'total_click_count' => 0,
+);
+
+$popular_summary = array(
+    'total'             => 0,
+    'active'            => 0,
+    'inactive'          => 0,
+    'total_click_count' => 0,
+);
+
+$feedback_summary = array(
+    'total_feedback'   => 0,
+    'helpful'          => 0,
+    'not_helpful'      => 0,
+    'helpful_rate'     => 0,
+    'not_helpful_rate' => 0,
+);
+
+if (class_exists('UR_AI_FAQ_Service')) {
+    $faq_service = new UR_AI_FAQ_Service();
+    $faq_summary = wp_parse_args($faq_service->get_summary(), $faq_summary);
+}
+
+if (class_exists('UR_AI_Log_Service')) {
+    $log_service = new UR_AI_Log_Service();
+    $log_summary = wp_parse_args($log_service->get_summary(), $log_summary);
+}
+
+if (class_exists('UR_AI_Related_Page_Service')) {
+    $related_service = new UR_AI_Related_Page_Service();
+    $related_summary = wp_parse_args($related_service->get_summary(), $related_summary);
+}
+
+if (class_exists('UR_AI_Popular_Question_Service')) {
+    $popular_service = new UR_AI_Popular_Question_Service();
+    $popular_summary = wp_parse_args($popular_service->get_summary(), $popular_summary);
+}
+
+if (class_exists('UR_AI_Feedback_Service')) {
+    $feedback_service = new UR_AI_Feedback_Service();
+    $feedback_summary = wp_parse_args($feedback_service->get_summary(), $feedback_summary);
+}
+
+$settings_url          = admin_url('admin.php?page=ur-ai-assistant-settings');
+$faqs_url              = admin_url('admin.php?page=ur-ai-assistant-faqs');
+$logs_url              = admin_url('admin.php?page=ur-ai-assistant-logs');
+$related_pages_url     = admin_url('admin.php?page=ur-ai-assistant-related-pages');
+$popular_questions_url = admin_url('admin.php?page=ur-ai-assistant-popular-questions');
+$feedback_url          = admin_url('admin.php?page=ur-ai-assistant-feedback');
+
+$shortcode = '[ur_ai_assistant]';
+
+$api_key_set = false;
+
+if (class_exists('UR_AI_Settings')) {
+    $api_key_set = '' !== trim((string) UR_AI_Settings::get_api_key());
+}
+
+$frontend_enabled = true;
+
+if (class_exists('UR_AI_Settings')) {
+    $frontend_enabled = UR_AI_Settings::is_frontend_enabled();
+}
+
+$logging_enabled = true;
+
+if (class_exists('UR_AI_Settings')) {
+    $logging_enabled = UR_AI_Settings::is_logging_enabled();
+}
+
+$faq_enabled = true;
+
+if (class_exists('UR_AI_Settings')) {
+    $faq_enabled = UR_AI_Settings::is_faq_enabled();
+}
+
+$related_enabled = true;
+
+if (class_exists('UR_AI_Settings')) {
+    $related_enabled = UR_AI_Settings::is_related_enabled();
+}
+
+$popular_enabled = true;
+
+if (class_exists('UR_AI_Settings')) {
+    $popular_enabled = UR_AI_Settings::is_popular_enabled();
+}
+
+?>
+
+<div class="wrap ur-ai-admin-page">
+
+    <h1><?php echo esc_html__('都更 AI 助理｜總覽', 'ur-ai-assistant'); ?></h1>
+
+    <?php if (!$api_key_set) : ?>
+        <div class="notice notice-warning">
+            <p>
+                <strong><?php echo esc_html__('尚未設定 OpenAI API Key。', 'ur-ai-assistant'); ?></strong>
+                <?php echo esc_html__('如果 FAQ 未命中，系統將無法呼叫 AI 回答。請先至「功能設定」填入 API Key。', 'ur-ai-assistant'); ?>
+                <a href="<?php echo esc_url($settings_url); ?>">
+                    <?php echo esc_html__('前往設定', 'ur-ai-assistant'); ?>
+                </a>
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!$frontend_enabled) : ?>
+        <div class="notice notice-error">
+            <p>
+                <strong><?php echo esc_html__('前台問答目前已停用。', 'ur-ai-assistant'); ?></strong>
+                <?php echo esc_html__('訪客將無法使用 AI 助理。', 'ur-ai-assistant'); ?>
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <?php
+    $faq_import_url = admin_url('admin.php?page=ur-ai-assistant-faqs');
+    ?>
+    <details class="ur-ai-card ur-ai-setup-guide"<?php echo (0 === (int) $faq_summary['total']) ? ' open' : ''; ?>>
+        <summary class="ur-ai-setup-guide-summary">
+            <span class="ur-ai-setup-guide-title"><?php echo esc_html__('安裝後設定指南', 'ur-ai-assistant'); ?></span>
+            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（首次安裝或搬移網站請先看這裡；點擊可展開／收合）', 'ur-ai-assistant'); ?></span>
+        </summary>
+
+        <div class="ur-ai-setup-guide-body">
+            <p class="ur-ai-setup-guide-intro">
+                <?php echo esc_html__('本外掛的檔案可直接安裝到任何 WordPress，但「內容」（FAQ 知識庫、API Key、試算器參數）儲存在資料庫與設定中，不會隨外掛檔案一起搬移。全新安裝或搬移網站後，請依序完成下列項目，功能才會完整運作。', 'ur-ai-assistant'); ?>
+            </p>
+
+            <ol class="ur-ai-setup-steps">
+                <li>
+                    <strong><?php echo esc_html__('1. 設定 OpenAI API Key', 'ur-ai-assistant'); ?></strong>
+                    <span class="ur-ai-setup-status <?php echo $api_key_set ? 'is-done' : 'is-todo'; ?>">
+                        <?php echo $api_key_set ? esc_html__('已設定', 'ur-ai-assistant') : esc_html__('尚未設定', 'ur-ai-assistant'); ?>
+                    </span>
+                    <p><?php echo esc_html__('未設定時，FAQ 未命中的問題將無法由 AI 回答。', 'ur-ai-assistant'); ?>
+                        <a href="<?php echo esc_url($settings_url); ?>"><?php echo esc_html__('前往功能設定', 'ur-ai-assistant'); ?></a>
+                    </p>
+                </li>
+                <li>
+                    <strong><?php echo esc_html__('2. 建立 FAQ 知識庫', 'ur-ai-assistant'); ?></strong>
+                    <span class="ur-ai-setup-status <?php echo ((int) $faq_summary['total'] > 0) ? 'is-done' : 'is-todo'; ?>">
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %d: FAQ 筆數 */
+                                __('目前 %d 筆', 'ur-ai-assistant'),
+                                (int) $faq_summary['total']
+                            )
+                        );
+                        ?>
+                    </span>
+                    <p><?php echo esc_html__('FAQ 命中越多，回答越穩定、也越省 API 費用。搬站或大量新增時，可用 CSV 匯入一次匯入多筆；匯入時題目相同的既有 FAQ 會被覆蓋更新，其餘新增（匯入前建議先匯出備份）。', 'ur-ai-assistant'); ?>
+                        <a href="<?php echo esc_url($faq_import_url); ?>"><?php echo esc_html__('前往 FAQ 知識庫（含匯入／匯出）', 'ur-ai-assistant'); ?></a>
+                    </p>
+                </li>
+                <li>
+                    <strong><?php echo esc_html__('3. 確認前台問答已啟用', 'ur-ai-assistant'); ?></strong>
+                    <span class="ur-ai-setup-status <?php echo $frontend_enabled ? 'is-done' : 'is-todo'; ?>">
+                        <?php echo $frontend_enabled ? esc_html__('已啟用', 'ur-ai-assistant') : esc_html__('已停用', 'ur-ai-assistant'); ?>
+                    </span>
+                    <p><?php echo esc_html__('於功能設定中啟用，並將短代碼 [ur_ai_assistant] 放到要顯示問答的頁面。', 'ur-ai-assistant'); ?></p>
+                </li>
+                <li>
+                    <strong><?php echo esc_html__('4. 試算器與名單表單（選用）', 'ur-ai-assistant'); ?></strong>
+                    <p><?php echo esc_html__('若要使用分回試算器的名單捕捉功能，需安裝 Contact Form 7，並在「試算器設定」中把 CF7 表單 ID 改成新網站自己的表單 ID（預設值為原網站的表單，搬站後必須修改）。試算器的容積率、獎勵係數等參數也建議依需求重新確認。', 'ur-ai-assistant'); ?></p>
+                </li>
+            </ol>
+
+            <p class="ur-ai-setup-guide-note">
+                <?php echo esc_html__('提示：完成上述項目後，本指南會自動收合（有 FAQ 資料時預設收合）。日後仍可隨時點擊標題重新展開。', 'ur-ai-assistant'); ?>
+            </p>
+        </div>
+    </details>
+
+    <div class="ur-ai-summary-grid">
+        <div class="ur-ai-summary-card">
+            <p class="ur-ai-summary-label"><?php echo esc_html__('FAQ 知識庫', 'ur-ai-assistant'); ?></p>
+            <p class="ur-ai-summary-value"><?php echo esc_html(absint($faq_summary['total'])); ?></p>
+            <p class="ur-ai-summary-note">
+                <?php
+                printf(
+                    esc_html__('啟用 %1$d｜停用 %2$d', 'ur-ai-assistant'),
+                    absint($faq_summary['active']),
+                    absint($faq_summary['inactive'])
+                );
+                ?>
+            </p>
+        </div>
+
+        <div class="ur-ai-summary-card">
+            <p class="ur-ai-summary-label"><?php echo esc_html__('問答紀錄', 'ur-ai-assistant'); ?></p>
+            <p class="ur-ai-summary-value"><?php echo esc_html(absint($log_summary['total'])); ?></p>
+            <p class="ur-ai-summary-note">
+                <?php
+                printf(
+                    esc_html__('FAQ %1$d｜AI %2$d｜錯誤 %3$d', 'ur-ai-assistant'),
+                    absint($log_summary['faq']),
+                    absint($log_summary['ai']),
+                    absint($log_summary['error'])
+                );
+                ?>
+            </p>
+        </div>
+
+        <div class="ur-ai-summary-card">
+            <p class="ur-ai-summary-label"><?php echo esc_html__('相關頁面推薦', 'ur-ai-assistant'); ?></p>
+            <p class="ur-ai-summary-value"><?php echo esc_html(absint($related_summary['total'])); ?></p>
+            <p class="ur-ai-summary-note">
+                <?php
+                printf(
+                    esc_html__('曝光 %1$d｜點擊 %2$d', 'ur-ai-assistant'),
+                    absint($related_summary['total_show_count']),
+                    absint($related_summary['total_click_count'])
+                );
+                ?>
+            </p>
+        </div>
+
+        <div class="ur-ai-summary-card">
+            <p class="ur-ai-summary-label"><?php echo esc_html__('熱門問題', 'ur-ai-assistant'); ?></p>
+            <p class="ur-ai-summary-value"><?php echo esc_html(absint($popular_summary['total'])); ?></p>
+            <p class="ur-ai-summary-note">
+                <?php
+                printf(
+                    esc_html__('啟用 %1$d｜點擊 %2$d', 'ur-ai-assistant'),
+                    absint($popular_summary['active']),
+                    absint($popular_summary['total_click_count'])
+                );
+                ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="ur-ai-grid ur-ai-grid-2">
+
+        <div class="ur-ai-card">
+            <div class="ur-ai-card-header">
+                <div>
+                    <h2 class="ur-ai-card-title"><?php echo esc_html__('系統狀態', 'ur-ai-assistant'); ?></h2>
+                    <p class="ur-ai-card-description">
+                        <?php echo esc_html__('確認目前主要功能是否啟用。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <ul class="ur-ai-dashboard-list">
+                <li>
+                    <span><?php echo esc_html__('前台問答', 'ur-ai-assistant'); ?></span>
+                    <?php echo $frontend_enabled ? '<span class="ur-ai-badge ur-ai-badge-active">' . esc_html__('啟用', 'ur-ai-assistant') . '</span>' : '<span class="ur-ai-badge ur-ai-badge-error">' . esc_html__('停用', 'ur-ai-assistant') . '</span>'; ?>
+                </li>
+                <li>
+                    <span><?php echo esc_html__('FAQ 優先回答', 'ur-ai-assistant'); ?></span>
+                    <?php echo $faq_enabled ? '<span class="ur-ai-badge ur-ai-badge-active">' . esc_html__('啟用', 'ur-ai-assistant') . '</span>' : '<span class="ur-ai-badge ur-ai-badge-inactive">' . esc_html__('停用', 'ur-ai-assistant') . '</span>'; ?>
+                </li>
+                <li>
+                    <span><?php echo esc_html__('問答紀錄', 'ur-ai-assistant'); ?></span>
+                    <?php echo $logging_enabled ? '<span class="ur-ai-badge ur-ai-badge-active">' . esc_html__('啟用', 'ur-ai-assistant') . '</span>' : '<span class="ur-ai-badge ur-ai-badge-inactive">' . esc_html__('停用', 'ur-ai-assistant') . '</span>'; ?>
+                </li>
+                <li>
+                    <span><?php echo esc_html__('相關頁面推薦', 'ur-ai-assistant'); ?></span>
+                    <?php echo $related_enabled ? '<span class="ur-ai-badge ur-ai-badge-active">' . esc_html__('啟用', 'ur-ai-assistant') . '</span>' : '<span class="ur-ai-badge ur-ai-badge-inactive">' . esc_html__('停用', 'ur-ai-assistant') . '</span>'; ?>
+                </li>
+                <li>
+                    <span><?php echo esc_html__('熱門問題', 'ur-ai-assistant'); ?></span>
+                    <?php echo $popular_enabled ? '<span class="ur-ai-badge ur-ai-badge-active">' . esc_html__('啟用', 'ur-ai-assistant') . '</span>' : '<span class="ur-ai-badge ur-ai-badge-inactive">' . esc_html__('停用', 'ur-ai-assistant') . '</span>'; ?>
+                </li>
+                <li>
+                    <span><?php echo esc_html__('OpenAI API Key', 'ur-ai-assistant'); ?></span>
+                    <?php echo $api_key_set ? '<span class="ur-ai-badge ur-ai-badge-active">' . esc_html__('已設定', 'ur-ai-assistant') . '</span>' : '<span class="ur-ai-badge ur-ai-badge-warning">' . esc_html__('未設定', 'ur-ai-assistant') . '</span>'; ?>
+                </li>
+            </ul>
+
+            <div class="ur-ai-dashboard-actions">
+                <a class="button button-primary" href="<?php echo esc_url($settings_url); ?>">
+                    <?php echo esc_html__('前往功能設定', 'ur-ai-assistant'); ?>
+                </a>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <div class="ur-ai-card-header">
+                <div>
+                    <h2 class="ur-ai-card-title"><?php echo esc_html__('前台使用方式', 'ur-ai-assistant'); ?></h2>
+                    <p class="ur-ai-card-description">
+                        <?php echo esc_html__('請將 Shortcode 放到 WordPress 頁面或文章中。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <p><?php echo esc_html__('基本 Shortcode：', 'ur-ai-assistant'); ?></p>
+
+            <p>
+                <code class="ur-ai-code" id="ur-ai-dashboard-shortcode"><?php echo esc_html($shortcode); ?></code>
+                <button
+                    type="button"
+                    class="button ur-ai-copy-button"
+                    data-copy-target="#ur-ai-dashboard-shortcode"
+                >
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+
+            <p class="ur-ai-muted">
+                <?php echo esc_html__('可放在「都更危老 AI 助理」頁面，讓訪客直接提問。', 'ur-ai-assistant'); ?>
+            </p>
+
+            <div class="ur-ai-help-box">
+                <strong><?php echo esc_html__('建議：', 'ur-ai-assistant'); ?></strong>
+                <?php echo esc_html__('正式上線前，先用 FAQ 與相關頁面推薦建立基本知識庫，可降低 AI API 成本，也能讓回答更穩定。', 'ur-ai-assistant'); ?>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="ur-ai-grid ur-ai-grid-3">
+
+        <div class="ur-ai-card">
+            <h2><?php echo esc_html__('FAQ 知識庫', 'ur-ai-assistant'); ?></h2>
+            <p>
+                <?php echo esc_html__('FAQ 命中時會優先使用固定回答，不呼叫 AI，適合作為成本控管與標準答案來源。', 'ur-ai-assistant'); ?>
+            </p>
+            <div class="ur-ai-dashboard-actions">
+                <a class="button button-primary" href="<?php echo esc_url($faqs_url); ?>">
+                    <?php echo esc_html__('管理 FAQ', 'ur-ai-assistant'); ?>
+                </a>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <h2><?php echo esc_html__('問答紀錄', 'ur-ai-assistant'); ?></h2>
+            <p>
+                <?php echo esc_html__('查看使用者提問、回答來源、FAQ 命中、Token 使用量與是否可轉成 FAQ 草稿。', 'ur-ai-assistant'); ?>
+            </p>
+            <div class="ur-ai-dashboard-actions">
+                <a class="button button-primary" href="<?php echo esc_url($logs_url); ?>">
+                    <?php echo esc_html__('查看紀錄', 'ur-ai-assistant'); ?>
+                </a>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <h2><?php echo esc_html__('相關頁面推薦', 'ur-ai-assistant'); ?></h2>
+            <p>
+                <?php echo esc_html__('依使用者問題推薦網站內文章，讓 AI 助理同時帶動網站內容曝光。', 'ur-ai-assistant'); ?>
+            </p>
+            <div class="ur-ai-dashboard-actions">
+                <a class="button button-primary" href="<?php echo esc_url($related_pages_url); ?>">
+                    <?php echo esc_html__('管理推薦頁面', 'ur-ai-assistant'); ?>
+                </a>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <h2><?php echo esc_html__('熱門問題', 'ur-ai-assistant'); ?></h2>
+            <p>
+                <?php echo esc_html__('在前台提供常見問題入口，降低訪客不知道如何提問的門檻。', 'ur-ai-assistant'); ?>
+            </p>
+            <div class="ur-ai-dashboard-actions">
+                <a class="button button-primary" href="<?php echo esc_url($popular_questions_url); ?>">
+                    <?php echo esc_html__('管理熱門問題', 'ur-ai-assistant'); ?>
+                </a>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <h2><?php echo esc_html__('回饋分析', 'ur-ai-assistant'); ?></h2>
+            <p>
+                <?php
+                printf(
+                    esc_html__('目前共有 %1$d 筆回饋，有幫助比例約 %2$s%%。', 'ur-ai-assistant'),
+                    absint($feedback_summary['total_feedback']),
+                    esc_html($feedback_summary['helpful_rate'])
+                );
+                ?>
+            </p>
+            <div class="ur-ai-dashboard-actions">
+                <a class="button button-primary" href="<?php echo esc_url($feedback_url); ?>">
+                    <?php echo esc_html__('查看回饋分析', 'ur-ai-assistant'); ?>
+                </a>
+            </div>
+        </div>
+
+        <div class="ur-ai-card">
+            <h2><?php echo esc_html__('開發提醒', 'ur-ai-assistant'); ?></h2>
+            <p>
+                <?php echo esc_html__('本版採模組化架構，後續新增功能時，建議維持 Repository、Service、Admin、Page 分層，避免檔案再度膨脹。', 'ur-ai-assistant'); ?>
+            </p>
+            <div class="ur-ai-warning-box">
+                <?php echo esc_html__('正式網站更新前，建議先在測試站啟用，確認資料表、前台問答、後台管理都正常後再上線。', 'ur-ai-assistant'); ?>
+            </div>
+        </div>
+
+    </div>
+
+</div>

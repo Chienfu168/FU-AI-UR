@@ -1,0 +1,751 @@
+/**
+ * UR AI Assistant Admin Styles
+ *
+ * 後台管理介面樣式。
+ */
+
+/* =========================================================
+   Base
+========================================================= */
+
+.ur-ai-admin-page {
+    max-width: 1280px;
+}
+
+.ur-ai-admin-page *,
+.ur-ai-admin-page *::before,
+.ur-ai-admin-page *::after {
+    box-sizing: border-box;
+}
+
+.ur-ai-admin-page h1 {
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.ur-ai-admin-page h2 {
+    margin: 0 0 14px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.ur-ai-admin-page h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.ur-ai-admin-page p {
+    line-height: 1.7;
+}
+
+.ur-ai-muted {
+    color: #646970;
+}
+
+.ur-ai-small {
+    font-size: 12px;
+}
+
+.ur-ai-text-right {
+    text-align: right;
+}
+
+.ur-ai-text-center {
+    text-align: center;
+}
+
+.ur-ai-mt-0 {
+    margin-top: 0;
+}
+
+.ur-ai-mt-12 {
+    margin-top: 12px;
+}
+
+.ur-ai-mt-16 {
+    margin-top: 16px;
+}
+
+.ur-ai-mt-20 {
+    margin-top: 20px;
+}
+
+.ur-ai-mb-0 {
+    margin-bottom: 0;
+}
+
+.ur-ai-mb-12 {
+    margin-bottom: 12px;
+}
+
+.ur-ai-mb-16 {
+    margin-bottom: 16px;
+}
+
+.ur-ai-hidden {
+    display: none;
+}
+
+/* =========================================================
+   Cards / Layout
+========================================================= */
+
+.ur-ai-card {
+    margin: 18px 0;
+    padding: 20px;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.ur-ai-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.ur-ai-card-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.ur-ai-card-description {
+    margin: 4px 0 0;
+    color: #646970;
+}
+
+.ur-ai-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.ur-ai-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ur-ai-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ur-ai-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ur-ai-flex {
+    display: flex;
+    gap: 10px;
+}
+
+.ur-ai-flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ur-ai-flex-wrap {
+    flex-wrap: wrap;
+}
+
+/* =========================================================
+   Summary Cards
+========================================================= */
+
+.ur-ai-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+}
+
+.ur-ai-summary-card {
+    padding: 18px;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.ur-ai-summary-label {
+    margin: 0 0 8px;
+    color: #646970;
+    font-size: 13px;
+}
+
+.ur-ai-summary-value {
+    margin: 0;
+    color: #1d2327;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.ur-ai-summary-note {
+    margin: 8px 0 0;
+    color: #646970;
+    font-size: 12px;
+}
+
+/* =========================================================
+   Badges / Status
+========================================================= */
+
+.ur-ai-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f0f0f1;
+    color: #3c434a;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.ur-ai-badge-default {
+    background: #f0f0f1;
+    color: #3c434a;
+}
+
+.ur-ai-badge-active,
+.ur-ai-badge-success,
+.ur-ai-badge-helpful {
+    background: #edfaef;
+    color: #0a7a22;
+}
+
+.ur-ai-badge-inactive,
+.ur-ai-badge-draft {
+    background: #f6f7f7;
+    color: #646970;
+}
+
+.ur-ai-badge-warning,
+.ur-ai-badge-pending,
+.ur-ai-badge-observing {
+    background: #fff8e5;
+    color: #996800;
+}
+
+.ur-ai-badge-error,
+.ur-ai-badge-danger,
+.ur-ai-badge-not_helpful {
+    background: #fcf0f1;
+    color: #b32d2e;
+}
+
+.ur-ai-badge-info,
+.ur-ai-badge-ai,
+.ur-ai-badge-faq {
+    background: #eef5ff;
+    color: #135e96;
+}
+
+.ur-ai-badge-linked {
+    background: #edfaef;
+    color: #0a7a22;
+}
+
+.ur-ai-badge-unlinked {
+    background: #fff8e5;
+    color: #996800;
+}
+
+/* =========================================================
+   Forms
+========================================================= */
+
+.ur-ai-admin-form {
+    max-width: 980px;
+}
+
+.ur-ai-form-row {
+    margin-bottom: 16px;
+}
+
+.ur-ai-form-row label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.ur-ai-form-row input[type="text"],
+.ur-ai-form-row input[type="url"],
+.ur-ai-form-row input[type="number"],
+.ur-ai-form-row input[type="password"],
+.ur-ai-form-row select,
+.ur-ai-form-row textarea {
+    width: 100%;
+    max-width: 760px;
+}
+
+.ur-ai-form-row textarea {
+    min-height: 120px;
+}
+
+.ur-ai-form-help {
+    margin: 6px 0 0;
+    color: #646970;
+    font-size: 12px;
+}
+
+.ur-ai-form-inline {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ur-ai-form-inline .ur-ai-form-row {
+    margin-bottom: 0;
+}
+
+.ur-ai-form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+/* =========================================================
+   Toolbar / Filters
+========================================================= */
+
+.ur-ai-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 14px;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.ur-ai-filter-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ur-ai-filter-form label {
+    display: block;
+    margin-bottom: 4px;
+    color: #646970;
+    font-size: 12px;
+}
+
+.ur-ai-filter-form input[type="text"],
+.ur-ai-filter-form input[type="date"],
+.ur-ai-filter-form select {
+    min-width: 150px;
+}
+
+.ur-ai-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* =========================================================
+   Tables
+========================================================= */
+
+.ur-ai-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.ur-ai-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ur-ai-table th,
+.ur-ai-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f1;
+    vertical-align: top;
+}
+
+.ur-ai-table th {
+    background: #f6f7f7;
+    color: #1d2327;
+    font-weight: 700;
+    text-align: left;
+}
+
+.ur-ai-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.ur-ai-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.ur-ai-table .check-column {
+    width: 36px;
+    text-align: center;
+}
+
+.ur-ai-row-title {
+    font-weight: 700;
+}
+
+.ur-ai-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    color: #646970;
+    font-size: 12px;
+}
+
+.ur-ai-row-actions form {
+    display: inline;
+    margin: 0;
+}
+
+.ur-ai-row-actions button,
+.ur-ai-row-actions a {
+    font-size: 12px;
+}
+
+.ur-ai-cell-main {
+    max-width: 360px;
+}
+
+.ur-ai-cell-wide {
+    min-width: 320px;
+}
+
+.ur-ai-cell-number {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.ur-ai-empty-state {
+    padding: 32px 20px;
+    color: #646970;
+    text-align: center;
+}
+
+/* =========================================================
+   Pagination
+========================================================= */
+
+.ur-ai-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.ur-ai-pagination-info {
+    color: #646970;
+}
+
+.ur-ai-pagination-links {
+    display: flex;
+    gap: 6px;
+}
+
+/* =========================================================
+   Tabs
+========================================================= */
+
+.ur-ai-admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 16px 0 0;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.ur-ai-admin-tab {
+    padding: 10px 14px;
+    border: 1px solid #dcdcde;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    background: #f6f7f7;
+    color: #1d2327;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ur-ai-admin-tab:hover,
+.ur-ai-admin-tab:focus {
+    background: #ffffff;
+    color: #135e96;
+}
+
+.ur-ai-admin-tab.is-active {
+    background: #ffffff;
+    color: #135e96;
+    font-weight: 700;
+}
+
+.ur-ai-admin-tab-panel {
+    padding-top: 16px;
+}
+
+/* =========================================================
+   Notices / Hints
+========================================================= */
+
+.ur-ai-help-box {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border-left: 4px solid #2271b1;
+    border-radius: 8px;
+    background: #f0f6fc;
+}
+
+.ur-ai-warning-box {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border-left: 4px solid #dba617;
+    border-radius: 8px;
+    background: #fff8e5;
+}
+
+.ur-ai-danger-box {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border-left: 4px solid #d63638;
+    border-radius: 8px;
+    background: #fcf0f1;
+}
+
+.ur-ai-success-box {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border-left: 4px solid #00a32a;
+    border-radius: 8px;
+    background: #edfaef;
+}
+
+/* =========================================================
+   Dashboard
+========================================================= */
+
+.ur-ai-dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.ur-ai-dashboard-list {
+    margin: 0;
+}
+
+.ur-ai-dashboard-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.ur-ai-dashboard-list li:last-child {
+    border-bottom: 0;
+}
+
+/* =========================================================
+   Code / Copy
+========================================================= */
+
+.ur-ai-code {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: #f6f7f7;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+}
+
+.ur-ai-copy-area {
+    position: relative;
+}
+
+.ur-ai-pre {
+    max-height: 260px;
+    overflow: auto;
+    padding: 12px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #f6f7f7;
+    white-space: pre-wrap;
+}
+
+/* =========================================================
+   Analytics
+========================================================= */
+
+.ur-ai-analytics-bar {
+    position: relative;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #f0f0f1;
+}
+
+.ur-ai-analytics-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #2271b1;
+}
+
+.ur-ai-reason-list {
+    margin: 0;
+}
+
+.ur-ai-reason-list li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 80px;
+    gap: 12px;
+    align-items: center;
+    margin: 0 0 10px;
+}
+
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 960px) {
+    .ur-ai-summary-grid,
+    .ur-ai-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ur-ai-grid-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ur-ai-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ur-ai-toolbar-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 782px) {
+    .ur-ai-card {
+        padding: 16px;
+    }
+
+    .ur-ai-card-header,
+    .ur-ai-flex-between,
+    .ur-ai-pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ur-ai-summary-grid,
+    .ur-ai-grid-2,
+    .ur-ai-grid-3,
+    .ur-ai-grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    .ur-ai-filter-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ur-ai-filter-form input[type="text"],
+    .ur-ai-filter-form input[type="date"],
+    .ur-ai-filter-form select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .ur-ai-form-inline {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ur-ai-form-row input[type="text"],
+    .ur-ai-form-row input[type="url"],
+    .ur-ai-form-row input[type="number"],
+    .ur-ai-form-row input[type="password"],
+    .ur-ai-form-row select,
+    .ur-ai-form-row textarea {
+        max-width: 100%;
+    }
+
+    .ur-ai-toolbar-actions,
+    .ur-ai-form-actions,
+    .ur-ai-dashboard-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ur-ai-toolbar-actions .button,
+    .ur-ai-form-actions .button,
+    .ur-ai-dashboard-actions .button {
+        text-align: center;
+    }
+}
+
+/* === CSV 匯入／匯出區（v1.3.4） === */
+.ur-ai-faq-io {
+    margin-bottom: 20px;
+}
+
+.ur-ai-faq-io-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+}
+
+.ur-ai-faq-io-col {
+    flex: 1 1 280px;
+    min-width: 260px;
+}
+
+.ur-ai-faq-io-subtitle {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ur-ai-faq-io-hint {
+    margin: 0 0 12px;
+    color: #555d66;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.ur-ai-faq-io-warning {
+    margin: 0 0 14px;
+}
+
+.ur-ai-faq-io-warning p {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.ur-ai-faq-import-form input[type="file"] {
+    display: block;
+    margin-bottom: 12px;
+    max-width: 100%;
+}

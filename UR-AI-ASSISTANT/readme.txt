@@ -1,0 +1,145 @@
+=== UR AI Assistant ===
+Contributors: ur-promoter
+Tags: ai, chatbot, faq, urban renewal, wordpress
+Requires at least: 6.0
+Tested up to: 6.5
+Requires PHP: 7.4
+Stable tag: 1.0.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+UR AI Assistant 是一套以 FAQ 知識庫優先、AI 回答輔助的 WordPress 前台問答外掛，主要用於都更危老資訊平台。
+
+== Description ==
+
+UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress AI 問答外掛。
+
+本外掛設計重點不是讓所有問題都直接送 AI API，而是採用「FAQ 知識庫優先」的架構：
+
+1. 使用者在前台提問。
+2. 系統先比對後台 FAQ 知識庫。
+3. FAQ 命中時，優先使用固定回答。
+4. FAQ 未命中時，才呼叫 AI API。
+5. 回答後可顯示相關頁面推薦。
+6. 問答紀錄可供後續轉成 FAQ 草稿。
+7. 使用者回饋可協助改善知識庫與提示詞。
+
+這樣可以降低 API 成本，並提升回答穩定度。
+
+= 主要功能 =
+
+* 前台 AI 問答 shortcode。
+* FAQ 知識庫管理。
+* FAQ 優先命中回答。
+* AI API 回答補位。
+* 問答紀錄管理。
+* AI 問答轉 FAQ 草稿。
+* 相關頁面推薦。
+* 熱門問題管理。
+* 使用者回饋分析。
+* Token 使用量紀錄。
+* CSV 匯出。
+* 每日提問限制。
+* 後台權限控管。
+* 模組化程式架構。
+
+= 適合用途 =
+
+* 都市更新資訊平台。
+* 危老重建知識平台。
+* 社區自主更新教育網站。
+* 不動產重建常見問題網站。
+* FAQ 知識庫型 AI 助理。
+* 需要降低 AI API 成本的網站問答系統。
+
+== Installation ==
+
+1. 將 `ur-ai-assistant` 資料夾上傳至 WordPress 的 `/wp-content/plugins/` 目錄。
+2. 至 WordPress 後台「外掛」頁面啟用 `UR AI Assistant`。
+3. 啟用後系統會建立必要資料表。
+4. 至外掛設定頁輸入 OpenAI API Key。
+5. 建立或匯入 FAQ 知識庫。
+6. 在需要顯示 AI 助理的頁面加入 shortcode：
+
+`[ur_ai_assistant]`
+
+= Shortcode =
+
+基本用法：
+
+`[ur_ai_assistant]`
+
+可選參數：
+
+`[ur_ai_assistant title="都更危老 AI 助理" show_popular="1" show_groups="0" popular_limit="6"]`
+
+參數說明：
+
+* `title`：自訂前台標題。
+* `subtitle`：自訂前台副標題。
+* `show_popular`：是否顯示熱門問題，1 為顯示，0 為不顯示。
+* `show_groups`：是否顯示分類熱門問題。
+* `popular_limit`：熱門問題顯示數量。
+* `group_limit`：每組分類熱門問題顯示數量。
+* `placeholder`：自訂輸入框提示文字。
+
+== Frequently Asked Questions ==
+
+= 這個外掛會自動回答所有問題嗎？ =
+
+不會。系統會先比對 FAQ 知識庫，FAQ 未命中時才呼叫 AI API。
+
+= 沒有設定 OpenAI API Key 可以使用嗎？ =
+
+可以使用 FAQ 固定回答功能，但 FAQ 未命中時無法產生 AI 回答。
+
+= AI 回答會直接變成 FAQ 嗎？ =
+
+不會。AI 回答可由管理員手動轉成 FAQ 草稿，檢查後再啟用。
+
+= 使用者回饋有什麼用途？ =
+
+使用者可以標示回答是否有幫助。後台可依回饋分析哪些 FAQ 或 AI 回答需要改善。
+
+= 刪除外掛時會刪除資料表嗎？ =
+
+預設不會。為避免正式資料被誤刪，解除安裝時預設保留 FAQ、Logs、Related Pages 與 Popular Questions 資料表。
+
+== Screenshots ==
+
+1. 前台 AI 助理問答畫面。
+2. FAQ 知識庫管理。
+3. 問答紀錄管理。
+4. 相關頁面推薦管理。
+5. 熱門問題管理。
+6. 回饋分析頁。
+
+== Changelog ==
+
+= 1.0.0 =
+* 建立模組化外掛架構。
+* 新增前台 AI 助理 shortcode。
+* 新增 FAQ 知識庫管理。
+* 新增 FAQ 優先命中回答。
+* 新增 OpenAI API 串接。
+* 新增問答紀錄管理。
+* 新增 AI 問答轉 FAQ 草稿。
+* 新增相關頁面推薦。
+* 新增熱門問題管理。
+* 新增使用者回饋分析。
+* 新增 CSV 匯出工具。
+* 新增資料庫 Schema 管理。
+* 新增每日提問限制。
+* 新增前台 CSS / JS。
+* 新增解除安裝清理檔。
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+初始正式模組化版本。建議先於測試站安裝確認，再上傳正式網站。
+
+== License ==
+
+This plugin is licensed under the GPLv2 or later.
+
+UR AI Assistant is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.
