@@ -150,6 +150,34 @@ class UR_AI_Calculator_Settings {
     }
 
     /**
+     * 取得 CF7 欄位名稱對應（name/tel/email/message/consent → 表單實際欄位名）。
+     *
+     * 後台可調，避免站方重建 CF7 表單改了欄位名時，名單擷取悄悄失效。
+     *
+     * @return array{ name: string, tel: string, email: string, message: string, consent: string }
+     */
+    public static function get_cf7_field_map() {
+        $map = self::get('cf7_field_map', array());
+
+        return array_merge(self::default_cf7_field_map(), is_array($map) ? $map : array());
+    }
+
+    /**
+     * CF7 欄位名稱對應預設值（沿用試算器上線時使用的表單欄位名）。
+     *
+     * @return array
+     */
+    public static function default_cf7_field_map() {
+        return array(
+            'name'    => 'your-name',
+            'tel'     => 'tel',
+            'email'   => 'your-email',
+            'message' => 'your-message',
+            'consent' => 'consent',
+        );
+    }
+
+    /**
      * 計算機是否啟用。
      *
      * @return bool
@@ -196,6 +224,7 @@ class UR_AI_Calculator_Settings {
         return array(
             'enabled'             => 1,
             'cf7_form_id'         => 1157393,
+            'cf7_field_map'       => self::default_cf7_field_map(),
             'cities'              => self::default_cities(),
             'other_bonus_options' => self::default_other_bonus_options(),
             'disclaimer'          => self::default_disclaimer(),
@@ -361,6 +390,22 @@ class UR_AI_Calculator_Settings {
 
         if (isset($values['cf7_form_id'])) {
             $clean['cf7_form_id'] = absint($values['cf7_form_id']);
+        }
+
+        if (isset($values['cf7_field_map']) && is_array($values['cf7_field_map'])) {
+            $clean_map = self::default_cf7_field_map();
+
+            foreach (array_keys($clean_map) as $map_key) {
+                if (isset($values['cf7_field_map'][$map_key])) {
+                    $field_name = sanitize_key((string) $values['cf7_field_map'][$map_key]);
+
+                    if ('' !== $field_name) {
+                        $clean_map[$map_key] = $field_name;
+                    }
+                }
+            }
+
+            $clean['cf7_field_map'] = $clean_map;
         }
 
         foreach (array('disclaimer', 'public_ratio_notice', 'lead_hook_title', 'lead_hook_subtitle', 'massing_coverage_hint') as $text_key) {

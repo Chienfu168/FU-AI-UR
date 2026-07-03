@@ -278,9 +278,18 @@ class UR_AI_Calculator_Module {
             'owner_ratio_high' => $rhigh / 100,
         );
 
+        $cf7_field_map = array();
+        foreach (array('name', 'tel', 'email', 'message', 'consent') as $map_key) {
+            $post_key = 'cf7_field_' . $map_key;
+            if (isset($_POST[$post_key])) {
+                $cf7_field_map[$map_key] = wp_unslash($_POST[$post_key]);
+            }
+        }
+
         $values = array(
             'enabled'             => !empty($_POST['enabled']) ? 1 : 0,
             'cf7_form_id'         => isset($_POST['cf7_form_id']) ? absint($_POST['cf7_form_id']) : 0,
+            'cf7_field_map'       => $cf7_field_map,
             'lead_hook_title'     => isset($_POST['lead_hook_title']) ? wp_unslash($_POST['lead_hook_title']) : '',
             'lead_hook_subtitle'  => isset($_POST['lead_hook_subtitle']) ? wp_unslash($_POST['lead_hook_subtitle']) : '',
             'public_ratio_notice' => isset($_POST['public_ratio_notice']) ? wp_unslash($_POST['public_ratio_notice']) : '',

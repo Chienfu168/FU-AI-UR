@@ -29,6 +29,7 @@ $owner_ratio_high = isset($params['owner_ratio_high']) ? $pct($params['owner_rat
 
 $enabled        = !empty($settings['enabled']);
 $cf7_form_id    = isset($settings['cf7_form_id']) ? (int) $settings['cf7_form_id'] : 0;
+$cf7_field_map  = UR_AI_Calculator_Settings::get_cf7_field_map();
 $hook_title     = isset($settings['lead_hook_title']) ? $settings['lead_hook_title'] : '';
 $hook_subtitle  = isset($settings['lead_hook_subtitle']) ? $settings['lead_hook_subtitle'] : '';
 $ratio_notice   = isset($settings['public_ratio_notice']) ? $settings['public_ratio_notice'] : '';
@@ -74,6 +75,38 @@ $massing_coverage_hint = isset($settings['massing_coverage_hint']) ? $settings['
                 <td>
                     <input name="cf7_form_id" id="cf7_form_id" type="number" min="0" value="<?php echo esc_attr($cf7_form_id); ?>" class="small-text">
                     <p class="description"><?php esc_html_e('留資料表單的數字 ID（目前為「都更獎勵試算」表單）。', 'ur-ai-assistant'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('CF7 欄位名稱對應', 'ur-ai-assistant'); ?></th>
+                <td>
+                    <p class="description" style="margin-top:0;">
+                        <?php esc_html_e('若重建 CF7 表單時欄位名稱有變動，請在此同步更新，避免名單擷取悄悄失效。', 'ur-ai-assistant'); ?>
+                    </p>
+                    <table class="widefat" style="max-width:480px;">
+                        <tbody>
+                            <tr>
+                                <td><label for="cf7_field_name"><?php esc_html_e('姓名欄位', 'ur-ai-assistant'); ?></label></td>
+                                <td><input name="cf7_field_name" id="cf7_field_name" type="text" value="<?php echo esc_attr($cf7_field_map['name']); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <td><label for="cf7_field_tel"><?php esc_html_e('電話欄位', 'ur-ai-assistant'); ?></label></td>
+                                <td><input name="cf7_field_tel" id="cf7_field_tel" type="text" value="<?php echo esc_attr($cf7_field_map['tel']); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <td><label for="cf7_field_email"><?php esc_html_e('Email 欄位', 'ur-ai-assistant'); ?></label></td>
+                                <td><input name="cf7_field_email" id="cf7_field_email" type="text" value="<?php echo esc_attr($cf7_field_map['email']); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <td><label for="cf7_field_message"><?php esc_html_e('留言欄位', 'ur-ai-assistant'); ?></label></td>
+                                <td><input name="cf7_field_message" id="cf7_field_message" type="text" value="<?php echo esc_attr($cf7_field_map['message']); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <td><label for="cf7_field_consent"><?php esc_html_e('同意條款欄位', 'ur-ai-assistant'); ?></label></td>
+                                <td><input name="cf7_field_consent" id="cf7_field_consent" type="text" value="<?php echo esc_attr($cf7_field_map['consent']); ?>" class="regular-text"></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </td>
             </tr>
         </table>

@@ -105,13 +105,17 @@ class UR_AI_Calculator_CF7 {
      * @return array
      */
     private function build_lead_data($posted, $context, $form_id) {
-        $name    = $this->field($posted, 'your-name');
-        $tel     = $this->field($posted, 'tel');
-        $email   = $this->field($posted, 'your-email');
-        $message = $this->field($posted, 'your-message');
+        $field_map = UR_AI_Calculator_Settings::get_cf7_field_map();
+
+        $this->warn_if_fields_missing($posted, $field_map, $form_id);
+
+        $name    = $this->field($posted, $field_map['name']);
+        $tel     = $this->field($posted, $field_map['tel']);
+        $email   = $this->field($posted, $field_map['email']);
+        $message = $this->field($posted, $field_map['message']);
 
         // 同意勾選框：CF7 checkbox 回傳陣列，非空即視為同意。
-        $consent_raw = isset($posted['consent']) ? $posted['consent'] : '';
+        $consent_raw = isset($posted[$field_map['consent']]) ? $posted[$field_map['consent']] : '';
         $consent     = (is_array($consent_raw) ? !empty($consent_raw) : ('' !== trim((string) $consent_raw))) ? 1 : 0;
 
         $data = array(
@@ -161,5 +165,37 @@ class UR_AI_Calculator_CF7 {
         }
 
         return (string) $value;
+    }
+
+    /**
+     * 若設定裡對應的欄位名在此次 CF7 送出資料中完全不存在，記錄警告。
+     *
+     * 欄位名寫死在設定裡（見 UR_AI_Calculator_Settings::get_cf7_field_map()），
+     * 站方若重建表單改了欄位名，name/tel/email 會被靜默存成空值且無任何提示；
+     * 這裡至少留下 error_log，讓管理者有機會發現名單品質異常。
+     *
+     * @param array $posted    CF7 posted data。
+     * @param array $field_map name/tel/email/message/consent → 欄位名。
+     * @param int   $form_id   CF7 表單 ID。
+     * @return void
+     */
+    private function warn_if_fields_missing($posted, $field_map, $form_id) {
+        $missing = array();
+
+        foreach (array('name', 'tel', 'email', 'message') as $map_key) {
+            if (!isset($field_map[$map_key]) || !array_key_exists($field_map[$map_key], $posted)) {
+                $missing[] = $map_key . '(' . ($field_map[$map_key] ?? '') . ')';
+            }
+        }
+
+        if (!empty($missing)) {
+            error_log(
+                sprintf(
+                    'UR AI Assistant: calculator CF7 lead capture (form ID %d) missing expected field(s): %s. Check UR_AI_Calculator_Settings::get_cf7_field_map() against the actual form.',
+                    $form_id,
+                    implode(', ', $missing)
+                )
+            );
+        }
     }
 }
