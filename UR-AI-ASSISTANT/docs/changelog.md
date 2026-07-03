@@ -1224,6 +1224,89 @@ ur-ai-assistant.php
 
 ---
 
+## v1.7.0
+
+更新日期
+2026-07-03
+
+版本定位
+
+v1.6.0 的「知識庫瀏覽」是純 AJAX 動態載入，塞在 AI 助理 widget 裡，對 SEO
+幫助有限：內容不在頁面原始 HTML 裡、沒有獨立網址、也沒有結構化資料。
+本版新增一個完全獨立、伺服器端渲染的「FAQ 知識庫查詢頁」shortcode，
+專門給想額外做 SEO 的網站使用，可放在自建的獨立頁面上。
+
+一、主要新增功能
+
+1. 新 shortcode [ur_ai_faq_kb_page]
+  與 [ur_ai_assistant] 完全獨立，建議放在自己新建的頁面（例如「常見問題」，
+  網址可自訂為 /faq/）。伺服器端直接輸出問答內容（不需 JavaScript），
+  搜尋、分類篩選、換頁皆透過網址參數（?kb_q=、?kb_cat=、?kb_page=）
+  以標準 GET 表單與 <a href> 連結運作，任何搜尋引擎爬蟲或停用 JS 的
+  瀏覽器都能正常瀏覽與被索引。
+
+2. FAQPage 結構化資料（JSON-LD）
+  每次渲染時，依「目前頁面實際顯示的問答」輸出 Google 支援的 FAQPage
+  schema.org 標記，讓網站有機會在 Google 搜尋結果中直接顯示常見問題摘要
+  （FAQ rich result）。
+
+3. 問答內容以 <details>/<summary> 呈現
+  原生 HTML 手風琴元件，不需要 JavaScript 就能展開／收合，且收合狀態下
+  文字仍存在於 DOM 中，對搜尋引擎索引更友善。
+
+二、新增檔案
+
+includes/modules/public/class-ur-ai-faq-kb-page-shortcode.php
+  - 新 shortcode 控制器：解析 title／per_page 屬性與 $_GET 的
+    kb_q／kb_cat／kb_page，呼叫既有的 UR_AI_FAQ_Service::browse()／
+    get_active_categories()（v1.6.0 已建置，未新增查詢邏輯），
+    格式化答案 HTML 後交給 view 渲染。
+
+public/views/faq-kb-page-view.php
+  - 頁面樣板：搜尋表單（GET）、分類下拉、問答手風琴列表、上一頁／下一頁
+    連結、FAQPage JSON-LD。CSS class 刻意採用 .ur-ai-faq-kb-page-* 前綴，
+    與 widget 內知識庫瀏覽區塊的 .ur-ai-kb-* 前綴區隔，避免同頁共存時
+    樣式衝突。
+
+三、修改檔案
+
+includes/modules/public/class-ur-ai-public-module.php
+  - 註冊新 shortcode ur_ai_faq_kb_page；新增 render_faq_kb_page_shortcode()。
+
+includes/modules/public/class-ur-ai-public-assets.php
+  - 新增 enqueue_style_only()：此頁面不需要 public.js（無 AJAX 依賴），
+    只載入 CSS，減少頁面重量。
+
+includes/core/class-ur-ai-autoloader.php
+  - 新增 UR_AI_FAQ_KB_Page_Shortcode 類別對照。
+
+public/assets/css/public.css
+  - 新增 .ur-ai-faq-kb-page-* 樣式。
+
+ur-ai-assistant.php
+  - 版本號 1.6.1 → 1.7.0。
+
+四、資料表變更
+
+無。沿用 v1.6.0 已建置的 UR_AI_FAQ_Service::browse()／get_active_categories()。
+
+五、測試方式
+
+由於本機沙箱環境無法安裝完整 WordPress（網路政策擋掉 wordpress.org），
+改以最小化 WordPress 函式模擬層，讓 faq-kb-page-view.php 實際渲染模擬資料，
+驗證：非空狀態下不顯示「找不到」訊息、問答筆數正確、FAQPage JSON-LD 為
+合法 JSON 且結構正確、非知識庫相關的既有網址參數（如 utm_source）會被保留、
+kb_page 不會被誤存為隱藏欄位（否則會與換頁邏輯衝突）、分頁連結 class 與
+widget 版本無命名衝突。
+
+六、是否建議上正式站
+
+建議先建立一個新頁面（例如「常見問題」），加入 [ur_ai_faq_kb_page]，
+確認搜尋／分類／換頁皆可用網址直接操作，且 Google 結構化資料測試工具
+能正確解析 FAQPage 標記後，再對外公開該頁面連結。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

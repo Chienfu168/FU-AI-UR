@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,7 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * FAQ 知識庫管理。
 * FAQ 優先命中回答。
 * 知識庫瀏覽（獨立搜尋／分類篩選常見問題，不需先問 AI）。
+* 獨立的 FAQ 知識庫查詢頁（SEO 導向，含 FAQPage 結構化資料）。
 * AI API 回答補位。
 * 問答紀錄管理。
 * AI 問答轉 FAQ 草稿。
@@ -86,6 +87,21 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * `show_kb_browse`：是否顯示知識庫瀏覽區塊（需另於後台「功能設定」啟用知識庫瀏覽，此參數才有作用），1 為顯示，0 為不顯示。
 * `kb_browse_limit`：知識庫瀏覽每頁筆數，留空則採用後台設定值。
 
+= 獨立 FAQ 知識庫查詢頁（SEO 用途）=
+
+與上面的 AI 助理 widget 不同，這是另一個獨立的 shortcode，建議放在單獨建立的頁面（例如「常見問題」）：
+
+`[ur_ai_faq_kb_page]`
+
+可選參數：
+
+`[ur_ai_faq_kb_page title="常見問題" per_page="20"]`
+
+* `title`：頁面標題（H1）。
+* `per_page`：每頁筆數（1～50）。
+
+特色：伺服器端直接輸出問答內容（不需 JavaScript 即可瀏覽），搜尋／分類／換頁皆使用網址參數（`?kb_q=`、`?kb_cat=`、`?kb_page=`），可分享、可被搜尋引擎收錄，並自動輸出 Google 支援的 FAQPage 結構化資料。僅在 FAQ 知識庫功能啟用時顯示。
+
 == Frequently Asked Questions ==
 
 = 這個外掛會自動回答所有問題嗎？ =
@@ -118,6 +134,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.7.0 =
+* 新增獨立的「FAQ 知識庫查詢頁」shortcode `[ur_ai_faq_kb_page]`，供 SEO 用途：伺服器端直接輸出問答內容（不需 JavaScript）、支援關鍵字與分類的網址參數（可分享、可被搜尋引擎收錄）、並自動輸出 Google 支援的 FAQPage 結構化資料（FAQ rich result）。
 
 = 1.6.1 =
 * 知識庫瀏覽：分頁按鈕（上一頁／下一頁）文字在部分主題下可能被主題樣式覆蓋而顯示不出來，已明確指定文字顏色修正。
@@ -180,6 +199,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.7.0 =
+新增 FAQ 知識庫 SEO 查詢頁 shortcode，需另外建立頁面並加入 [ur_ai_faq_kb_page] 才會出現，不影響既有頁面。
 
 = 1.6.0 =
 新增知識庫瀏覽功能，預設關閉。若要啟用，請至「功能設定 → 知識庫瀏覽」勾選開啟。

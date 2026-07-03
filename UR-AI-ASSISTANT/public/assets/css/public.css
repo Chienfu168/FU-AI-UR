@@ -2063,3 +2063,142 @@
     color: #6b7280;
     font-size: 13px;
 }
+
+/* =========================================================
+ * 獨立 FAQ 知識庫查詢頁（SEO 導向，[ur_ai_faq_kb_page]）
+ * 與上面 .ur-ai-kb-* 系列（AI 助理 widget 內的知識庫瀏覽區塊）
+ * 刻意使用不同命名前綴（.ur-ai-faq-kb-page-*），避免兩者同頁時衝突。
+ * ========================================================= */
+
+.ur-ai-faq-kb-page {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.ur-ai-faq-kb-page-title {
+    margin-bottom: 16px;
+}
+
+.ur-ai-faq-kb-page-search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.ur-ai-faq-kb-page-search-input {
+    flex: 1 1 240px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.ur-ai-faq-kb-page-category-select {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #ffffff;
+}
+
+.ur-ai-faq-kb-page-search-submit {
+    flex: 0 0 auto;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ur-ai-faq-kb-page-search-submit:hover,
+.ur-ai-faq-kb-page-search-submit:focus {
+    background: #1d4ed8;
+    outline: none;
+}
+
+.ur-ai-faq-kb-page-empty {
+    padding: 14px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-faq-kb-page-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ur-ai-faq-kb-page-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.ur-ai-faq-kb-page-item-question {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+}
+
+.ur-ai-faq-kb-page-item-category {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.ur-ai-faq-kb-page-item-question-text {
+    flex: 1 1 auto;
+}
+
+.ur-ai-faq-kb-page-item-answer {
+    padding: 0 14px 16px;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.ur-ai-faq-kb-page-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.ur-ai-faq-kb-page-pagination-link {
+    padding: 6px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    -webkit-text-fill-color: #1f2937;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.ur-ai-faq-kb-page-pagination-link:hover,
+.ur-ai-faq-kb-page-pagination-link:focus {
+    border-color: #2563eb;
+    color: #1d4ed8;
+    -webkit-text-fill-color: #1d4ed8;
+}
+
+.ur-ai-faq-kb-page-pagination-info {
+    color: #6b7280;
+    font-size: 13px;
+}

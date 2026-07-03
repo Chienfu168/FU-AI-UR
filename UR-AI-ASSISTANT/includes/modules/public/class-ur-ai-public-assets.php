@@ -82,6 +82,22 @@ class UR_AI_Public_Assets {
     }
 
     /**
+     * 只載入 CSS（不含 JS／localize）。
+     *
+     * 供 FAQ 知識庫查詢頁使用：該頁純伺服器端渲染，不需要 public.js，
+     * 少載一支 JS 對頁面效能／SEO 更有利。
+     *
+     * @return void
+     */
+    public function enqueue_style_only() {
+        if (!$this->registered) {
+            $this->register();
+        }
+
+        wp_enqueue_style(self::STYLE_HANDLE);
+    }
+
+    /**
      * 傳遞資料給前台 JavaScript。
      *
      * @return void

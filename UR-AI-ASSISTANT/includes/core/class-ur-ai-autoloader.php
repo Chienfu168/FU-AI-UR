@@ -128,9 +128,10 @@ class UR_AI_Autoloader {
             /*
              * Public Module
              */
-            'UR_AI_Public_Module' => 'includes/modules/public/class-ur-ai-public-module.php',
-            'UR_AI_Public_Assets' => 'includes/modules/public/class-ur-ai-public-assets.php',
-            'UR_AI_Shortcode'     => 'includes/modules/public/class-ur-ai-shortcode.php',
+            'UR_AI_Public_Module'         => 'includes/modules/public/class-ur-ai-public-module.php',
+            'UR_AI_Public_Assets'         => 'includes/modules/public/class-ur-ai-public-assets.php',
+            'UR_AI_Shortcode'             => 'includes/modules/public/class-ur-ai-shortcode.php',
+            'UR_AI_FAQ_KB_Page_Shortcode' => 'includes/modules/public/class-ur-ai-faq-kb-page-shortcode.php',
 
             /*
              * Calculator Module（都更分回試算，v1.1.0 新增）
