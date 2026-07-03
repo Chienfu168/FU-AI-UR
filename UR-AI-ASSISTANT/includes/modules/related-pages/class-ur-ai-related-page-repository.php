@@ -378,18 +378,22 @@ class UR_AI_Related_Page_Repository {
     /**
      * 搜尋與問題相關的推薦頁面。
      *
-     * @param string $question 使用者問題。
-     * @param int    $limit 筆數。
+     * @param string     $question 使用者問題。
+     * @param int        $limit 筆數。
+     * @param array|null $pages 預先取得的啟用中頁面列表；未提供時內部查詢
+     *                           （呼叫端若已有快取結果，可傳入以避免重複查詢）。
      * @return array
      */
-    public function find_related_by_question($question, $limit = 3) {
+    public function find_related_by_question($question, $limit = 3, $pages = null) {
         $question = is_string($question) ? trim($question) : '';
 
         if ('' === $question) {
             return array();
         }
 
-        $pages = $this->get_active_pages(500);
+        if (null === $pages) {
+            $pages = $this->get_active_pages(500);
+        }
 
         if (empty($pages)) {
             return array();

@@ -17,6 +17,22 @@ if (!defined('ABSPATH')) {
 class UR_AI_Related_Page_Service {
 
     /**
+     * active 推薦頁面快取 key 前綴。
+     *
+     * 實際 key 會附上 limit，因為不同 limit 的查詢結果不同。
+     *
+     * @var string
+     */
+    const ACTIVE_PAGES_CACHE_PREFIX = 'ur_ai_active_pages_';
+
+    /**
+     * 預設快取存活秒數（TTL）。
+     *
+     * @var int
+     */
+    const ACTIVE_PAGES_CACHE_TTL = 1200;
+
+    /**
      * Related Page Repository.
      *
      * @var UR_AI_Related_Page_Repository|null
@@ -44,9 +60,51 @@ class UR_AI_Related_Page_Service {
             return array();
         }
 
-        $pages = $this->repository->find_related_by_question($question, $limit);
+        $active_pages = $this->get_active_pages(500);
+
+        if (empty($active_pages)) {
+            return array();
+        }
+
+        $pages = $this->repository->find_related_by_question($question, $limit, $active_pages);
 
         return $this->format_many_for_frontend($pages);
+    }
+
+    /**
+     * 取得啟用中的推薦頁面。
+     *
+     * 以 Transient 快取查詢結果，避免每次提問都重新查詢並對最多 500 筆
+     * 資料重新評分（比照 UR_AI_FAQ_Service::get_active_faqs() 的快取做法）。
+     * 內容類寫入（新增/更新/刪除/批次狀態切換）會清除此快取。
+     *
+     * @param int $limit 筆數。
+     * @return array
+     */
+    public function get_active_pages($limit = 500) {
+        if (!$this->repository instanceof UR_AI_Related_Page_Repository) {
+            return array();
+        }
+
+        $cache_key = self::ACTIVE_PAGES_CACHE_PREFIX . absint($limit);
+
+        $cached = get_transient($cache_key);
+
+        if (false !== $cached && is_array($cached)) {
+            return $cached;
+        }
+
+        $pages = $this->repository->get_active_pages($limit);
+
+        if (!is_array($pages)) {
+            return $pages;
+        }
+
+        set_transient($cache_key, $pages, self::ACTIVE_PAGES_CACHE_TTL);
+
+        $this->register_cache_key($cache_key);
+
+        return $pages;
     }
 
     /**
@@ -108,7 +166,13 @@ class UR_AI_Related_Page_Service {
             return 0;
         }
 
-        return $this->repository->create($data);
+        $result = $this->repository->create($data);
+
+        if ($result) {
+            $this->clear_active_pages_cache();
+        }
+
+        return $result;
     }
 
     /**
@@ -123,7 +187,13 @@ class UR_AI_Related_Page_Service {
             return false;
         }
 
-        return $this->repository->update($id, $data);
+        $result = $this->repository->update($id, $data);
+
+        if ($result) {
+            $this->clear_active_pages_cache();
+        }
+
+        return $result;
     }
 
     /**
@@ -137,7 +207,13 @@ class UR_AI_Related_Page_Service {
             return false;
         }
 
-        return $this->repository->delete($id);
+        $result = $this->repository->delete($id);
+
+        if ($result) {
+            $this->clear_active_pages_cache();
+        }
+
+        return $result;
     }
 
     /**
@@ -151,7 +227,13 @@ class UR_AI_Related_Page_Service {
             return 0;
         }
 
-        return $this->repository->bulk_delete($ids);
+        $result = $this->repository->bulk_delete($ids);
+
+        if ($result) {
+            $this->clear_active_pages_cache();
+        }
+
+        return $result;
     }
 
     /**
@@ -235,7 +317,13 @@ class UR_AI_Related_Page_Service {
             return 0;
         }
 
-        return $this->repository->bulk_update_status($ids, 'active');
+        $result = $this->repository->bulk_update_status($ids, 'active');
+
+        if ($result) {
+            $this->clear_active_pages_cache();
+        }
+
+        return $result;
     }
 
     /**
@@ -249,7 +337,13 @@ class UR_AI_Related_Page_Service {
             return 0;
         }
 
-        return $this->repository->bulk_update_status($ids, 'inactive');
+        $result = $this->repository->bulk_update_status($ids, 'inactive');
+
+        if ($result) {
+            $this->clear_active_pages_cache();
+        }
+
+        return $result;
     }
 
     /**
@@ -664,5 +758,59 @@ class UR_AI_Related_Page_Service {
         }
 
         return round(($click_count / $show_count) * 100, 2);
+    }
+
+    /**
+     * 註冊一個快取 key 至索引（供日後清除）。
+     *
+     * @param string $cache_key 快取 key。
+     * @return void
+     */
+    private function register_cache_key($cache_key) {
+        $index = get_option($this->cache_index_option_name(), array());
+
+        if (!is_array($index)) {
+            $index = array();
+        }
+
+        if (!in_array($cache_key, $index, true)) {
+            $index[] = $cache_key;
+            update_option($this->cache_index_option_name(), $index, false);
+        }
+    }
+
+    /**
+     * 清除所有 active 推薦頁面快取。
+     *
+     * @return void
+     */
+    public function clear_active_pages_cache() {
+        $index = get_option($this->cache_index_option_name(), array());
+
+        if (is_array($index)) {
+            foreach ($index as $cache_key) {
+                if (is_string($cache_key) && '' !== $cache_key) {
+                    delete_transient($cache_key);
+                }
+            }
+        }
+
+        // 保險：即使 index 因並發寫入而不完整，仍涵蓋常見的 limit 變體。
+        $fallback_limits = array(500, 100, 50, 0);
+
+        foreach ($fallback_limits as $limit) {
+            delete_transient(self::ACTIVE_PAGES_CACHE_PREFIX . absint($limit));
+        }
+
+        update_option($this->cache_index_option_name(), array(), false);
+    }
+
+    /**
+     * 快取 key 索引的 option 名稱。
+     *
+     * @return string
+     */
+    private function cache_index_option_name() {
+        return 'ur_ai_active_pages_cache_index';
     }
 }
