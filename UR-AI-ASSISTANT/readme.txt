@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,10 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.6.1 =
+* 知識庫瀏覽：分頁按鈕（上一頁／下一頁）文字在部分主題下可能被主題樣式覆蓋而顯示不出來，已明確指定文字顏色修正。
+* 知識庫瀏覽：選擇分類後立即套用篩選，不需再額外按下「搜尋」。
 
 = 1.6.0 =
 * 新增前台「知識庫瀏覽」功能：可直接搜尋／分類篩選並瀏覽已啟用的常見問題，不需先向 AI 提問、也不經過 AI 比對演算法。

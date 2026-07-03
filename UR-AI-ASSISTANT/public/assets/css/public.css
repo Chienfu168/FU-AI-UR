@@ -2047,7 +2047,10 @@
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: #ffffff;
+    color: #1f2937;
+    -webkit-text-fill-color: #1f2937;
     font-size: 13px;
+    line-height: 1.4;
     cursor: pointer;
 }
 

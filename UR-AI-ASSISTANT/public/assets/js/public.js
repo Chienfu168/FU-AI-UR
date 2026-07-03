@@ -690,6 +690,12 @@
         $(this).closest(selectors.kbItem).toggleClass('is-open');
     }
 
+    function handleKbCategoryChange(event) {
+        const $kbSection = $(this).closest(selectors.kbBrowse);
+
+        fetchKbList($kbSection, 1);
+    }
+
     function handleKbPageLinkClick(event) {
         event.preventDefault();
 
@@ -971,6 +977,7 @@
         $(document).on('submit', selectors.kbSearchForm, handleKbSearchSubmit);
         $(document).on('click', selectors.kbItemQuestion, handleKbItemToggle);
         $(document).on('click', selectors.kbPageLink, handleKbPageLinkClick);
+        $(document).on('change', selectors.kbCategorySelect, handleKbCategoryChange);
 
         $(document).on('input', selectors.input, function () {
             const $wrapper = $(this).closest(selectors.wrapper);
