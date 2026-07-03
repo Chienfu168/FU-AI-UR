@@ -31,6 +31,13 @@ class UR_AI_Public_Module {
     private $shortcode = null;
 
     /**
+     * FAQ 知識庫查詢頁 Shortcode（SEO 導向，獨立於 AI 助理 widget）。
+     *
+     * @var UR_AI_FAQ_KB_Page_Shortcode|null
+     */
+    private $faq_kb_page_shortcode = null;
+
+    /**
      * 註冊 WordPress hooks。
      *
      * @return void
@@ -38,6 +45,7 @@ class UR_AI_Public_Module {
     public function register() {
         add_action('wp_enqueue_scripts', array($this, 'register_assets'));
         add_shortcode('ur_ai_assistant', array($this, 'render_shortcode'));
+        add_shortcode('ur_ai_faq_kb_page', array($this, 'render_faq_kb_page_shortcode'));
     }
 
     /**
@@ -52,6 +60,10 @@ class UR_AI_Public_Module {
 
         if (class_exists('UR_AI_Shortcode')) {
             $this->shortcode = new UR_AI_Shortcode();
+        }
+
+        if (class_exists('UR_AI_FAQ_KB_Page_Shortcode')) {
+            $this->faq_kb_page_shortcode = new UR_AI_FAQ_KB_Page_Shortcode();
         }
     }
 
@@ -105,6 +117,32 @@ class UR_AI_Public_Module {
         }
 
         return $this->shortcode->render($atts);
+    }
+
+    /**
+     * FAQ 知識庫查詢頁 Shortcode 輸出。
+     *
+     * @param array|string $atts Shortcode 屬性。
+     * @return string
+     */
+    public function render_faq_kb_page_shortcode($atts = array()) {
+        if (!$this->faq_kb_page_shortcode instanceof UR_AI_FAQ_KB_Page_Shortcode && class_exists('UR_AI_FAQ_KB_Page_Shortcode')) {
+            $this->faq_kb_page_shortcode = new UR_AI_FAQ_KB_Page_Shortcode();
+        }
+
+        if (!$this->faq_kb_page_shortcode instanceof UR_AI_FAQ_KB_Page_Shortcode) {
+            return $this->render_missing_shortcode_notice();
+        }
+
+        if (!$this->assets instanceof UR_AI_Public_Assets && class_exists('UR_AI_Public_Assets')) {
+            $this->assets = new UR_AI_Public_Assets();
+        }
+
+        if ($this->assets instanceof UR_AI_Public_Assets && method_exists($this->assets, 'enqueue_style_only')) {
+            $this->assets->enqueue_style_only();
+        }
+
+        return $this->faq_kb_page_shortcode->render($atts);
     }
 
     /**
