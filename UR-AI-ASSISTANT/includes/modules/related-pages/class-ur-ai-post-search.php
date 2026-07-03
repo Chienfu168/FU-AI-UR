@@ -275,7 +275,7 @@ class UR_AI_Post_Search {
 
         if (class_exists('UR_AI_FAQ_Category_Helper')) {
             $helper = new UR_AI_FAQ_Category_Helper();
-            return $helper->suggest_keywords($category, $title, $content);
+            return $helper->suggest_keywords($title, $content);
         }
 
         $keywords = array();
