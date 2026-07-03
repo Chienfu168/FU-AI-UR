@@ -1,0 +1,2062 @@
+/**
+ * UR AI Assistant Public Styles
+ *
+ * Frontend styles.
+ */
+
+.ur-ai-box {
+    max-width: 980px;
+    margin: 32px auto;
+    padding: 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    color: #1f2937;
+    font-size: 16px;
+    line-height: 1.7;
+    box-sizing: border-box;
+}
+
+.ur-ai-box *,
+.ur-ai-box *::before,
+.ur-ai-box *::after {
+    box-sizing: border-box;
+}
+
+.ur-ai-header {
+    margin-bottom: 18px;
+}
+
+.ur-ai-header h2 {
+    margin: 0 0 8px;
+    font-size: 30px;
+    line-height: 1.3;
+    color: #111827;
+    font-weight: 700;
+}
+
+.ur-ai-header p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 16px;
+}
+
+.ur-ai-notice {
+    margin: 18px 0 22px;
+    padding: 14px 16px;
+    border-left: 4px solid #2563eb;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-size: 14px;
+}
+
+.ur-ai-section-heading {
+    margin-bottom: 12px;
+}
+
+.ur-ai-section-heading h3 {
+    margin: 0 0 4px;
+    font-size: 19px;
+    line-height: 1.4;
+    color: #111827;
+    font-weight: 700;
+}
+
+.ur-ai-section-heading p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-popular-section,
+.ur-ai-topics-section,
+.ur-ai-examples,
+.ur-ai-form,
+.ur-ai-answer-wrap,
+.ur-ai-followups,
+.ur-ai-related-pages {
+    margin-top: 22px;
+}
+
+.ur-ai-popular-list,
+.ur-ai-topic-question-list,
+.ur-ai-followup-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ur-ai-quick-question,
+.ur-ai-followup-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #f8fbff;
+    color: #1d4ed8;
+    font-size: 14px;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-quick-question:hover,
+.ur-ai-quick-question:focus,
+.ur-ai-followup-btn:hover,
+.ur-ai-followup-btn:focus {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.ur-ai-topics-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ur-ai-toggle-topics {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-toggle-topics:hover,
+.ur-ai-toggle-topics:focus {
+    border-color: #2563eb;
+    color: #2563eb;
+    outline: none;
+}
+
+.ur-ai-topics-panel {
+    margin-top: 14px;
+    padding: 16px;
+    border: 1px solid #eef2ff;
+    border-radius: 16px;
+    background: #f9fafb;
+}
+
+.ur-ai-topic-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.ur-ai-topic-tab {
+    padding: 7px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #4b5563;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-topic-tab:hover,
+.ur-ai-topic-tab:focus {
+    border-color: #2563eb;
+    color: #2563eb;
+    outline: none;
+}
+
+.ur-ai-topic-tab.is-active {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.ur-ai-topic-select-wrap {
+    display: none;
+    margin-bottom: 14px;
+}
+
+.ur-ai-topic-select-wrap label {
+    display: block;
+    margin-bottom: 6px;
+    color: #374151;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.ur-ai-topic-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #111827;
+}
+
+.ur-ai-empty-text {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-examples {
+    padding: 16px;
+    border-radius: 16px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+}
+
+.ur-ai-examples p {
+    margin: 0 0 8px;
+}
+
+.ur-ai-examples ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.ur-ai-examples li {
+    margin: 4px 0;
+    color: #4b5563;
+}
+
+.ur-ai-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #111827;
+    font-weight: 700;
+}
+
+#ur-ai-question {
+    width: 100%;
+    min-height: 132px;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #111827;
+    font-size: 16px;
+    line-height: 1.7;
+    resize: vertical;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#ur-ai-question:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    outline: none;
+}
+
+.ur-ai-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.ur-ai-counter {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-submit {
+    min-width: 120px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-submit:hover,
+.ur-ai-submit:focus {
+    background: #1d4ed8;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.ur-ai-submit:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ur-ai-loading {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 14px;
+}
+
+.ur-ai-error {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 14px;
+}
+
+.ur-ai-answer-wrap {
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.ur-ai-answer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.ur-ai-answer-header h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.ur-ai-copy-answer {
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-copy-answer:hover,
+.ur-ai-copy-answer:focus {
+    border-color: #2563eb;
+    color: #2563eb;
+    outline: none;
+}
+
+.ur-ai-copy-answer:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+.ur-ai-answer {
+    color: #1f2937;
+}
+
+.ur-ai-answer p {
+    margin: 0 0 12px;
+}
+
+.ur-ai-answer p:last-child {
+    margin-bottom: 0;
+}
+
+.ur-ai-answer ul,
+.ur-ai-answer ol {
+    margin: 10px 0 12px;
+    padding-left: 22px;
+}
+
+.ur-ai-answer li {
+    margin: 4px 0;
+}
+
+.ur-ai-answer strong {
+    color: #111827;
+}
+
+.ur-ai-answer-meta {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.ur-ai-answer-disclaimer {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f9fafb;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.ur-ai-feedback {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.ur-ai-feedback-title {
+    margin: 0 0 10px;
+    color: #374151;
+    font-weight: 700;
+}
+
+.ur-ai-feedback-actions,
+.ur-ai-feedback-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ur-ai-feedback-reasons {
+    margin-top: 12px;
+}
+
+.ur-ai-feedback-reasons p {
+    flex-basis: 100%;
+    margin: 0 0 2px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-feedback-btn,
+.ur-ai-feedback-reason {
+    padding: 7px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-feedback-btn:hover,
+.ur-ai-feedback-btn:focus,
+.ur-ai-feedback-reason:hover,
+.ur-ai-feedback-reason:focus {
+    border-color: #2563eb;
+    color: #2563eb;
+    outline: none;
+}
+
+.ur-ai-feedback-btn.is-selected,
+.ur-ai-feedback-reason.is-selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.ur-ai-feedback-btn:disabled,
+.ur-ai-feedback-reason:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.ur-ai-feedback-message {
+    margin-top: 12px;
+    color: #166534;
+    font-size: 14px;
+}
+
+.ur-ai-followups,
+.ur-ai-related-pages {
+    padding: 18px;
+    border-radius: 18px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+}
+
+.ur-ai-followups h3,
+.ur-ai-related-pages h3 {
+    margin: 0 0 12px;
+    color: #111827;
+    font-size: 18px;
+}
+
+.ur-ai-related-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ur-ai-related-card {
+    display: block;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-related-card:hover,
+.ur-ai-related-card:focus {
+    border-color: #2563eb;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.ur-ai-related-title {
+    color: #1d4ed8;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.ur-ai-related-description {
+    margin-top: 6px;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.ur-ai-related-category {
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+@media (max-width: 782px) {
+    .ur-ai-box {
+        margin: 20px auto;
+        padding: 20px;
+        border-radius: 18px;
+    }
+
+    .ur-ai-header h2 {
+        font-size: 24px;
+    }
+
+    .ur-ai-topics-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .ur-ai-toggle-topics {
+        width: 100%;
+    }
+
+    .ur-ai-topic-tabs {
+        display: none;
+    }
+
+    .ur-ai-topic-select-wrap {
+        display: block;
+    }
+
+    .ur-ai-popular-list,
+    .ur-ai-topic-question-list,
+    .ur-ai-followup-list {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .ur-ai-quick-question,
+    .ur-ai-followup-btn {
+        width: 100%;
+        justify-content: flex-start;
+        text-align: left;
+        border-radius: 14px;
+    }
+
+    .ur-ai-form-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ur-ai-submit {
+        width: 100%;
+    }
+
+    .ur-ai-answer-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .ur-ai-copy-answer {
+        width: 100%;
+    }
+
+    .ur-ai-related-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .ur-ai-box {
+        padding: 16px;
+        box-shadow: none;
+        border-radius: 16px;
+    }
+
+    .ur-ai-header h2 {
+        font-size: 22px;
+    }
+
+    .ur-ai-notice,
+    .ur-ai-examples,
+    .ur-ai-topics-panel,
+    .ur-ai-answer-wrap,
+    .ur-ai-followups,
+    .ur-ai-related-pages {
+        border-radius: 14px;
+    }
+
+    #ur-ai-question {
+        min-height: 120px;
+        border-radius: 14px;
+    }
+}
+
+/* =========================================================
+ * UR AI Assistant Frontend Beautify v1
+ * 依目前 public.css 實際 class 結構追加美化
+ * ========================================================= */
+
+/* 讓整體區塊不要太滿版，形成集中閱讀感 */
+.ur-ai-box {
+    max-width: 1040px;
+    margin: 48px auto 56px;
+    padding: 0;
+    border: 0;
+    border-radius: 28px;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* 上方 Hero 標題區 */
+.ur-ai-box .ur-ai-header {
+    margin: 0 0 22px;
+    padding: 34px 38px 30px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 52%, #2563eb 100%);
+    color: #ffffff;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.ur-ai-box .ur-ai-header::after {
+    content: "";
+    position: absolute;
+    right: -72px;
+    top: -72px;
+    width: 230px;
+    height: 230px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    pointer-events: none;
+}
+
+.ur-ai-box .ur-ai-header h2 {
+    margin: 0 0 12px;
+    font-size: 34px;
+    line-height: 1.25;
+    color: #ffffff;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.ur-ai-box .ur-ai-header p {
+    max-width: 820px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    line-height: 1.85;
+}
+
+/* 使用提醒改成 Hero 內的柔和提示感 */
+.ur-ai-box .ur-ai-notice {
+    margin: 0 0 22px;
+    padding: 18px 20px;
+    border-left: 0;
+    border-radius: 20px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.8;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+}
+
+/* 主要內容區塊統一卡片化 */
+.ur-ai-popular-section,
+.ur-ai-topics-section,
+.ur-ai-examples,
+.ur-ai-form,
+.ur-ai-answer-wrap,
+.ur-ai-followups,
+.ur-ai-related-pages {
+    margin-top: 22px;
+    padding: 24px;
+    border-radius: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
+}
+
+/* 區塊標題 */
+.ur-ai-section-heading h3,
+.ur-ai-followups h3,
+.ur-ai-related-pages h3 {
+    margin-bottom: 8px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.ur-ai-section-heading p {
+    color: #64748b;
+    line-height: 1.7;
+}
+
+/* 熱門問題與延伸提問按鈕 */
+.ur-ai-quick-question,
+.ur-ai-followup-btn {
+    min-height: 40px;
+    padding: 9px 16px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #f8fbff;
+    color: #1d4ed8;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.ur-ai-quick-question:hover,
+.ur-ai-quick-question:focus,
+.ur-ai-followup-btn:hover,
+.ur-ai-followup-btn:focus {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+}
+
+/* 主題分類區塊 */
+.ur-ai-topics-panel {
+    margin-top: 16px;
+    padding: 20px;
+    border-radius: 20px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+}
+
+.ur-ai-topic-tab {
+    padding: 8px 14px;
+    font-weight: 700;
+}
+
+.ur-ai-topic-tab.is-active {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* 範例區塊稍微淡化，避免搶主表單 */
+.ur-ai-examples {
+    background: #f8fafc;
+    box-shadow: none;
+}
+
+.ur-ai-examples p {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.ur-ai-examples li {
+    color: #475569;
+}
+
+/* 表單卡片強化 */
+.ur-ai-form {
+    background: #ffffff;
+}
+
+.ur-ai-label {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #0f172a;
+}
+
+/* 輸入框 */
+#ur-ai-question {
+    min-height: 150px;
+    padding: 18px 20px;
+    border-radius: 20px;
+    border: 1px solid #d6deea;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #0f172a;
+    background: #ffffff;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+#ur-ai-question:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* 表單底部 */
+.ur-ai-form-footer {
+    margin-top: 16px;
+}
+
+.ur-ai-counter {
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* 送出按鈕 */
+.ur-ai-submit {
+    min-width: 132px;
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
+}
+
+.ur-ai-submit:hover,
+.ur-ai-submit:focus {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
+}
+
+/* 如果前台有清除問題按鈕，套用同樣風格 */
+.ur-ai-clear,
+#ur-ai-clear {
+    min-width: 118px;
+    padding: 12px 22px;
+    border: 1px solid #d6deea;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-clear:hover,
+#ur-ai-clear:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+/* Loading 狀態改成柔和提示 */
+.ur-ai-loading {
+    margin-top: 18px;
+    padding: 15px 18px;
+    border-radius: 18px;
+    background: #fff7d6;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+/* 錯誤提示 */
+.ur-ai-error {
+    margin-top: 18px;
+    padding: 15px 18px;
+    border-radius: 18px;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+}
+
+/* 回答區 */
+.ur-ai-answer-wrap {
+    background: #ffffff;
+    border-radius: 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.08);
+}
+
+.ur-ai-answer-header h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.ur-ai-answer {
+    color: #1f2937;
+    font-size: 16px;
+    line-height: 1.9;
+}
+
+/* 複製回答按鈕 */
+.ur-ai-copy-answer {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+/* 免責提醒 */
+.ur-ai-answer-disclaimer {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #64748b;
+    line-height: 1.7;
+}
+
+/* 回饋區 */
+.ur-ai-feedback {
+    margin-top: 18px;
+    padding-top: 18px;
+}
+
+.ur-ai-feedback-title {
+    color: #334155;
+}
+
+.ur-ai-feedback-btn,
+.ur-ai-feedback-reason {
+    font-weight: 700;
+}
+
+.ur-ai-feedback-btn.is-selected,
+.ur-ai-feedback-reason.is-selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+/* 相關文章推薦 */
+.ur-ai-related-list {
+    gap: 14px;
+}
+
+.ur-ai-related-card {
+    padding: 18px;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.ur-ai-related-card:hover,
+.ur-ai-related-card:focus {
+    border-color: #2563eb;
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.14);
+}
+
+.ur-ai-related-title {
+    color: #1d4ed8;
+    font-weight: 800;
+}
+
+.ur-ai-related-description {
+    color: #475569;
+}
+
+/* 平板與手機 */
+@media (max-width: 782px) {
+    .ur-ai-box {
+        margin: 28px 14px 44px;
+    }
+
+    .ur-ai-box .ur-ai-header {
+        padding: 28px 22px 24px;
+        border-radius: 24px;
+    }
+
+    .ur-ai-box .ur-ai-header h2 {
+        font-size: 28px;
+    }
+
+    .ur-ai-box .ur-ai-header p {
+        font-size: 15px;
+    }
+
+    .ur-ai-popular-section,
+    .ur-ai-topics-section,
+    .ur-ai-examples,
+    .ur-ai-form,
+    .ur-ai-answer-wrap,
+    .ur-ai-followups,
+    .ur-ai-related-pages {
+        padding: 20px;
+        border-radius: 22px;
+    }
+
+    .ur-ai-form-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ur-ai-submit,
+    .ur-ai-clear,
+    #ur-ai-clear {
+        width: 100%;
+    }
+}
+
+/* 小手機 */
+@media (max-width: 480px) {
+    .ur-ai-box {
+        margin: 20px 10px 36px;
+    }
+
+    .ur-ai-box .ur-ai-header {
+        padding: 24px 18px 22px;
+    }
+
+    .ur-ai-box .ur-ai-header h2 {
+        font-size: 24px;
+    }
+
+    .ur-ai-popular-section,
+    .ur-ai-topics-section,
+    .ur-ai-examples,
+    .ur-ai-form,
+    .ur-ai-answer-wrap,
+    .ur-ai-followups,
+    .ur-ai-related-pages {
+        padding: 16px;
+        border-radius: 18px;
+    }
+
+    #ur-ai-question {
+        min-height: 128px;
+        border-radius: 16px;
+    }
+
+    .ur-ai-quick-question,
+    .ur-ai-followup-btn {
+        border-radius: 14px;
+    }
+}
+/* =========================================================
+ * UR AI Assistant Frontend Beautify v2.1 修正版
+ * 修正完整替換版在新版 assistant-view.php 結構中 Hero 文字過暗問題
+ * 只調整前台 CSS，不影響 PHP、AJAX、資料庫與 AI 問答流程
+ * ========================================================= */
+
+/* 新版前台主容器：避免舊版 .ur-ai-box 限定導致樣式未套用 */
+.ur-ai-assistant {
+    max-width: 1180px;
+    margin: 48px auto 64px;
+    padding: 0 20px;
+    color: #0f172a;
+    box-sizing: border-box;
+}
+
+.ur-ai-assistant *,
+.ur-ai-assistant *::before,
+.ur-ai-assistant *::after {
+    box-sizing: border-box;
+}
+
+.ur-ai-container {
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 30px;
+    background: #ffffff;
+    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.10);
+}
+
+/* Hero 區：明確指定新版結構文字為白色 */
+.ur-ai-assistant .ur-ai-header,
+.ur-ai-container > .ur-ai-header {
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    padding: 42px 44px 38px;
+    border-radius: 0;
+    background:
+        radial-gradient(circle at 92% 72%, rgba(255, 255, 255, 0.18) 0, rgba(255, 255, 255, 0.18) 115px, transparent 116px),
+        linear-gradient(135deg, #0f172a 0%, #1e3a5f 48%, #2563eb 100%);
+    color: #ffffff !important;
+}
+
+.ur-ai-assistant .ur-ai-header::after,
+.ur-ai-container > .ur-ai-header::after {
+    content: "";
+    position: absolute;
+    right: -90px;
+    top: -90px;
+    width: 260px;
+    height: 260px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.10);
+    pointer-events: none;
+}
+
+/* 修正標題看不到：涵蓋 h1/h2 以及新版 .ur-ai-title */
+.ur-ai-assistant .ur-ai-header h1,
+.ur-ai-assistant .ur-ai-header h2,
+.ur-ai-assistant .ur-ai-header h3,
+.ur-ai-assistant .ur-ai-title,
+.ur-ai-container > .ur-ai-header h1,
+.ur-ai-container > .ur-ai-header h2,
+.ur-ai-container > .ur-ai-header h3 {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 14px;
+    color: #ffffff !important;
+    font-size: clamp(28px, 3.2vw, 40px);
+    line-height: 1.25;
+    font-weight: 850;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 12px rgba(15, 23, 42, 0.28);
+}
+
+/* 修正副標題文字過暗 */
+.ur-ai-assistant .ur-ai-header p,
+.ur-ai-assistant .ur-ai-subtitle,
+.ur-ai-assistant .ur-ai-description,
+.ur-ai-container > .ur-ai-header p {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.90) !important;
+    font-size: 16px;
+    line-height: 1.85;
+}
+
+/* 修正 Hero 內提醒框文字對比不足 */
+.ur-ai-assistant .ur-ai-header .ur-ai-notice,
+.ur-ai-assistant .ur-ai-header .ur-ai-disclaimer,
+.ur-ai-container > .ur-ai-header .ur-ai-notice,
+.ur-ai-container > .ur-ai-header .ur-ai-disclaimer {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 24px 0 0;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-left: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.88) !important;
+    box-shadow: none;
+    backdrop-filter: blur(8px);
+}
+
+.ur-ai-assistant .ur-ai-header .ur-ai-notice *,
+.ur-ai-assistant .ur-ai-header .ur-ai-disclaimer *,
+.ur-ai-container > .ur-ai-header .ur-ai-notice *,
+.ur-ai-container > .ur-ai-header .ur-ai-disclaimer * {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* Body 區：讓表單卡片與 Hero 銜接自然 */
+.ur-ai-body {
+    padding: 28px 32px 34px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 42%);
+}
+
+.ur-ai-section,
+.ur-ai-form,
+.ur-ai-answer-wrap,
+.ur-ai-followups,
+.ur-ai-related-pages {
+    border-radius: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+
+/* 新版 textarea class 與舊版 ID 同步修正 */
+.ur-ai-question-input,
+#ur-ai-question {
+    width: 100%;
+    min-height: 150px;
+    padding: 18px 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 22px;
+    background: #ffffff;
+    color: #0f172a !important;
+    font-size: 16px;
+    line-height: 1.8;
+    resize: vertical;
+    outline: none;
+}
+
+.ur-ai-question-input::placeholder,
+#ur-ai-question::placeholder {
+    color: #94a3b8;
+}
+
+.ur-ai-question-input:focus,
+#ur-ai-question:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* 按鈕相容新版與舊版 */
+.ur-ai-submit,
+#ur-ai-submit {
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff !important;
+    font-weight: 800;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
+}
+
+.ur-ai-clear,
+#ur-ai-clear {
+    border-radius: 999px;
+    background: #ffffff;
+    color: #475569 !important;
+}
+
+/* 手機與平板 */
+@media (max-width: 782px) {
+    .ur-ai-assistant {
+        margin: 28px auto 44px;
+        padding: 0 12px;
+    }
+
+    .ur-ai-container {
+        border-radius: 24px;
+    }
+
+    .ur-ai-assistant .ur-ai-header,
+    .ur-ai-container > .ur-ai-header {
+        padding: 32px 22px 28px;
+    }
+
+    .ur-ai-body {
+        padding: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ur-ai-assistant .ur-ai-header,
+    .ur-ai-container > .ur-ai-header {
+        padding: 28px 18px 24px;
+    }
+
+    .ur-ai-assistant .ur-ai-header h1,
+    .ur-ai-assistant .ur-ai-header h2,
+    .ur-ai-assistant .ur-ai-title {
+        font-size: 26px;
+    }
+
+    .ur-ai-assistant .ur-ai-header p,
+    .ur-ai-assistant .ur-ai-subtitle,
+    .ur-ai-assistant .ur-ai-description,
+    .ur-ai-assistant .ur-ai-header .ur-ai-notice,
+    .ur-ai-assistant .ur-ai-header .ur-ai-disclaimer {
+        font-size: 14px;
+    }
+}
+/* =========================================================
+ * UR AI Assistant Result Beautify Patch v2.2
+ * 目的：
+ * 1. 美化 AI 回答區塊，避免內容貼太近
+ * 2. 強化段落、標題、清單、回饋區可讀性
+ * 3. 相容新版 assistant-view.php 的 .ur-ai-result 結構
+ *
+ * 注意：
+ * 若回答中的 ### 仍以文字出現，代表目前 public.js 尚未將 Markdown 轉成 HTML。
+ * CSS 可以改善間距與版型，但無法真正刪除文字內容中的 #。
+ * ========================================================= */
+
+/* 回答結果主卡片 */
+.ur-ai-result {
+    margin-top: 28px;
+    padding: 30px 32px;
+    border: 1px solid #e2e8f0;
+    border-radius: 26px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 16px;
+    line-height: 1.95;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    overflow-wrap: break-word;
+}
+
+/* 回答區內的基本文字 */
+.ur-ai-result p {
+    margin: 0 0 16px;
+    line-height: 1.95;
+}
+
+.ur-ai-result p:last-child {
+    margin-bottom: 0;
+}
+
+/* 若 JS 已將 Markdown 標題轉成 h3/h4，這裡會套用美化 */
+.ur-ai-result h3,
+.ur-ai-result h4,
+.ur-ai-answer-heading {
+    margin: 28px 0 14px;
+    padding: 0 0 0 14px;
+    border-left: 5px solid #2563eb;
+    color: #0f172a;
+    font-weight: 850;
+    line-height: 1.45;
+}
+
+.ur-ai-result h3 {
+    font-size: 21px;
+}
+
+.ur-ai-result h4,
+.ur-ai-answer-heading {
+    font-size: 18px;
+}
+
+/* 第一個標題不要離上方太遠 */
+.ur-ai-result h3:first-child,
+.ur-ai-result h4:first-child,
+.ur-ai-answer-heading:first-child {
+    margin-top: 0;
+}
+
+/* 清單間距 */
+.ur-ai-result ul,
+.ur-ai-result ol {
+    margin: 12px 0 20px;
+    padding-left: 1.5em;
+}
+
+.ur-ai-result li {
+    margin: 8px 0;
+    padding-left: 2px;
+    line-height: 1.85;
+}
+
+.ur-ai-result li::marker {
+    color: #2563eb;
+}
+
+/* 強調文字 */
+.ur-ai-result strong {
+    color: #0f172a;
+    font-weight: 850;
+}
+
+/* 你的問題、AI 回答等小標籤若存在，讓它更像資訊標籤 */
+.ur-ai-question-label,
+.ur-ai-answer-label,
+.ur-ai-result-label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 8px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+/* 使用者問題內容若有包 class，可呈現為淡色框 */
+.ur-ai-user-question,
+.ur-ai-question-text {
+    margin: 8px 0 18px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+}
+
+/* Loading 與回答區距離 */
+.ur-ai-loading {
+    margin-top: 22px;
+    margin-bottom: 18px;
+}
+
+/* 回饋區重新整理，避免貼太近 */
+.ur-ai-result .ur-ai-feedback,
+.ur-ai-feedback {
+    margin-top: 28px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    background: #f8fafc;
+}
+
+.ur-ai-feedback-title {
+    margin: 0 0 14px;
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 850;
+}
+
+.ur-ai-feedback-actions {
+    gap: 10px;
+}
+
+.ur-ai-feedback-btn {
+    min-width: 96px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    font-weight: 800;
+}
+
+.ur-ai-feedback-btn:hover,
+.ur-ai-feedback-btn:focus,
+.ur-ai-feedback-btn.is-selected {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* 沒幫助原因與補充說明 */
+.ur-ai-feedback-reasons select,
+.ur-ai-feedback select,
+.ur-ai-feedback textarea {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 15px;
+}
+
+.ur-ai-feedback textarea {
+    min-height: 86px;
+    resize: vertical;
+}
+
+/* 回饋送出按鈕 */
+.ur-ai-feedback .ur-ai-submit,
+.ur-ai-feedback button[type="submit"] {
+    margin-top: 12px;
+    min-width: 120px;
+}
+
+/* 手機版 */
+@media (max-width: 782px) {
+    .ur-ai-result {
+        padding: 22px 18px;
+        border-radius: 22px;
+        font-size: 15px;
+        line-height: 1.9;
+    }
+
+    .ur-ai-result h3 {
+        font-size: 19px;
+    }
+
+    .ur-ai-result h4,
+    .ur-ai-answer-heading {
+        font-size: 17px;
+    }
+
+    .ur-ai-result .ur-ai-feedback,
+    .ur-ai-feedback {
+        padding: 18px;
+    }
+
+    .ur-ai-feedback-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ur-ai-feedback-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .ur-ai-result {
+        padding: 18px 16px;
+        border-radius: 18px;
+    }
+
+    .ur-ai-feedback-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+ * UR AI Assistant Result Beautify Patch v2.3
+ * 搭配 public-fixed-markdown.js 使用：
+ * 1. 讓 ### Markdown 標題轉成漂亮小標題
+ * 2. 讓「你的問題 / AI 助理回答」分區更清楚
+ * 3. 修正回饋按鈕 class 與目前 public.js 相容
+ * ========================================================= */
+
+.ur-ai-result {
+    margin-top: 30px;
+    padding: 0;
+    border: 1px solid #dfe7f2;
+    border-radius: 28px;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.09);
+    overflow: hidden;
+}
+
+.ur-ai-message {
+    padding: 26px 30px;
+}
+
+.ur-ai-user-message {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ur-ai-answer-message {
+    background: #ffffff;
+}
+
+.ur-ai-message-label {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 12px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 850;
+}
+
+.ur-ai-user-message .ur-ai-message-content {
+    display: block;
+    padding: 16px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.ur-ai-answer-message .ur-ai-message-content {
+    max-width: 100%;
+    color: #0f172a;
+    font-size: 16px;
+    line-height: 1.95;
+}
+
+.ur-ai-answer-message .ur-ai-message-content p {
+    margin: 0 0 16px;
+}
+
+.ur-ai-answer-message .ur-ai-message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.ur-ai-answer-heading,
+.ur-ai-answer-message .ur-ai-message-content h3,
+.ur-ai-answer-message .ur-ai-message-content h4 {
+    margin: 30px 0 16px;
+    padding: 12px 16px;
+    border-left: 5px solid #2563eb;
+    border-radius: 14px;
+    background: #f8fbff;
+    color: #0f172a;
+    font-size: 19px;
+    line-height: 1.45;
+    font-weight: 900;
+}
+
+.ur-ai-answer-message .ur-ai-message-content .ur-ai-answer-heading:first-child,
+.ur-ai-answer-message .ur-ai-message-content h3:first-child,
+.ur-ai-answer-message .ur-ai-message-content h4:first-child {
+    margin-top: 0;
+}
+
+.ur-ai-answer-list,
+.ur-ai-answer-message .ur-ai-message-content ul,
+.ur-ai-answer-message .ur-ai-message-content ol {
+    margin: 12px 0 22px;
+    padding-left: 1.45em;
+}
+
+.ur-ai-answer-list li,
+.ur-ai-answer-message .ur-ai-message-content li {
+    margin: 9px 0;
+    padding-left: 3px;
+    line-height: 1.85;
+}
+
+.ur-ai-answer-list li::marker,
+.ur-ai-answer-message .ur-ai-message-content li::marker {
+    color: #2563eb;
+}
+
+.ur-ai-answer-message .ur-ai-message-content strong {
+    color: #0f172a;
+    font-weight: 900;
+}
+
+.ur-ai-answer-meta {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid #eef2f7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ur-ai-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.ur-ai-badge-faq {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.ur-ai-badge-ai {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+/* 列印按鈕：置於答案 meta 區右側 */
+.ur-ai-print-button {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ur-ai-print-button:hover,
+.ur-ai-print-button:focus {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.ur-ai-print-button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+@media print {
+    .ur-ai-print-button {
+        display: none;
+    }
+}
+
+/* 相關文章：相容目前 public.js 的 .ur-ai-related 結構 */
+.ur-ai-related {
+    margin-top: 24px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    background: #f8fafc;
+}
+
+.ur-ai-related-title {
+    margin: 0 0 14px;
+    color: #0f172a;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.ur-ai-related .ur-ai-related-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.ur-ai-related-item {
+    margin: 0;
+}
+
+.ur-ai-related-link {
+    display: block;
+    height: 100%;
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-related-link:hover,
+.ur-ai-related-link:focus {
+    border-color: #2563eb;
+    box-shadow: 0 12px 26px rgba(37, 99, 235, 0.13);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.ur-ai-related-heading {
+    margin: 6px 0 0;
+    color: #1d4ed8;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 900;
+}
+
+.ur-ai-related-description {
+    margin: 8px 0 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.ur-ai-related-category {
+    display: inline-flex;
+    margin-bottom: 4px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+/* 回饋區：修正目前 JS 使用的 class 名稱 */
+.ur-ai-feedback {
+    margin-top: 26px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    background: #f8fafc;
+}
+
+.ur-ai-feedback-title {
+    margin: 0 0 14px;
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.ur-ai-feedback-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ur-ai-feedback-button,
+.ur-ai-feedback-btn,
+.ur-ai-feedback-reason {
+    min-width: 96px;
+    padding: 10px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ur-ai-feedback-button:hover,
+.ur-ai-feedback-button:focus,
+.ur-ai-feedback-button.is-selected,
+.ur-ai-feedback-btn:hover,
+.ur-ai-feedback-btn:focus,
+.ur-ai-feedback-btn.is-selected,
+.ur-ai-feedback-reason:hover,
+.ur-ai-feedback-reason:focus,
+.ur-ai-feedback-reason.is-selected {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+    outline: none;
+}
+
+.ur-ai-feedback-reason {
+    display: none;
+    margin-top: 14px;
+}
+
+.ur-ai-feedback-reason.is-active {
+    display: block;
+}
+
+.ur-ai-feedback-reason-select,
+.ur-ai-feedback-comment,
+.ur-ai-feedback select,
+.ur-ai-feedback textarea {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.ur-ai-feedback-comment,
+.ur-ai-feedback textarea {
+    min-height: 86px;
+    resize: vertical;
+}
+
+.ur-ai-feedback-submit {
+    margin-top: 12px;
+    min-width: 128px;
+}
+
+.ur-ai-feedback-message {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ur-ai-feedback-message.ur-ai-success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #bbf7d0;
+}
+
+.ur-ai-feedback-message.ur-ai-error {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+}
+
+/* 手機版 */
+@media (max-width: 782px) {
+    .ur-ai-result {
+        border-radius: 22px;
+    }
+
+    .ur-ai-message {
+        padding: 22px 18px;
+    }
+
+    .ur-ai-answer-message .ur-ai-message-content {
+        font-size: 15px;
+        line-height: 1.9;
+    }
+
+    .ur-ai-answer-heading,
+    .ur-ai-answer-message .ur-ai-message-content h3,
+    .ur-ai-answer-message .ur-ai-message-content h4 {
+        font-size: 17px;
+        padding: 11px 14px;
+        margin: 24px 0 14px;
+    }
+
+    .ur-ai-related .ur-ai-related-list {
+        grid-template-columns: 1fr;
+    }
+
+    .ur-ai-feedback-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ur-ai-feedback-button,
+    .ur-ai-feedback-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .ur-ai-message {
+        padding: 20px 16px;
+    }
+
+    .ur-ai-feedback-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+ * Loading 狀態修正
+ * 預設隱藏，只有送出問題後才顯示
+ * ========================================================= */
+
+.ur-ai-loading {
+    display: none;
+}
+
+.ur-ai-loading.is-active {
+    display: block;
+}
+
+/* =========================================================
+ * 知識庫瀏覽（獨立搜尋 FAQ，不經 AI 比對）
+ * ========================================================= */
+
+.ur-ai-kb-browse {
+    margin-bottom: 20px;
+}
+
+.ur-ai-kb-search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ur-ai-kb-search-input {
+    flex: 1 1 220px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.ur-ai-kb-category-select {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #ffffff;
+}
+
+.ur-ai-kb-search-submit {
+    flex: 0 0 auto;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ur-ai-kb-search-submit:hover,
+.ur-ai-kb-search-submit:focus {
+    background: #1d4ed8;
+    outline: none;
+}
+
+.ur-ai-kb-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ur-ai-kb-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.ur-ai-kb-item-question {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ur-ai-kb-item-category {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.ur-ai-kb-item-question-text {
+    flex: 1 1 auto;
+}
+
+.ur-ai-kb-item-answer {
+    display: none;
+    padding: 0 14px 14px;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.ur-ai-kb-item.is-open .ur-ai-kb-item-answer {
+    display: block;
+}
+
+.ur-ai-kb-loading,
+.ur-ai-kb-empty,
+.ur-ai-kb-error {
+    padding: 14px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.ur-ai-kb-error {
+    color: #dc2626;
+}
+
+.ur-ai-kb-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.ur-ai-kb-page-link {
+    padding: 6px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ur-ai-kb-page-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ur-ai-kb-page-info {
+    color: #6b7280;
+    font-size: 13px;
+}

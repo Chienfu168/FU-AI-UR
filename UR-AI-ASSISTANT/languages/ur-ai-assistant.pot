@@ -1,0 +1,284 @@
+# Copyright (C) 2026 UR AI Assistant
+# This file is distributed under the same license as the UR AI Assistant plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: UR AI Assistant 1.0.0\n"
+"Report-Msgid-Bugs-To: https://www.ur-promoter.com/\n"
+"POT-Creation-Date: 2026-05-16 00:00+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: UR AI Assistant\n"
+"X-Domain: ur-ai-assistant\n"
+
+#: ur-ai-assistant.php
+msgid "UR AI Assistant"
+msgstr ""
+
+#: includes/shared/class-ur-ai-settings.php
+msgid "都更危老 AI 助理"
+msgstr ""
+
+#: includes/shared/class-ur-ai-settings.php
+msgid "用白話方式，快速了解都市更新、危老重建、更新會、自主更新、權利變換與協議合建等基礎問題。"
+msgstr ""
+
+#: includes/shared/class-ur-ai-settings.php
+msgid "本工具提供一般資訊參考，不構成法律、估價、建築、稅務或個案決策建議。若涉及個案權利、契約、訴訟、登記或稅務問題，建議洽詢相關專業人士。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "送出提問"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "思考中..."
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "發生錯誤，請稍後再試。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "連線失敗，請稍後再試。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "請先輸入想詢問的問題。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "問題字數過長，請縮短後再送出。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "你的問題"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "AI 助理回答"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "你也許想知道"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "這個回答對你有幫助嗎？"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "有幫助"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "沒幫助"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "請選擇原因"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "可補充說明，讓我們知道如何改善。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "送出回饋"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "感謝您的回饋。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "回饋送出失敗，請稍後再試。"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "回答不夠清楚"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "沒有回答到問題"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "內容太籠統"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "需要更多實務說明"
+msgstr ""
+
+#: includes/modules/public/class-ur-ai-public-assets.php
+msgid "其他"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "你可以這樣問"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "依主題快速提問"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "請輸入問題"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "請輸入您想了解的都市更新、危老重建、更新會、權利變換或協議合建問題。"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "字"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "清除問題"
+msgstr ""
+
+#: public/views/assistant-view.php
+msgid "AI 助理正在整理回答，請稍候。"
+msgstr ""
+
+#: includes/modules/ajax/class-ur-ai-ajax-module.php
+msgid "前台問答功能目前已停用。"
+msgstr ""
+
+#: includes/modules/ajax/class-ur-ai-ajax-module.php
+msgid "今日提問次數已達上限，請明日再試。"
+msgstr ""
+
+#: includes/modules/ajax/class-ur-ai-ajax-module.php
+msgid "問答服務尚未正確載入，請稍後再試。"
+msgstr ""
+
+#: includes/modules/ajax/class-ur-ai-ajax-module.php
+msgid "回答產生失敗，請稍後再試。"
+msgstr ""
+
+#: includes/shared/class-ur-ai-security.php
+msgid "安全驗證失敗，請重新整理頁面後再試。"
+msgstr ""
+
+#: includes/shared/class-ur-ai-permissions.php
+msgid "您沒有權限執行此操作。"
+msgstr ""
+
+#: includes/shared/class-ur-ai-permissions.php
+msgid "權限不足"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "FAQ 知識庫回答"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "AI 回答"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "錯誤"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "未回饋"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "啟用"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "停用"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "成功"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "草稿"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "待審核"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "已確認"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "不採用"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "手動建立"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "AI 問答轉入"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "匯入建立"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "WordPress 文章"
+msgstr ""
+
+#: includes/shared/class-ur-ai-helper.php
+msgid "WordPress 頁面"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "分類"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "問題"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "回答"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "關鍵字"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "狀態"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "來源"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "排序"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "命中次數"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "管理備註"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "建立時間"
+msgstr ""
+
+#: includes/database/schemas/class-ur-ai-schema-faqs.php
+msgid "更新時間"
+msgstr ""
