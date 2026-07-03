@@ -441,9 +441,7 @@ class UR_AI_Calculator_Ajax {
             'cap_multiplier'       => $adv['cap_multiplier'],
         );
 
-        if ('ratio' === $share_mode) {
-            $service_args['own_share'] = $own_share;
-        }
+        $service_args['own_share'] = $own_share;
 
         $result = $this->service->calculate_best_incentive($service_args);
 
