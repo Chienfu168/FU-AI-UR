@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -103,7 +103,7 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 = 刪除外掛時會刪除資料表嗎？ =
 
-預設不會。為避免正式資料被誤刪，解除安裝時預設保留 FAQ、Logs、Related Pages 與 Popular Questions 資料表。
+預設不會。為避免正式資料被誤刪，解除安裝時預設保留 FAQ、Logs、Related Pages、Popular Questions 與計算機名單資料表。
 
 == Screenshots ==
 
@@ -115,6 +115,13 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.5.1 =
+* 修正解除安裝時漏刪計算機名單表（含個資）的問題。
+* 修正 CF7 留資料寫入失敗被靜默忽略、進階試算漏傳個人持分、相關頁面關鍵字匯入未讀取文章內容等問題。
+* 計算機每小時流量限制改為原子操作，避免高並發下被繞過。
+* 相關頁面推薦查詢加入快取；文章匯入／搜尋改為批次查詢，改善效能。
+* CF7 留資料欄位名稱改為後台可調。
 
 = 1.5.0 =
 * 土地面積輸入整合為「立即試算」與「進階試算」共用區塊，免重複填寫。
@@ -162,6 +169,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.5.1 =
+建議更新。修正一項解除安裝漏刪個資表的問題，以及數項計算機／相關頁面推薦的正確性與效能問題。
 
 = 1.5.0 =
 建議先於測試站確認試算器共用輸入區塊與樓層估算顯示正常，再上傳正式網站。
