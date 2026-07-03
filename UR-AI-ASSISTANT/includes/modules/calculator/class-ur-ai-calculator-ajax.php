@@ -591,15 +591,12 @@ class UR_AI_Calculator_Ajax {
         $ip_hash = md5(UR_AI_Security::get_user_ip());
         $key     = 'ur_ai_calc_rl_' . $ip_hash;
 
-        $count = (int) get_transient($key);
+        // 原本的 get_transient()→set_transient() 為非原子操作，高並發下
+        // 可能多個請求讀到相同舊值、各自 +1，讓限制被繞過。改用原子遞增，
+        // 每次呼叫先計數再判斷是否超限。
+        $count = UR_AI_Helper::atomic_increment_transient($key, HOUR_IN_SECONDS);
 
-        if ($count >= self::RATE_LIMIT_PER_HOUR) {
-            return false;
-        }
-
-        set_transient($key, $count + 1, HOUR_IN_SECONDS);
-
-        return true;
+        return $count <= self::RATE_LIMIT_PER_HOUR;
     }
 
     /**

@@ -312,12 +312,10 @@ class UR_AI_Ajax_Module {
     /**
      * 增加每日提問次數（成功回答後呼叫）。
      *
-     * H2 修正：原本的 get_transient()→set_transient() 為非原子操作，
-     * 高並發下可能多個請求讀到相同舊值、各自 +1，導致計數落後。
-     * 此處改用「原子遞增」：
-     *   1. 若站台有外部物件快取（Redis/Memcached），使用 wp_cache_incr()。
-     *   2. 否則對 transient 在 options 表的儲存 row 直接以 SQL 原子 +1。
-     * 兩種路徑都保留 transient 的自動過期特性，不會造成 wp_options 膨脹。
+     * 原本的 get_transient()→set_transient() 為非原子操作，高並發下
+     * 可能多個請求讀到相同舊值、各自 +1，導致計數落後。改用
+     * UR_AI_Helper::atomic_increment_transient() 做原子遞增（見該方法內的
+     * H2 修法說明），並保留 transient 的自動過期特性。
      *
      * @return void
      */
@@ -328,100 +326,7 @@ class UR_AI_Ajax_Module {
             return;
         }
 
-        $key = $this->get_daily_count_key();
-
-        // 路徑 1：使用外部物件快取的原子遞增（Redis / Memcached）。
-        if (wp_using_ext_object_cache()) {
-            $this->increase_count_object_cache($key);
-            return;
-        }
-
-        // 路徑 2：DB transient，使用 SQL 原子遞增 transient 的儲存值。
-        $this->increase_count_db_transient($key);
-    }
-
-    /**
-     * 以外部物件快取原子遞增每日計數。
-     *
-     * transient 在物件快取模式下儲存於 cache group 'transient'，
-     * key 即 transient 名稱。使用 wp_cache_incr() 原子 +1；
-     * 首次（key 不存在）時改用 set_transient 建立並設定過期。
-     *
-     * @param string $key transient key。
-     * @return void
-     */
-    private function increase_count_object_cache($key) {
-        $current = get_transient($key);
-
-        if (false === $current) {
-            // 首次建立，設定當日過期。
-            set_transient($key, 1, $this->get_daily_count_ttl());
-            return;
-        }
-
-        // 已存在，原子遞增。group 名稱 'transient' 為 WordPress 內部慣例。
-        $incremented = wp_cache_incr($key, 1, 'transient');
-
-        // 極少數情況下 incr 失敗（例如 key 剛過期），保守回退。
-        if (false === $incremented) {
-            set_transient($key, absint($current) + 1, $this->get_daily_count_ttl());
-        }
-    }
-
-    /**
-     * 以 DB transient 的 SQL 原子遞增每日計數。
-     *
-     * DB transient 實際儲存於 wp_options：
-     *   option_name = '_transient_' . $key            （值）
-     *   option_name = '_transient_timeout_' . $key     （過期 UNIX 時間）
-     * 此方法：
-     *   1. 確保 timeout row 存在（首次建立並設定當日過期）。
-     *   2. 對值 row 執行 INSERT ... ON DUPLICATE KEY UPDATE +1（原子）。
-     *
-     * @param string $key transient key。
-     * @return void
-     */
-    private function increase_count_db_transient($key) {
-        global $wpdb;
-
-        $value_option   = '_transient_' . $key;
-        $timeout_option = '_transient_timeout_' . $key;
-
-        // 先確保過期時間 row 存在。若已存在則不更動原有過期時間。
-        $existing_timeout = $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
-                $timeout_option
-            )
-        );
-
-        if (null === $existing_timeout) {
-            $expire = time() + $this->get_daily_count_ttl();
-
-            // autoload = no，避免進入 alloptions 快取。
-            $wpdb->query(
-                $wpdb->prepare(
-                    "INSERT INTO {$wpdb->options} (option_name, option_value, autoload)
-                     VALUES (%s, %s, 'no')
-                     ON DUPLICATE KEY UPDATE option_value = option_value",
-                    $timeout_option,
-                    (string) $expire
-                )
-            );
-        }
-
-        // 原子遞增值 row。
-        $wpdb->query(
-            $wpdb->prepare(
-                "INSERT INTO {$wpdb->options} (option_name, option_value, autoload)
-                 VALUES (%s, '1', 'no')
-                 ON DUPLICATE KEY UPDATE option_value = option_value + 1",
-                $value_option
-            )
-        );
-
-        // 清掉可能存在的本地（非持久）快取，避免後續同請求讀到舊值。
-        wp_cache_delete($key, 'transient');
+        UR_AI_Helper::atomic_increment_transient($this->get_daily_count_key(), $this->get_daily_count_ttl());
     }
 
     /**

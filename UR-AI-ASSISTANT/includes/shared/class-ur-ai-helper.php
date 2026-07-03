@@ -508,4 +508,94 @@ class UR_AI_Helper {
 
         return strlen($text);
     }
+
+    /**
+     * 原子遞增一個以 transient 儲存的計數器，回傳遞增後的新值。
+     *
+     * 一般的 get_transient()→set_transient() 屬於「先讀後寫」的非原子操作，
+     * 高並發下多個請求可能讀到相同舊值、各自 +1，導致計數失準或被繞過限制。
+     * 此方法改用：
+     *   1. 若站台有外部物件快取（Redis/Memcached），使用 wp_cache_incr()。
+     *   2. 否則對 transient 在 options 表的儲存 row，以 SQL 原子 +1
+     *      （並透過 LAST_INSERT_ID() 技巧一併取回新值，避免額外查詢造成的競態）。
+     * 兩種路徑都保留 transient 的自動過期特性。
+     *
+     * @param string $key transient key（不含 _transient_ 前綴）。
+     * @param int    $ttl 過期秒數（僅在計數器首次建立時套用）。
+     * @return int 遞增後的新計數值。
+     */
+    public static function atomic_increment_transient($key, $ttl) {
+        if (wp_using_ext_object_cache()) {
+            $current = get_transient($key);
+
+            if (false === $current) {
+                set_transient($key, 1, $ttl);
+                return 1;
+            }
+
+            $incremented = wp_cache_incr($key, 1, 'transient');
+
+            if (false === $incremented) {
+                $incremented = absint($current) + 1;
+                set_transient($key, $incremented, $ttl);
+            }
+
+            return (int) $incremented;
+        }
+
+        global $wpdb;
+
+        $value_option   = '_transient_' . $key;
+        $timeout_option = '_transient_timeout_' . $key;
+
+        $existing_timeout = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+                $timeout_option
+            )
+        );
+
+        if (null === $existing_timeout) {
+            $expire = time() + (int) $ttl;
+
+            $wpdb->query(
+                $wpdb->prepare(
+                    "INSERT INTO {$wpdb->options} (option_name, option_value, autoload)
+                     VALUES (%s, %s, 'no')
+                     ON DUPLICATE KEY UPDATE option_value = option_value",
+                    $timeout_option,
+                    (string) $expire
+                )
+            );
+        }
+
+        // 先確保值 row 存在（不存在才建立，值不變動），
+        // 讓下一步的 UPDATE 分支必定被觸發，LAST_INSERT_ID() 才能可靠帶回新值；
+        // 若省略這步，遇到「真正首次 INSERT」時 insert_id 會是 option_id 而非計數值。
+        $wpdb->query(
+            $wpdb->prepare(
+                "INSERT INTO {$wpdb->options} (option_name, option_value, autoload)
+                 VALUES (%s, '0', 'no')
+                 ON DUPLICATE KEY UPDATE option_value = option_value",
+                $value_option
+            )
+        );
+
+        // LAST_INSERT_ID(expr) 讓 $wpdb->insert_id 直接帶回遞增後的新值，
+        // 免去「寫入後再 SELECT 一次」在兩者之間又留下的競態窗口。
+        $wpdb->query(
+            $wpdb->prepare(
+                "INSERT INTO {$wpdb->options} (option_name, option_value, autoload)
+                 VALUES (%s, '1', 'no')
+                 ON DUPLICATE KEY UPDATE option_value = LAST_INSERT_ID(option_value + 1)",
+                $value_option
+            )
+        );
+
+        $new_value = (int) $wpdb->insert_id;
+
+        wp_cache_delete($key, 'transient');
+
+        return $new_value;
+    }
 }
