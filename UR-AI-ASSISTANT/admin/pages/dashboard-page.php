@@ -96,6 +96,7 @@ $feedback_url          = admin_url('admin.php?page=ur-ai-assistant-feedback');
 
 $shortcode             = '[ur_ai_assistant]';
 $faq_kb_page_shortcode = '[ur_ai_faq_kb_page]';
+$calculator_shortcode  = '[ur_ai_calculator]';
 
 $api_key_set = false;
 
@@ -217,6 +218,94 @@ if (class_exists('UR_AI_Settings')) {
             <p class="ur-ai-setup-guide-note">
                 <?php echo esc_html__('提示：完成上述項目後，本指南會自動收合（有 FAQ 資料時預設收合）。日後仍可隨時點擊標題重新展開。', 'ur-ai-assistant'); ?>
             </p>
+        </div>
+    </details>
+
+    <details class="ur-ai-card ur-ai-setup-guide" id="ur-ai-shortcode-guide">
+        <summary class="ur-ai-setup-guide-summary">
+            <span class="ur-ai-setup-guide-title"><?php echo esc_html__('Shortcode 使用說明', 'ur-ai-assistant'); ?></span>
+            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 3 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
+        </summary>
+
+        <div class="ur-ai-setup-guide-body">
+
+            <h3><?php echo esc_html__('1. AI 助理問答', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-assistant"><?php echo esc_html($shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-assistant">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('放到任一頁面或文章即可顯示問答框，訪客可直接提問，FAQ 命中則優先回答，未命中才呼叫 AI。', 'ur-ai-assistant'); ?></p>
+            <ul class="ur-ai-shortcode-params">
+                <li><code>title</code> — <?php echo esc_html__('自訂前台標題，留空採用功能設定的預設標題。', 'ur-ai-assistant'); ?></li>
+                <li><code>subtitle</code> — <?php echo esc_html__('自訂前台副標題。', 'ur-ai-assistant'); ?></li>
+                <li><code>placeholder</code> — <?php echo esc_html__('自訂輸入框提示文字。', 'ur-ai-assistant'); ?></li>
+                <li><code>show_popular</code> — <?php echo esc_html__('是否顯示熱門問題清單，預設 1（顯示）。', 'ur-ai-assistant'); ?></li>
+                <li><code>popular_limit</code> — <?php echo esc_html__('熱門問題顯示數量，預設 6。', 'ur-ai-assistant'); ?></li>
+                <li><code>show_groups</code> — <?php echo esc_html__('是否顯示依分類分組的熱門問題，預設 0（不顯示）。', 'ur-ai-assistant'); ?></li>
+                <li><code>group_limit</code> — <?php echo esc_html__('每組分類熱門問題顯示數量，預設 4。', 'ur-ai-assistant'); ?></li>
+                <li><code>show_kb_browse</code> — <?php echo esc_html__('是否顯示知識庫瀏覽區塊，預設 1；需另於下方「功能設定」啟用知識庫瀏覽此參數才有作用。', 'ur-ai-assistant'); ?></li>
+                <li><code>kb_browse_limit</code> — <?php echo esc_html__('知識庫瀏覽每頁筆數，留空採用功能設定的預設值。', 'ur-ai-assistant'); ?></li>
+            </ul>
+            <p class="ur-ai-muted">
+                <?php
+                printf(
+                    /* translators: %s: example shortcode */
+                    esc_html__('範例：%s', 'ur-ai-assistant'),
+                    '<code>[ur_ai_assistant title="都更危老 AI 助理" show_popular="1" show_groups="0" popular_limit="6"]</code>'
+                );
+                ?>
+            </p>
+
+            <hr>
+
+            <h3><?php echo esc_html__('2. FAQ 知識庫查詢頁（SEO 導向）', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-faqkb"><?php echo esc_html($faq_kb_page_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-faqkb">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('與上面的 AI 助理是完全獨立的功能，建議另外新建一個獨立頁面（例如「常見問題」）放這個 Shortcode。伺服器端直接輸出問答內容，不需要 JavaScript 就能瀏覽；搜尋／分類／換頁皆使用網址參數（?kb_q=、?kb_cat=、?kb_page=），並會自動輸出 Google 支援的 FAQPage 結構化資料。僅在「功能設定」的 FAQ 功能啟用時才會顯示內容。', 'ur-ai-assistant'); ?></p>
+            <ul class="ur-ai-shortcode-params">
+                <li><code>title</code> — <?php echo esc_html__('頁面標題（H1），留空預設為「常見問題知識庫」。', 'ur-ai-assistant'); ?></li>
+                <li><code>per_page</code> — <?php echo esc_html__('每頁筆數（1～50），預設 20。', 'ur-ai-assistant'); ?></li>
+            </ul>
+            <p class="ur-ai-muted">
+                <?php
+                printf(
+                    /* translators: %s: example shortcode */
+                    esc_html__('範例：%s', 'ur-ai-assistant'),
+                    '<code>[ur_ai_faq_kb_page title="常見問題" per_page="20"]</code>'
+                );
+                ?>
+            </p>
+
+            <hr>
+
+            <h3><?php echo esc_html__('3. 都更分回效益試算器', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-calculator"><?php echo esc_html($calculator_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-calculator">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('提供都更／危老分回效益試算，並可透過 Contact Form 7 整合留下試算名單。搬到新網站使用前，請先到「試算器設定」確認容積率、獎勵係數等參數，並把 CF7 表單 ID 換成新網站自己的表單 ID。', 'ur-ai-assistant'); ?></p>
+            <ul class="ur-ai-shortcode-params">
+                <li><code>mode="owner"</code> — <?php echo esc_html__('地主版（預設）：只有「換坪比」試算，最簡單，適合一般屋主。', 'ur-ai-assistant'); ?></li>
+                <li><code>mode="pro"</code> — <?php echo esc_html__('含整合公司進階：額外提供三案擇優、樓層／高度概估等進階評估。', 'ur-ai-assistant'); ?></li>
+            </ul>
+            <p class="ur-ai-muted">
+                <?php
+                printf(
+                    /* translators: %s: example shortcode */
+                    esc_html__('範例：%s', 'ur-ai-assistant'),
+                    '<code>[ur_ai_calculator mode="pro"]</code>'
+                );
+                ?>
+            </p>
+
         </div>
     </details>
 
@@ -357,23 +446,9 @@ if (class_exists('UR_AI_Settings')) {
                 <?php echo esc_html__('正式上線前，先用 FAQ 與相關頁面推薦建立基本知識庫，可降低 AI API 成本，也能讓回答更穩定。', 'ur-ai-assistant'); ?>
             </div>
 
-            <hr>
-
-            <p><?php echo esc_html__('FAQ 知識庫查詢頁（SEO 導向，獨立於上方 AI 助理）：', 'ur-ai-assistant'); ?></p>
-
-            <p>
-                <code class="ur-ai-code" id="ur-ai-dashboard-faq-kb-page-shortcode"><?php echo esc_html($faq_kb_page_shortcode); ?></code>
-                <button
-                    type="button"
-                    class="button ur-ai-copy-button"
-                    data-copy-target="#ur-ai-dashboard-faq-kb-page-shortcode"
-                >
-                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
-                </button>
-            </p>
-
             <p class="ur-ai-muted">
-                <?php echo esc_html__('建議另外建立一個獨立頁面（例如「常見問題」）放這個 Shortcode。伺服器端直接輸出問答內容，不需要 JavaScript 就能瀏覽，搜尋／分類／換頁皆使用網址參數，並會自動輸出 Google 支援的 FAQPage 結構化資料，有利 SEO。僅在 FAQ 知識庫功能啟用時顯示。', 'ur-ai-assistant'); ?>
+                <?php echo esc_html__('本外掛共有 3 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
+                <a href="#ur-ai-shortcode-guide"><?php echo esc_html__('前往完整說明', 'ur-ai-assistant'); ?></a>
             </p>
         </div>
 

@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -134,6 +134,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.7.1 =
+* 後台總覽頁新增完整的「Shortcode 使用說明」區塊，一次列出本外掛全部 3 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器）與所有參數，方便日後安裝到不同網站時快速設定。
 
 = 1.7.0 =
 * 新增獨立的「FAQ 知識庫查詢頁」shortcode `[ur_ai_faq_kb_page]`，供 SEO 用途：伺服器端直接輸出問答內容（不需 JavaScript）、支援關鍵字與分類的網址參數（可分享、可被搜尋引擎收錄）、並自動輸出 Google 支援的 FAQPage 結構化資料（FAQ rich result）。
