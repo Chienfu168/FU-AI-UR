@@ -1307,6 +1307,59 @@ widget 版本無命名衝突。
 
 ---
 
+## v1.7.1
+
+更新日期
+2026-07-03
+
+版本定位
+
+readme.txt／docs 雖然都記錄了 Shortcode 用法，但站方實際安裝時真正會看的
+是後台總覽頁，而總覽頁原本的「前台使用方式」卡片只簡短提到 2 組 Shortcode
+（AI 助理、FAQ 知識庫查詢頁），完全沒提到試算器的 [ur_ai_calculator]，
+也沒有列出各 Shortcode 的完整參數。日後把這套外掛安裝到不同網站時，
+需要有一個後台就能查到的完整參考。本版把 3 組 Shortcode 的完整用法
+整理成後台總覽頁的一個獨立收合區塊。
+
+一、主要調整
+
+1. 後台總覽頁新增「Shortcode 使用說明」收合區塊
+  位置：安裝後設定指南下方，摘要卡片上方。內容依序為：
+    1. AI 助理問答 [ur_ai_assistant]（含 title／subtitle／placeholder／
+       show_popular／popular_limit／show_groups／group_limit／
+       show_kb_browse／kb_browse_limit 全部 9 個參數）
+    2. FAQ 知識庫查詢頁 [ur_ai_faq_kb_page]（title／per_page）
+    3. 都更分回效益試算器 [ur_ai_calculator]（mode=owner／pro）
+  每組皆附完整 Shortcode 代碼＋複製按鈕＋參數說明＋範例。
+
+2. 簡化「前台使用方式」卡片
+  移除與新區塊重複的完整參數說明，改為保留最基本的 [ur_ai_assistant]
+  複製功能，並附連結指向新的「Shortcode 使用說明」區塊，避免同一份
+  資訊維護兩份、日後容易改一邊漏一邊。
+
+二、修改檔案
+
+admin/pages/dashboard-page.php
+  - 新增「Shortcode 使用說明」<details> 區塊（id="ur-ai-shortcode-guide"，
+    可用網址錨點 #ur-ai-shortcode-guide 直接連結並自動展開）。
+  - 簡化原本「前台使用方式」卡片內容。
+
+admin/assets/css/admin.css
+  - 新增 .ur-ai-shortcode-params 清單樣式。
+
+ur-ai-assistant.php
+  - 版本號 1.7.0 → 1.7.1。
+
+三、資料表變更
+
+無。純後台說明文字與版面調整。
+
+四、是否建議上正式站
+
+建議。純後台文件性質調整，不影響前台任何功能與既有頁面。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

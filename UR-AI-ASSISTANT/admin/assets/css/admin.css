@@ -593,6 +593,17 @@
     white-space: pre-wrap;
 }
 
+.ur-ai-shortcode-params {
+    margin: 8px 0 12px;
+    padding-left: 20px;
+    list-style: disc;
+}
+
+.ur-ai-shortcode-params li {
+    margin-bottom: 6px;
+    line-height: 1.6;
+}
+
 /* =========================================================
    Analytics
 ========================================================= */
