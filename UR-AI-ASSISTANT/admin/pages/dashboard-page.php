@@ -94,7 +94,8 @@ $related_pages_url     = admin_url('admin.php?page=ur-ai-assistant-related-pages
 $popular_questions_url = admin_url('admin.php?page=ur-ai-assistant-popular-questions');
 $feedback_url          = admin_url('admin.php?page=ur-ai-assistant-feedback');
 
-$shortcode = '[ur_ai_assistant]';
+$shortcode             = '[ur_ai_assistant]';
+$faq_kb_page_shortcode = '[ur_ai_faq_kb_page]';
 
 $api_key_set = false;
 
@@ -355,6 +356,25 @@ if (class_exists('UR_AI_Settings')) {
                 <strong><?php echo esc_html__('建議：', 'ur-ai-assistant'); ?></strong>
                 <?php echo esc_html__('正式上線前，先用 FAQ 與相關頁面推薦建立基本知識庫，可降低 AI API 成本，也能讓回答更穩定。', 'ur-ai-assistant'); ?>
             </div>
+
+            <hr>
+
+            <p><?php echo esc_html__('FAQ 知識庫查詢頁（SEO 導向，獨立於上方 AI 助理）：', 'ur-ai-assistant'); ?></p>
+
+            <p>
+                <code class="ur-ai-code" id="ur-ai-dashboard-faq-kb-page-shortcode"><?php echo esc_html($faq_kb_page_shortcode); ?></code>
+                <button
+                    type="button"
+                    class="button ur-ai-copy-button"
+                    data-copy-target="#ur-ai-dashboard-faq-kb-page-shortcode"
+                >
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+
+            <p class="ur-ai-muted">
+                <?php echo esc_html__('建議另外建立一個獨立頁面（例如「常見問題」）放這個 Shortcode。伺服器端直接輸出問答內容，不需要 JavaScript 就能瀏覽，搜尋／分類／換頁皆使用網址參數，並會自動輸出 Google 支援的 FAQPage 結構化資料，有利 SEO。僅在 FAQ 知識庫功能啟用時顯示。', 'ur-ai-assistant'); ?>
+            </p>
         </div>
 
     </div>
