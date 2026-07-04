@@ -144,13 +144,16 @@ admin/assets/js/admin.js
 includes/modules/public/class-ur-ai-public-module.php
 includes/modules/public/class-ur-ai-public-assets.php
 includes/modules/public/class-ur-ai-shortcode.php
+includes/modules/public/class-ur-ai-faq-kb-page-shortcode.php
 public/views/assistant-view.php
+public/views/faq-kb-page-view.php
 public/assets/css/public.css
 public/assets/js/public.js
 
 負責：
 
 註冊 [ur_ai_assistant]
+註冊 [ur_ai_faq_kb_page]（v1.7.0 新增，獨立 SEO 查詢頁，純伺服器端渲染，不載入 public.js）
 載入前台 CSS / JS
 輸出前台 AI 助理畫面
 處理熱門問題點擊

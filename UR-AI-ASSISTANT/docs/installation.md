@@ -147,6 +147,22 @@ gpt-4o-mini
 完整範例：
 
 [ur_ai_assistant title="都更危老 AI 助理" show_popular="1" show_groups="0" popular_limit="6"]
+
+七之一、FAQ 知識庫查詢頁 Shortcode（SEO 用途，v1.7.0 新增）
+
+與上面的 AI 助理 widget 是完全獨立的 shortcode，不會互相影響，建議另外建立一個獨立頁面
+（例如「常見問題」）放這個 shortcode：
+
+[ur_ai_faq_kb_page]
+
+自訂標題與每頁筆數：
+
+[ur_ai_faq_kb_page title="常見問題" per_page="20"]
+
+特色：伺服器端直接輸出問答內容（不需 JavaScript）、搜尋／分類／換頁皆使用網址參數
+（?kb_q=、?kb_cat=、?kb_page=），可分享、可被搜尋引擎收錄，並自動輸出 Google 支援的
+FAQPage 結構化資料。僅在後台「功能設定」的 FAQ 功能啟用時才會顯示內容。
+
 八、建議初始測試流程
 
 啟用後，建議依序測試：
@@ -243,7 +259,7 @@ API 額度是否足夠
 FAQ 未命中時才會呼叫 AI
 Q5：刪除外掛會刪除資料嗎？
 
-預設不會刪除 FAQ、Logs、Related Pages、Popular Questions 資料表。
+預設不會刪除 FAQ、Logs、Related Pages、Popular Questions、計算機名單資料表。
 
 這是為了避免正式營運資料被誤刪。
 
@@ -258,6 +274,8 @@ FAQ 至少建立 10～20 筆基礎資料
 問答紀錄可正常寫入
 使用者回饋可正常送出
 錯誤訊息不會暴露敏感資訊
+若有建立 FAQ 知識庫查詢頁（[ur_ai_faq_kb_page]），搜尋／分類／換頁與 FAQPage
+結構化資料皆已用 Google 結構化資料測試工具驗證正常
 十二、維護建議
 
 建議每週或每月定期檢查：
