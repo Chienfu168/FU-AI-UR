@@ -52,11 +52,7 @@ $total_count      = $service->count_all();
 $last_imported_at = $service->get_last_imported_at();
 $cities           = $service->get_supported_cities();
 
-$stale_days = null;
-
-if ($last_imported_at) {
-    $stale_days = (int) floor((current_time('timestamp') - strtotime($last_imported_at)) / DAY_IN_SECONDS);
-}
+$stale_days = $service->get_stale_days();
 
 ?>
 <div class="wrap ur-ai-admin-page">
@@ -94,7 +90,7 @@ if ($last_imported_at) {
         </div>
     <?php endif; ?>
 
-    <?php if (null !== $stale_days && $stale_days >= 90) : ?>
+    <?php if ($service->is_stale()) : ?>
         <div class="notice notice-warning">
             <p>
                 <?php

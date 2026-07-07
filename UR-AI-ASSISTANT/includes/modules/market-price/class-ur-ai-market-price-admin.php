@@ -61,13 +61,20 @@ class UR_AI_Market_Price_Admin {
 
         $city = isset($_POST['city']) ? sanitize_key(wp_unslash($_POST['city'])) : '';
 
-        if (empty($_FILES['ur_ai_market_price_csv']) || !isset($_FILES['ur_ai_market_price_csv']['tmp_name'])) {
+        if (!isset($_FILES['ur_ai_market_price_csv']) || !is_array($_FILES['ur_ai_market_price_csv'])) {
             $this->redirect_with_message($redirect_base, 'import_no_file', 'error');
         }
 
-        $file = $_FILES['ur_ai_market_price_csv'];
+        $file          = $_FILES['ur_ai_market_price_csv'];
+        $upload_error  = isset($file['error']) ? (int) $file['error'] : UPLOAD_ERR_NO_FILE;
 
-        if (!empty($file['error']) && UPLOAD_ERR_OK !== (int) $file['error']) {
+        // UPLOAD_ERR_NO_FILE：欄位存在但使用者沒有選擇檔案，需與其他上傳失敗
+        // 原因分開判斷，否則永遠只會顯示「上傳失敗」而非「請選擇檔案」。
+        if (UPLOAD_ERR_NO_FILE === $upload_error) {
+            $this->redirect_with_message($redirect_base, 'import_no_file', 'error');
+        }
+
+        if (UPLOAD_ERR_OK !== $upload_error) {
             $this->redirect_with_message($redirect_base, 'import_upload_error', 'error');
         }
 
@@ -146,6 +153,11 @@ class UR_AI_Market_Price_Admin {
             }
         }
 
+        if (class_exists('UR_AI_Permissions') && method_exists('UR_AI_Permissions', 'require_capability')) {
+            UR_AI_Permissions::require_capability($capability);
+            return;
+        }
+
         if (!current_user_can($capability)) {
             wp_die(esc_html__('權限不足。', 'ur-ai-assistant'));
         }
@@ -163,8 +175,8 @@ class UR_AI_Market_Price_Admin {
     private function redirect_with_message($redirect_base, $message, $type = 'updated', $extra_args = array()) {
         $args = array_merge(
             array(
-                'ur_message'  => $message,
-                'ur_msg_type' => $type,
+                'ur_message'  => sanitize_key($message),
+                'ur_msg_type' => sanitize_key($type),
             ),
             $extra_args
         );

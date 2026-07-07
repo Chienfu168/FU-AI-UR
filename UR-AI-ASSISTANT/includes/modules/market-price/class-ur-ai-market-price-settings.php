@@ -181,6 +181,12 @@ class UR_AI_Market_Price_Settings {
             $clean['new_age_threshold'] = min(20, max(1, absint($values['new_age_threshold'])));
         }
 
+        // 老屋門檻必須大於新成屋門檻，避免兩組屋齡區間重疊、同一筆交易被同時
+        // 計入「老屋現況」與「新成屋」兩種矛盾的統計。
+        if ($clean['new_age_threshold'] >= $clean['old_age_threshold']) {
+            $clean['new_age_threshold'] = max(1, $clean['old_age_threshold'] - 1);
+        }
+
         if (isset($values['min_sample_size']) && is_numeric($values['min_sample_size'])) {
             $clean['min_sample_size'] = min(50, max(1, absint($values['min_sample_size'])));
         }

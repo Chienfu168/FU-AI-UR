@@ -102,12 +102,8 @@ $market_price_shortcode = '[ur_ai_market_price]';
 $market_price_stale_days = null;
 
 if (class_exists('UR_AI_Market_Price_Service')) {
-    $market_price_service     = new UR_AI_Market_Price_Service();
-    $market_price_last_import = $market_price_service->get_last_imported_at();
-
-    if ($market_price_last_import) {
-        $market_price_stale_days = (int) floor((current_time('timestamp') - strtotime($market_price_last_import)) / DAY_IN_SECONDS);
-    }
+    $market_price_service    = new UR_AI_Market_Price_Service();
+    $market_price_stale_days = $market_price_service->get_stale_days();
 }
 
 $market_price_admin_url = admin_url('admin.php?page=ur-ai-assistant-market-price');
@@ -166,7 +162,7 @@ if (class_exists('UR_AI_Settings')) {
         </div>
     <?php endif; ?>
 
-    <?php if (null !== $market_price_stale_days && $market_price_stale_days >= 90) : ?>
+    <?php if (isset($market_price_service) && $market_price_service->is_stale()) : ?>
         <div class="notice notice-warning">
             <p>
                 <strong><?php echo esc_html__('行情參考資料已久未更新。', 'ur-ai-assistant'); ?></strong>

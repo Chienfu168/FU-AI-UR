@@ -103,6 +103,7 @@ class UR_AI_Market_Price_Import_Service {
             : array();
         $mismatched_city  = false;
         $import_batch     = gmdate('Ymd\THis');
+        $known_ids        = $this->repository->get_existing_source_record_ids($city);
 
         for ($i = 1, $len = count($rows); $i < $len; $i++) {
             $row = $this->extract_row($rows[$i], $header_map);
@@ -125,7 +126,7 @@ class UR_AI_Market_Price_Import_Service {
                 continue;
             }
 
-            $status = $this->repository->insert($prepared);
+            $status = $this->repository->insert($prepared, $known_ids);
 
             if ('inserted' === $status) {
                 $result['created']++;
@@ -222,7 +223,7 @@ class UR_AI_Market_Price_Import_Service {
      * @return bool
      */
     private function has_required_columns($header_map) {
-        $required = array('鄉鎮市區', '交易標的', '交易年月日', '總價元', '建物移轉總面積平方公尺');
+        $required = array('鄉鎮市區', '交易標的', '交易年月日', '總價元', '建物移轉總面積平方公尺', '編號');
 
         foreach ($required as $column) {
             if (!isset($header_map[$column])) {
@@ -316,9 +317,9 @@ class UR_AI_Market_Price_Import_Service {
             $building_age_years = $transaction_year - $built_year;
         }
 
-        $building_area_sqm = is_numeric($row['building_area_sqm']) ? (float) $row['building_area_sqm'] : 0.0;
-        $total_price       = is_numeric($row['total_price']) ? absint($row['total_price']) : 0;
-        $parking_price     = is_numeric($row['parking_price']) ? absint($row['parking_price']) : 0;
+        $building_area_sqm = $this->parse_numeric($row['building_area_sqm']);
+        $total_price       = absint($this->parse_numeric($row['total_price']));
+        $parking_price     = absint($this->parse_numeric($row['parking_price']));
 
         $house_price = $total_price - $parking_price;
 
@@ -354,6 +355,20 @@ class UR_AI_Market_Price_Import_Service {
             'source_record_id'        => $source_record_id,
             'import_batch'            => $import_batch,
         );
+    }
+
+    /**
+     * 將 CSV 欄位值解析為數值，容忍千分位逗號（例如 Excel 另存 CSV 時
+     * 保留的 "15,000,000" 格式），避免被 is_numeric() 直接判為非數值
+     * 而靜默歸零。
+     *
+     * @param mixed $value 原始欄位值。
+     * @return float 無法解析時回傳 0.0。
+     */
+    private function parse_numeric($value) {
+        $value = str_replace(',', '', trim((string) $value));
+
+        return is_numeric($value) ? (float) $value : 0.0;
     }
 
     /**

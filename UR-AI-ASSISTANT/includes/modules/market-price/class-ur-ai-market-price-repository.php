@@ -49,10 +49,16 @@ class UR_AI_Market_Price_Repository {
     /**
      * 新增一筆行情紀錄（以 source_record_id 防重複）。
      *
-     * @param array $data 資料。
+     * 大量匯入時可傳入 $known_ids（由 get_existing_source_record_ids()
+     * 預先查出的集合，呼叫端逐筆插入時同步更新），避免每一筆都對資料庫
+     * 額外下一次 SELECT 查重複——唯一索引本身仍是最終防線。
+     *
+     * @param array      $data 資料。
+     * @param array|null $known_ids 已知 source_record_id 集合（以值為 key），
+     *                              會在成功新增後就地更新；留空則退回逐筆查詢。
      * @return string 'inserted' | 'duplicate' | 'failed'
      */
-    public function insert($data) {
+    public function insert($data, array &$known_ids = null) {
         global $wpdb;
 
         $source_record_id = isset($data['source_record_id']) ? (string) $data['source_record_id'] : '';
@@ -61,7 +67,11 @@ class UR_AI_Market_Price_Repository {
             return 'failed';
         }
 
-        if ($this->find_by_source_record_id($source_record_id)) {
+        $is_duplicate = null !== $known_ids
+            ? isset($known_ids[$source_record_id])
+            : $this->find_by_source_record_id($source_record_id);
+
+        if ($is_duplicate) {
             return 'duplicate';
         }
 
@@ -92,7 +102,15 @@ class UR_AI_Market_Price_Repository {
             )
         );
 
-        return false !== $result ? 'inserted' : 'failed';
+        if (false === $result) {
+            return 'failed';
+        }
+
+        if (null !== $known_ids) {
+            $known_ids[$source_record_id] = true;
+        }
+
+        return 'inserted';
     }
 
     /**
@@ -118,6 +136,26 @@ class UR_AI_Market_Price_Repository {
         );
 
         return null !== $id && '' !== $id;
+    }
+
+    /**
+     * 預先取出指定縣市已存在的 source_record_id 集合（以值為 key），
+     * 供大量匯入時逐筆比對，避免每一列都對資料庫下一次查重複 SELECT。
+     *
+     * @param string $city 縣市 key。
+     * @return array
+     */
+    public function get_existing_source_record_ids($city) {
+        global $wpdb;
+
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT source_record_id FROM {$this->table_name} WHERE city = %s",
+                (string) $city
+            )
+        );
+
+        return is_array($ids) ? array_fill_keys($ids, true) : array();
     }
 
     /**
@@ -150,6 +188,56 @@ class UR_AI_Market_Price_Repository {
             : $wpdb->get_results($wpdb->prepare($sql, $values));
 
         return $this->summarize_rows($rows);
+    }
+
+    /**
+     * 一次查詢取得「老屋現況」與「新成屋」兩組統計摘要。
+     *
+     * $args 只帶縣市／行政區／分區／建物型態等基本篩選（不含 age_min／
+     * age_max），一次撈出所有符合基本條件的紀錄後，於 PHP 端依屋齡門檻
+     * 分成兩組再各自統計，避免同一批條件對資料庫下兩次幾乎相同的查詢。
+     *
+     * @param array $args 基本篩選條件（同 get_price_stats()，但不含 age_min／age_max）。
+     * @param int   $old_threshold 老屋門檻（年，含）。
+     * @param int   $new_threshold 新成屋門檻（年，含）。
+     * @return array{ old: array, new: array }
+     */
+    public function get_price_stats_pair($args, $old_threshold, $new_threshold) {
+        global $wpdb;
+
+        list($where, $values) = $this->build_where($args);
+
+        $sql = "SELECT unit_price_per_ping, building_age_years
+                FROM {$this->table_name}
+                WHERE " . implode(' AND ', $where) . '
+                  AND unit_price_per_ping > 0';
+
+        $rows = empty($values)
+            ? $wpdb->get_results($sql)
+            : $wpdb->get_results($wpdb->prepare($sql, $values));
+
+        $old_threshold = absint($old_threshold);
+        $new_threshold = absint($new_threshold);
+
+        $old_rows = array();
+        $new_rows = array();
+
+        foreach ((array) $rows as $row) {
+            $age = (int) $row->building_age_years;
+
+            if ($age >= $old_threshold) {
+                $old_rows[] = $row;
+            }
+
+            if ($age <= $new_threshold) {
+                $new_rows[] = $row;
+            }
+        }
+
+        return array(
+            'old' => $this->summarize_rows($old_rows),
+            'new' => $this->summarize_rows($new_rows),
+        );
     }
 
     /**
@@ -244,21 +332,7 @@ class UR_AI_Market_Price_Repository {
      * @return array
      */
     public function get_zones($city, $district = '') {
-        global $wpdb;
-
-        $where  = array('city = %s', "zone != ''");
-        $values = array((string) $city);
-
-        if ('' !== $district) {
-            $where[]  = 'district = %s';
-            $values[] = (string) $district;
-        }
-
-        $sql = "SELECT DISTINCT zone FROM {$this->table_name} WHERE " . implode(' AND ', $where) . ' ORDER BY zone ASC';
-
-        $rows = $wpdb->get_col($wpdb->prepare($sql, $values));
-
-        return is_array($rows) ? $rows : array();
+        return $this->get_distinct_column('zone', $city, $district);
     }
 
     /**
@@ -269,9 +343,22 @@ class UR_AI_Market_Price_Repository {
      * @return array
      */
     public function get_building_types($city, $district = '') {
+        return $this->get_distinct_column('building_type', $city, $district);
+    }
+
+    /**
+     * 取得指定縣市（可選行政區）某欄位的去重清單，供 get_zones()／
+     * get_building_types() 共用（兩者除欄位名稱外查詢邏輯完全相同）。
+     *
+     * @param string $column 欄位名稱（僅限本類別內部已知的安全欄位名）。
+     * @param string $city 縣市 key。
+     * @param string $district 行政區（留空＝不限）。
+     * @return array
+     */
+    private function get_distinct_column($column, $city, $district = '') {
         global $wpdb;
 
-        $where  = array('city = %s', "building_type != ''");
+        $where  = array('city = %s', "{$column} != ''");
         $values = array((string) $city);
 
         if ('' !== $district) {
@@ -279,7 +366,7 @@ class UR_AI_Market_Price_Repository {
             $values[] = (string) $district;
         }
 
-        $sql = "SELECT DISTINCT building_type FROM {$this->table_name} WHERE " . implode(' AND ', $where) . ' ORDER BY building_type ASC';
+        $sql = "SELECT DISTINCT {$column} FROM {$this->table_name} WHERE " . implode(' AND ', $where) . " ORDER BY {$column} ASC";
 
         $rows = $wpdb->get_col($wpdb->prepare($sql, $values));
 
@@ -302,7 +389,7 @@ class UR_AI_Market_Price_Repository {
         $old_threshold = absint($old_threshold);
         $new_threshold = absint($new_threshold);
 
-        $where  = array('is_special_relationship = 0');
+        $where  = $this->exclusion_where();
         $values = array();
 
         if ('' !== (string) $city) {
@@ -352,13 +439,25 @@ class UR_AI_Market_Price_Repository {
     }
 
     /**
+     * 特殊關係交易排除條件。
+     *
+     * 統計相關查詢（build_where() 與 get_sample_health()）都必須套用這條
+     * 排除條件，集中在同一處避免兩處各自維護一份、日後規則異動時漏改。
+     *
+     * @return array
+     */
+    private function exclusion_where() {
+        return array('is_special_relationship = 0');
+    }
+
+    /**
      * 建立查詢 WHERE 條件。
      *
      * @param array $args 查詢參數。
      * @return array{0: array, 1: array} array($where_clauses, $values)
      */
     private function build_where($args) {
-        $where  = array('is_special_relationship = 0');
+        $where  = $this->exclusion_where();
         $values = array();
 
         if (!empty($args['city'])) {

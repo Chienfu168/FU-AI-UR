@@ -35,6 +35,13 @@ class UR_AI_Market_Price_Service {
     const CACHE_TTL = 1200;
 
     /**
+     * 資料過舊提醒門檻（天）。
+     *
+     * @var int
+     */
+    const STALE_DAYS_THRESHOLD = 90;
+
+    /**
      * Repository。
      *
      * @var UR_AI_Market_Price_Repository|null
@@ -157,19 +164,16 @@ class UR_AI_Market_Price_Service {
             'building_type' => isset($args['building_type']) ? sanitize_text_field($args['building_type']) : '',
         );
 
-        $old_stats = $this->get_price_stats(
-            array_merge($base_args, array('age_min' => $old_threshold)),
-            $min_sample_size
-        );
-
-        $new_stats = $this->get_price_stats(
-            array_merge($base_args, array('age_max' => $new_threshold)),
-            $min_sample_size
-        );
+        // 「老屋」與「新成屋」共用相同的縣市／行政區／分區／建物型態基本
+        // 篩選，只差屋齡門檻，因此一次查詢取出符合基本條件的紀錄後在
+        // Repository 端依屋齡分桶，避免對資料庫下兩次幾乎相同的查詢。
+        $pair = $this->repository instanceof UR_AI_Market_Price_Repository
+            ? $this->repository->get_price_stats_pair($base_args, $old_threshold, $new_threshold)
+            : array('old' => $this->empty_raw_stats(), 'new' => $this->empty_raw_stats());
 
         return array(
-            'old'               => $old_stats,
-            'new'               => $new_stats,
+            'old'               => $this->format_stats($pair['old'], $min_sample_size),
+            'new'               => $this->format_stats($pair['new'], $min_sample_size),
             'old_age_threshold' => $old_threshold,
             'new_age_threshold' => $new_threshold,
             'min_sample_size'   => $min_sample_size,
@@ -177,19 +181,13 @@ class UR_AI_Market_Price_Service {
     }
 
     /**
-     * 取得單一情境的行情統計（含最低樣本數門檻判斷）。
+     * 套用最低樣本數門檻判斷，將原始統計轉為前台可直接使用的格式。
      *
-     * @param array $args 查詢參數（傳給 Repository::get_price_stats()）。
+     * @param array $stats 原始統計（count／median／average／min／max／avg_age）。
      * @param int   $min_sample_size 最低樣本數門檻。
      * @return array
      */
-    private function get_price_stats($args, $min_sample_size) {
-        if (!$this->repository instanceof UR_AI_Market_Price_Repository) {
-            return $this->empty_stats();
-        }
-
-        $stats = $this->repository->get_price_stats($args);
-
+    private function format_stats($stats, $min_sample_size) {
         $sufficient = $stats['count'] >= $min_sample_size;
 
         return array(
@@ -204,19 +202,18 @@ class UR_AI_Market_Price_Service {
     }
 
     /**
-     * 空統計結果（服務不可用時的保底回傳值）。
+     * 空的原始統計結果（服務不可用時的保底回傳值）。
      *
      * @return array
      */
-    private function empty_stats() {
+    private function empty_raw_stats() {
         return array(
-            'count'      => 0,
-            'median'     => null,
-            'average'    => null,
-            'min'        => null,
-            'max'        => null,
-            'avg_age'    => 0.0,
-            'sufficient' => false,
+            'count'   => 0,
+            'median'  => 0.0,
+            'average' => 0.0,
+            'min'     => 0.0,
+            'max'     => 0.0,
+            'avg_age' => 0.0,
         );
     }
 
@@ -249,6 +246,35 @@ class UR_AI_Market_Price_Service {
         }
 
         return $this->repository->get_last_imported_at();
+    }
+
+    /**
+     * 距離最後一次匯入的天數。
+     *
+     * 集中在服務層計算，避免各後台頁面各自重複同一段日期換算邏輯，
+     * 未來若要調整「過舊」門檻或計算方式，只需要改這裡一處。
+     *
+     * @return int|null 尚無任何匯入資料時回傳 null。
+     */
+    public function get_stale_days() {
+        $last_imported = $this->get_last_imported_at();
+
+        if (!$last_imported) {
+            return null;
+        }
+
+        return (int) floor((current_time('timestamp') - strtotime($last_imported)) / DAY_IN_SECONDS);
+    }
+
+    /**
+     * 資料是否已久未更新（超過 STALE_DAYS_THRESHOLD 天）。
+     *
+     * @return bool
+     */
+    public function is_stale() {
+        $days = $this->get_stale_days();
+
+        return null !== $days && $days >= self::STALE_DAYS_THRESHOLD;
     }
 
     /**
