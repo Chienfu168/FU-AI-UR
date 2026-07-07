@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.8.6
+Stable tag: 1.8.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -160,6 +160,10 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 == Changelog ==
 
+= 1.8.7 =
+* 行情參考每組統計新增「近一年行情」：全歷史統計會因早期（通常較便宜）成交紀錄佔比隨資料量累積而越來越重，導致中位數落後於目前實際成交行情；現在額外顯示近一年的中位數與常見區間（樣本數需達最低門檻），讓使用者同時看到長期參考與近期實際行情，並附上年成長率。
+* 查詢結果新增「資料庫累計 N 筆歷史成交紀錄」，讓使用者了解本次查詢背後的樣本母數規模。
+
 = 1.8.6 =
 * 後台「行情參考」管理頁的「前台使用方式」補上新的 `[ur_ai_market_price_ranking]`（都更效益排行榜）短碼複製區塊，先前只列出 `[ur_ai_market_price]`，容易讓管理者找不到新短碼。
 
@@ -257,6 +261,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.8.7 =
+建議更新。行情參考新增「近一年行情」與資料庫累計筆數顯示，協助判斷長期歷史統計與近期實際行情的落差，純新增呈現內容，不影響既有查詢邏輯。
 
 = 1.8.6 =
 建議更新。純後台文件性質調整（行情參考管理頁補上新短碼複製區塊），不影響任何功能與資料。

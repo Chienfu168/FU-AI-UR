@@ -260,7 +260,7 @@ class UR_AI_Market_Price_Repository {
                 'range_high' => 0.0,
                 'avg_age'    => 0.0,
                 'examples'   => array(),
-                'trend'      => null,
+                'recent'     => null,
             );
         }
 
@@ -292,24 +292,30 @@ class UR_AI_Market_Price_Repository {
             'range_high' => $this->percentile($prices, 0.75),
             'avg_age'    => $count > 0 ? round(array_sum($ages) / $count, 1) : 0.0,
             'examples'   => $this->pick_examples($rows),
-            'trend'      => $this->compute_trend($rows),
+            'recent'     => $this->compute_recent_window($rows),
         );
     }
 
     /**
-     * 比較「近一年」與「前一年（一～二年前）」的中位數單價，計算年成長率。
+     * 計算「近一年」的行情統計（中位數、四分位距、樣本數），並在有
+     * 「前一年（一～二年前）」資料可比較時，一併算出年成長率。
      *
-     * 兩個時間窗都採用中位數（而非平均），並沿用與其他統計數字相同的
-     * 穩健性原則。任一時間窗樣本數為 0 時，趨勢視為無法計算，回傳 null，
-     * 由呼叫端決定是否再依最低樣本數門檻進一步隱藏。
+     * 全歷史統計會因為早期（通常較便宜）的成交紀錄佔比隨資料量累積
+     * 而越來越重，導致中位數落後於目前實際成交行情；近一年這組數字
+     * 讓使用者可以同時看到「長期參考」與「近期實際行情」，而不是只看
+     * 一個被歷史資料拉低的數字。
+     *
+     * 即使沒有前一年資料可比較成長率，只要近一年本身樣本足夠，仍會
+     * 回傳中位數／區間（change_percent 為 null）；完全沒有近一年資料
+     * 時才回傳 null，由呼叫端決定是否再依最低樣本數門檻進一步隱藏。
      *
      * @param array $rows $wpdb->get_results() 回傳的紀錄陣列（需含 transaction_date）。
-     * @return array{ recent_count: int, prior_count: int, change_percent: float }|null
+     * @return array{ count: int, median: float, range_low: float, range_high: float, prior_count: int, change_percent: float|null }|null
      */
-    private function compute_trend($rows) {
-        $now            = current_time('timestamp');
-        $one_year_ago   = $now - (365 * DAY_IN_SECONDS);
-        $two_years_ago  = $now - (730 * DAY_IN_SECONDS);
+    private function compute_recent_window($rows) {
+        $now           = current_time('timestamp');
+        $one_year_ago  = $now - (365 * DAY_IN_SECONDS);
+        $two_years_ago = $now - (730 * DAY_IN_SECONDS);
 
         $recent_prices = array();
         $prior_prices  = array();
@@ -328,25 +334,33 @@ class UR_AI_Market_Price_Repository {
             }
         }
 
-        if (empty($recent_prices) || empty($prior_prices)) {
+        if (empty($recent_prices)) {
             return null;
         }
 
         sort($recent_prices);
-        sort($prior_prices);
 
-        $recent_median = $this->percentile($recent_prices, 0.5);
-        $prior_median  = $this->percentile($prior_prices, 0.5);
+        $result = array(
+            'count'          => count($recent_prices),
+            'median'         => $this->percentile($recent_prices, 0.5),
+            'range_low'      => $this->percentile($recent_prices, 0.25),
+            'range_high'     => $this->percentile($recent_prices, 0.75),
+            'prior_count'    => 0,
+            'change_percent' => null,
+        );
 
-        if ($prior_median <= 0) {
-            return null;
+        if (!empty($prior_prices)) {
+            sort($prior_prices);
+
+            $prior_median             = $this->percentile($prior_prices, 0.5);
+            $result['prior_count']    = count($prior_prices);
+
+            if ($prior_median > 0) {
+                $result['change_percent'] = round((($result['median'] - $prior_median) / $prior_median) * 100, 1);
+            }
         }
 
-        return array(
-            'recent_count'   => count($recent_prices),
-            'prior_count'    => count($prior_prices),
-            'change_percent' => round((($recent_median - $prior_median) / $prior_median) * 100, 1),
-        );
+        return $result;
     }
 
     /**

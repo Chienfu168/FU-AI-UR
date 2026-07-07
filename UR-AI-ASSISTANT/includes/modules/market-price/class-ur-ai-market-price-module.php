@@ -229,6 +229,8 @@ class UR_AI_Market_Price_Module {
                     'example_price'    => __('單價約 %s/坪', 'ur-ai-assistant'),
                     'uplift_label'     => __('都更後行情變化約 %s', 'ur-ai-assistant'),
                     'trend_label'      => __('近一年成長 %s', 'ur-ai-assistant'),
+                    'recent_label'     => __('近一年行情', 'ur-ai-assistant'),
+                    'total_records_label' => __('資料庫累計 %s 筆歷史成交紀錄', 'ur-ai-assistant'),
                 ),
             )
         );

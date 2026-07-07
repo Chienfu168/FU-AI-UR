@@ -144,6 +144,28 @@
     font-weight: 600;
 }
 
+.ur-ai-market-price-recent {
+    margin: 10px 0;
+    padding: 10px 12px;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.ur-ai-market-price-recent-label {
+    margin: 0 0 4px;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ur-ai-market-price-recent-median {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
 .ur-ai-market-price-insufficient {
     color: #6b7280;
     font-size: 13px;
