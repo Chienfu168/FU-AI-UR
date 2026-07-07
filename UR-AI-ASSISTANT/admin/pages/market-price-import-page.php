@@ -29,6 +29,28 @@ if (!class_exists('UR_AI_Market_Price_Settings') || !class_exists('UR_AI_Market_
     return;
 }
 
+/*
+ * 資料表若因故未成功建立（例如資料庫帳號權限不足導致 dbDelta 靜默失敗），
+ * 匯入時每一列都會被判定為「略過」且沒有任何明確錯誤訊息，難以排查。
+ * 這裡先明確檢查資料表是否存在，避免管理者誤以為是 CSV 檔案格式問題。
+ */
+if (class_exists('UR_AI_Schema_Manager') && method_exists('UR_AI_Schema_Manager', 'get_table_statuses')) {
+    $ur_ai_mp_table_statuses = UR_AI_Schema_Manager::get_table_statuses();
+    $ur_ai_mp_table_exists   = !isset($ur_ai_mp_table_statuses['UR_AI_Schema_Market_Prices'])
+        || !empty($ur_ai_mp_table_statuses['UR_AI_Schema_Market_Prices']['exists']);
+
+    if (!$ur_ai_mp_table_exists) {
+        echo '<div class="wrap ur-ai-admin-page">';
+        echo '<h1>' . esc_html__('都更 AI 助理｜行情參考', 'ur-ai-assistant') . '</h1>';
+        echo '<div class="notice notice-error"><p>' . esc_html__(
+            '行情參考資料表尚未成功建立，因此匯入時所有資料列都會被判定為「略過」（並非 CSV 檔案格式問題）。請先嘗試：至外掛頁面「停用」後再「重新啟用」本外掛以觸發資料表建立；若重新啟用後仍無法解決，請聯絡主機廠商確認資料庫帳號是否具備 CREATE TABLE 權限。',
+            'ur-ai-assistant'
+        ) . '</p></div>';
+        echo '</div>';
+        return;
+    }
+}
+
 $message  = isset($_GET['ur_message']) ? sanitize_key(wp_unslash($_GET['ur_message'])) : '';
 $msg_type = isset($_GET['ur_msg_type']) ? sanitize_key(wp_unslash($_GET['ur_msg_type'])) : 'updated';
 
