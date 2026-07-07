@@ -178,7 +178,8 @@ class UR_AI_Market_Price_Repository {
 
         list($where, $values) = $this->build_where($args);
 
-        $sql = "SELECT unit_price_per_ping, building_age_years
+        $sql = "SELECT unit_price_per_ping, building_age_years,
+                       district, building_type, building_area_sqm, address_raw
                 FROM {$this->table_name}
                 WHERE " . implode(' AND ', $where) . '
                   AND unit_price_per_ping > 0';
@@ -207,7 +208,8 @@ class UR_AI_Market_Price_Repository {
 
         list($where, $values) = $this->build_where($args);
 
-        $sql = "SELECT unit_price_per_ping, building_age_years
+        $sql = "SELECT unit_price_per_ping, building_age_years,
+                       district, building_type, building_area_sqm, address_raw
                 FROM {$this->table_name}
                 WHERE " . implode(' AND ', $where) . '
                   AND unit_price_per_ping > 0';
@@ -257,6 +259,7 @@ class UR_AI_Market_Price_Repository {
                 'range_low'  => 0.0,
                 'range_high' => 0.0,
                 'avg_age'    => 0.0,
+                'examples'   => array(),
             );
         }
 
@@ -287,7 +290,99 @@ class UR_AI_Market_Price_Repository {
             'range_low'  => $this->percentile($prices, 0.25),
             'range_high' => $this->percentile($prices, 0.75),
             'avg_age'    => $count > 0 ? round(array_sum($ages) / $count, 1) : 0.0,
+            'examples'   => $this->pick_examples($rows),
         );
+    }
+
+    /**
+     * 依單價由低到高，挑出接近第一四分位、中位數、第三四分位位置的
+     * 真實交易紀錄，作為去識別化的參考案例。
+     *
+     * 只揭露屋齡／坪數／建物型態／路段＋單價，不含門牌號、樓層、
+     * 確切交易日期，避免反查回政府公開資料裡的特定一筆交易。
+     *
+     * @param array $rows $wpdb->get_results() 回傳的紀錄陣列。
+     * @return array
+     */
+    private function pick_examples($rows) {
+        $rows = array_values($rows);
+        $count = count($rows);
+
+        if (0 === $count) {
+            return array();
+        }
+
+        usort(
+            $rows,
+            function ($a, $b) {
+                return $a->unit_price_per_ping <=> $b->unit_price_per_ping;
+            }
+        );
+
+        $target_indexes = array(
+            (int) round(0.25 * ($count - 1)),
+            (int) round(0.5 * ($count - 1)),
+            (int) round(0.75 * ($count - 1)),
+        );
+
+        $examples = array();
+        $seen     = array();
+
+        foreach ($target_indexes as $index) {
+            if (isset($seen[$index])) {
+                continue;
+            }
+
+            $seen[$index] = true;
+            $examples[]   = $this->format_example($rows[$index]);
+        }
+
+        return $examples;
+    }
+
+    /**
+     * 將單一交易紀錄轉為去識別化的案例資料（不含門牌、樓層、交易日期）。
+     *
+     * @param object $row 單一交易紀錄。
+     * @return array
+     */
+    private function format_example($row) {
+        $sqm_per_ping = class_exists('UR_AI_Market_Price_Import_Service')
+            ? UR_AI_Market_Price_Import_Service::SQM_PER_PING
+            : 3.305785;
+
+        return array(
+            'district'            => (string) $row->district,
+            'road_section'        => $this->extract_road_section((string) $row->address_raw, (string) $row->district),
+            'building_type'       => (string) $row->building_type,
+            'building_age_years'  => (int) $row->building_age_years,
+            'ping'                => round(((float) $row->building_area_sqm) / $sqm_per_ping, 1),
+            'unit_price_per_ping' => (float) $row->unit_price_per_ping,
+        );
+    }
+
+    /**
+     * 從完整地址擷取「路／街／大道＋段」層級的去識別化地點描述，
+     * 捨棄門牌號、巷弄、樓層等會指向特定一戶的細節。
+     *
+     * @param string $address_raw 原始地址（含縣市／行政區／門牌／樓層）。
+     * @param string $district 行政區（用來定位路名的起始位置）。
+     * @return string 解析失敗時回傳空字串。
+     */
+    private function extract_road_section($address_raw, $district) {
+        if ('' !== $district) {
+            $pos = mb_strpos($address_raw, $district);
+
+            if (false !== $pos) {
+                $address_raw = mb_substr($address_raw, $pos + mb_strlen($district));
+            }
+        }
+
+        if (preg_match('/^(.*?(?:路|街|大道)(?:[一二三四五六七八九十]+段)?)/u', $address_raw, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return '';
     }
 
     /**

@@ -192,6 +192,10 @@ class UR_AI_Market_Price_Module {
                     'range_label'      => __('常見區間', 'ur-ai-assistant'),
                     'range_note'       => __('（反映同區域內不同樓層、屋況、地點的價格落差，已排除少數極端案例）', 'ur-ai-assistant'),
                     'per_ping'         => __('每坪', 'ur-ai-assistant'),
+                    'examples_label'   => __('參考案例（依單價由低到高）', 'ur-ai-assistant'),
+                    /* translators: 1: 屋齡 2: 坪數 3: 建物型態 */
+                    'example_feature'  => __('屋齡 %1$s 年、%2$s 坪、%3$s', 'ur-ai-assistant'),
+                    'example_price'    => __('單價約 %s/坪', 'ur-ai-assistant'),
                 ),
             )
         );
