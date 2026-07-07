@@ -111,6 +111,13 @@
     font-size: 13px;
 }
 
+.ur-ai-market-price-range-note {
+    margin: 0 0 8px;
+    color: #9ca3af;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
 .ur-ai-market-price-insufficient {
     color: #6b7280;
     font-size: 13px;

@@ -187,9 +187,10 @@ class UR_AI_Market_Price_Module {
                     'insufficient'     => __('本區樣本數不足，暫不提供統計，建議放寬篩選條件。', 'ur-ai-assistant'),
                     'sample_count'     => __('樣本 %s 筆', 'ur-ai-assistant'),
                     'avg_age'          => __('平均屋齡 %s 年', 'ur-ai-assistant'),
-                    'median_label'     => __('中位數', 'ur-ai-assistant'),
-                    'average_label'    => __('平均數', 'ur-ai-assistant'),
-                    'range_label'      => __('區間', 'ur-ai-assistant'),
+                    'old_title'        => __('老屋現況行情（%s 年以上）', 'ur-ai-assistant'),
+                    'new_title'        => __('新成屋行情（%s 年內）', 'ur-ai-assistant'),
+                    'range_label'      => __('常見區間', 'ur-ai-assistant'),
+                    'range_note'       => __('（反映同區域內不同樓層、屋況、地點的價格落差，已排除少數極端案例）', 'ur-ai-assistant'),
                     'per_ping'         => __('每坪', 'ur-ai-assistant'),
                 ),
             )

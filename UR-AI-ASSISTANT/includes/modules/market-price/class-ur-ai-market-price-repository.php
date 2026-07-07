@@ -249,12 +249,14 @@ class UR_AI_Market_Price_Repository {
     private function summarize_rows($rows) {
         if (!is_array($rows) || empty($rows)) {
             return array(
-                'count'   => 0,
-                'median'  => 0.0,
-                'average' => 0.0,
-                'min'     => 0.0,
-                'max'     => 0.0,
-                'avg_age' => 0.0,
+                'count'      => 0,
+                'median'     => 0.0,
+                'average'    => 0.0,
+                'min'        => 0.0,
+                'max'        => 0.0,
+                'range_low'  => 0.0,
+                'range_high' => 0.0,
+                'avg_age'    => 0.0,
             );
         }
 
@@ -270,35 +272,59 @@ class UR_AI_Market_Price_Repository {
         $count = count($prices);
 
         return array(
-            'count'   => $count,
-            'median'  => $this->median($prices),
-            'average' => round(array_sum($prices) / $count, 2),
-            'min'     => $prices[0],
-            'max'     => $prices[$count - 1],
-            'avg_age' => $count > 0 ? round(array_sum($ages) / $count, 1) : 0.0,
+            'count'      => $count,
+            'median'     => $this->percentile($prices, 0.5),
+            'average'    => round(array_sum($prices) / $count, 2),
+            'min'        => $prices[0],
+            'max'        => $prices[$count - 1],
+            /*
+             * 「區間」對外顯示用四分位距（25%～75%），而非 min／max。
+             * min／max 對極端值（例如個別瑕疵屋或特殊裝潢戶）非常敏感，
+             * 樣本一多，區間動輒橫跨好幾倍，容易讓使用者誤以為資料失真；
+             * 四分位距代表「扣除最極端的前後各 25% 之後，中間一半案例
+             * 落在的範圍」，更貼近一般認知的「行情區間」。
+             */
+            'range_low'  => $this->percentile($prices, 0.25),
+            'range_high' => $this->percentile($prices, 0.75),
+            'avg_age'    => $count > 0 ? round(array_sum($ages) / $count, 1) : 0.0,
         );
     }
 
     /**
-     * 計算中位數（陣列須已排序）。
+     * 計算指定百分位數（陣列須已排序），採線性內插法（與常見統計軟體
+     * 的預設方法一致）。
      *
      * @param array $sorted_values 已由小到大排序的數值陣列。
+     * @param float $p 百分位（0～1 之間，例如 0.5 為中位數、0.25 為第一四分位）。
      * @return float
      */
-    private function median($sorted_values) {
+    private function percentile($sorted_values, $p) {
         $count = count($sorted_values);
 
         if (0 === $count) {
             return 0.0;
         }
 
-        $middle = (int) floor(($count - 1) / 2);
-
-        if ($count % 2) {
-            return round($sorted_values[$middle], 2);
+        if (1 === $count) {
+            return round($sorted_values[0], 2);
         }
 
-        return round(($sorted_values[$middle] + $sorted_values[$middle + 1]) / 2, 2);
+        $index = $p * ($count - 1);
+        $lower = (int) floor($index);
+        $upper = (int) ceil($index);
+
+        if ($upper >= $count) {
+            return round($sorted_values[$count - 1], 2);
+        }
+
+        if ($lower === $upper) {
+            return round($sorted_values[$lower], 2);
+        }
+
+        $weight = $index - $lower;
+        $value  = $sorted_values[$lower] + $weight * ($sorted_values[$upper] - $sorted_values[$lower]);
+
+        return round($value, 2);
     }
 
     /**
