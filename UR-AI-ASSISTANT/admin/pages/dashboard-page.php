@@ -97,6 +97,20 @@ $feedback_url          = admin_url('admin.php?page=ur-ai-assistant-feedback');
 $shortcode             = '[ur_ai_assistant]';
 $faq_kb_page_shortcode = '[ur_ai_faq_kb_page]';
 $calculator_shortcode  = '[ur_ai_calculator]';
+$market_price_shortcode = '[ur_ai_market_price]';
+
+$market_price_stale_days = null;
+
+if (class_exists('UR_AI_Market_Price_Service')) {
+    $market_price_service     = new UR_AI_Market_Price_Service();
+    $market_price_last_import = $market_price_service->get_last_imported_at();
+
+    if ($market_price_last_import) {
+        $market_price_stale_days = (int) floor((current_time('timestamp') - strtotime($market_price_last_import)) / DAY_IN_SECONDS);
+    }
+}
+
+$market_price_admin_url = admin_url('admin.php?page=ur-ai-assistant-market-price');
 
 $api_key_set = false;
 
@@ -147,6 +161,24 @@ if (class_exists('UR_AI_Settings')) {
                 <?php echo esc_html__('如果 FAQ 未命中，系統將無法呼叫 AI 回答。請先至「功能設定」填入 API Key。', 'ur-ai-assistant'); ?>
                 <a href="<?php echo esc_url($settings_url); ?>">
                     <?php echo esc_html__('前往設定', 'ur-ai-assistant'); ?>
+                </a>
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <?php if (null !== $market_price_stale_days && $market_price_stale_days >= 90) : ?>
+        <div class="notice notice-warning">
+            <p>
+                <strong><?php echo esc_html__('行情參考資料已久未更新。', 'ur-ai-assistant'); ?></strong>
+                <?php
+                printf(
+                    /* translators: %d: days since last import */
+                    esc_html__('已 %d 天未匯入新資料，建議至內政部實價登錄開放資料下載新一季資料並重新匯入。', 'ur-ai-assistant'),
+                    $market_price_stale_days
+                );
+                ?>
+                <a href="<?php echo esc_url($market_price_admin_url); ?>">
+                    <?php echo esc_html__('前往行情參考', 'ur-ai-assistant'); ?>
                 </a>
             </p>
         </div>
@@ -224,7 +256,7 @@ if (class_exists('UR_AI_Settings')) {
     <details class="ur-ai-card ur-ai-setup-guide" id="ur-ai-shortcode-guide">
         <summary class="ur-ai-setup-guide-summary">
             <span class="ur-ai-setup-guide-title"><?php echo esc_html__('Shortcode 使用說明', 'ur-ai-assistant'); ?></span>
-            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 3 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
+            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 4 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
         </summary>
 
         <div class="ur-ai-setup-guide-body">
@@ -305,6 +337,20 @@ if (class_exists('UR_AI_Settings')) {
                 );
                 ?>
             </p>
+
+            <hr>
+
+            <h3><?php echo esc_html__('4. 雙北成屋行情參考', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-market-price"><?php echo esc_html($market_price_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-market-price">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('查詢雙北（台北市／新北市）近期「老屋現況」與「新成屋」成交行情，並排比較都更／危老重建前後的價值落差。僅供歷史成交行情參考，不構成估價。需先於「行情參考」頁面上傳內政部實價登錄開放資料並啟用此功能。', 'ur-ai-assistant'); ?></p>
+            <ul class="ur-ai-shortcode-params">
+                <li><code>title</code> — <?php echo esc_html__('自訂標題，留空預設為「雙北成屋行情參考」。', 'ur-ai-assistant'); ?></li>
+            </ul>
 
         </div>
     </details>
@@ -447,7 +493,7 @@ if (class_exists('UR_AI_Settings')) {
             </div>
 
             <p class="ur-ai-muted">
-                <?php echo esc_html__('本外掛共有 3 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
+                <?php echo esc_html__('本外掛共有 4 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
                 <a href="#ur-ai-shortcode-guide"><?php echo esc_html__('前往完整說明', 'ur-ai-assistant'); ?></a>
             </p>
         </div>

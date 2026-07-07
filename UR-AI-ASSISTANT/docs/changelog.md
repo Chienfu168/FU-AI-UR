@@ -1360,6 +1360,179 @@ ur-ai-assistant.php
 
 ---
 
+## v1.8.0
+
+更新日期
+2026-07-07
+
+版本定位
+
+都更危老重建案的前期評估，除了試算分回效益外，屋主與投資方也常需要知道
+「附近的成屋行情大概多少」，並且需要區分「更新前的老舊房屋」與
+「更新後的新成屋」兩種參考基準。考量「估價」一詞在法規上僅限領有證照的
+不動產估價師使用，本模組定位為「歷史成交行情參考」，資料來源為內政部
+不動產交易實價查詢服務的公開資料，不做任何預測或估算，僅呈現歷史統計
+（中位數為主），並排除特殊關係交易、設有最低樣本數門檻。範圍先限定
+雙北（台北市／新北市），資料以後台手動上傳 CSV 的方式匯入與持續累積。
+
+核心目標
+
+* 提供「簡易查詢行情參考」的獨立 shortcode，不與既有 AI 助理／試算器混用。
+* 以獨立模組建置（schema／repository／service／import service／
+  settings／ajax／admin／module 各層分離），service 層方法設計成
+  未來其他模組（例如試算器）可直接 new 呼叫取得行情資料，不需要額外的
+  hook 或 REST 包裝。
+* 同一批資料依「建物年齡」動態分成「老屋現況」與「新成屋」兩組統計，
+  門檻皆可於後台調整，不需要維護兩份資料。
+* 資料正確性與統計效度優先於功能豐富度：特殊關係交易一律排除、
+  最低樣本數不足時只顯示筆數不顯示金額、以中位數而非平均數為主要指標
+  （避免極端交易拉高/拉低參考值）。
+
+一、主要新增功能
+
+1. 新 shortcode [ur_ai_market_price]
+  使用者選擇縣市（台北市／新北市）與行政區後，可查詢該行政區「老屋現況」
+  （預設屋齡 30 年以上）與「新成屋」（預設屋齡 5 年內）兩組歷史成交行情
+  統計：中位數、平均、最低、最高單價（元/坪）與平均屋齡。任一組樣本數
+  低於後台設定的最低門檻（預設 5 筆）時，只顯示筆數並標示「樣本不足」，
+  不顯示金額，避免統計失真誤導使用者。
+
+2. 後台「行情參考」管理頁
+  - CSV 匯入：上傳內政部實價登錄公開資料 CSV（依政府「編號」欄位去重，
+    可重複上傳含重疊區間的資料而不會產生重複紀錄，方便日後持續累加）。
+  - 功能開關與門檻設定：老屋／新成屋屋齡門檻、最低樣本數門檻、
+    免責聲明文字皆可調整。
+  - 各行政區樣本數健檢總覽：一次檢視雙北各行政區的老屋／新成屋樣本數，
+    低於門檻的儲存格會標示提醒色，方便判斷哪些行政區還需要補充資料。
+  - 資料過舊提醒：最後匯入時間超過 90 天會於管理頁顯示提醒。
+
+3. 資料清理與正規化（匯入時自動處理）
+  - 民國年日期換算為西元年月日（相容 6～7 碼、含驗證，格式錯誤直接略過
+    該筆而非整批匯入失敗）。
+  - 都市土地使用分區原始文字（如「都市：其他:第三種住宅區。」）正規化為
+    簡短分類（如「住三」），與既有試算器的分區分類方式一致。
+  - 自動偵測備註欄含「特殊關係」字樣的交易並標記排除，不納入任何統計。
+  - 單價換算：以（總價－車位總價）÷（建物移轉總面積 ÷ 3.305785）計算
+    元/坪單價，扣除車位總價影響、避免車位交易拉高住宅單價參考值。
+
+二、新增檔案
+
+includes/database/schemas/class-ur-ai-schema-market-prices.php
+  - 新資料表 schema：ur_ai_market_prices（含 source_record_id 唯一索引
+    作為去重依據，及 city/district/zone/building_age_years/
+    transaction_date 等查詢索引）。
+
+includes/modules/market-price/class-ur-ai-market-price-settings.php
+  - 專屬設定類別（獨立 option，仿試算器模組慣例）：啟用開關、老屋／
+    新成屋屋齡門檻、最低樣本數門檻、免責聲明文字，皆含 sanitize 邊界檢查。
+
+includes/modules/market-price/class-ur-ai-market-price-zone-normalizer.php
+  - 都市土地使用分區文字正規化工具（住宅區／商業區各種別，無法辨識時
+    歸類為「其他」）。
+
+includes/modules/market-price/class-ur-ai-market-price-repository.php
+  - 資料存取層：去重寫入、依條件（縣市／行政區／分區／建物型態／
+    屋齡區間）查詢統計（中位數／平均／最低／最高於 PHP 端計算，
+    避免依賴特定 MySQL/MariaDB 版本的統計函式）、各行政區樣本數健檢查詢。
+
+includes/modules/market-price/class-ur-ai-market-price-import-service.php
+  - CSV 匯入服務：欄位對應、民國年換算、特殊關係偵測、分區正規化、
+    單價計算，並統計本次匯入的新增／重複／略過筆數。
+
+includes/modules/market-price/class-ur-ai-market-price-service.php
+  - 對外服務層（含 transient 快取）：get_comparison() 回傳老屋／新成屋
+    兩組統計、get_sample_health()、get_last_imported_at() 等。刻意維持
+    一組穩定、有清楚文件註解的公開方法，方便未來其他模組（例如試算器）
+    需要參考行情資料時直接 new 一個本類別呼叫。
+
+includes/modules/market-price/class-ur-ai-market-price-ajax.php
+  - 前台查詢 AJAX handler（沿用共用 nonce ur_ai_assistant_public_nonce）。
+
+includes/modules/market-price/class-ur-ai-market-price-module.php
+  - 模組進入點：註冊 shortcode、專屬 CSS/JS（不共用 public.css/js）、
+    後台選單、admin-post 匯入與設定儲存 handler。
+
+includes/modules/market-price/class-ur-ai-market-price-admin.php
+  - 後台匯入與設定儲存邏輯（capability 檢查、nonce 驗證、匯入結果訊息）。
+
+admin/pages/market-price-import-page.php
+  - 後台「行情參考」管理頁樣板。
+
+public/views/market-price-view.php
+  - 前台查詢表單與結果容器樣板（僅提供縣市／行政區篩選，符合「簡易查詢」
+    需求；分區／建物型態篩選已在 service／repository／ajax 層備妥，
+    未來如需更細緻篩選可直接擴充前台表單）。
+
+public/assets/js/market-price.js
+  - 前台互動邏輯：依縣市篩選行政區選項、送出 AJAX 查詢、渲染老屋／
+    新成屋比較卡片。
+
+public/assets/css/market-price.css
+  - 專屬樣式（.ur-ai-market-price-* 前綴，與既有模組樣式命名空間區隔）。
+
+三、修改檔案
+
+includes/database/class-ur-ai-schema-manager.php
+  - DB_VERSION 1.1.0 → 1.2.0；註冊 UR_AI_Schema_Market_Prices。
+
+includes/core/class-ur-ai-autoloader.php
+  - 新增行情參考模組 8 個類別與新 schema 類別的路徑對照。
+
+includes/core/class-ur-ai-module-manager.php
+  - 註冊 market_price 模組（UR_AI_Market_Price_Module）。
+
+admin/pages/dashboard-page.php
+  - 資料過舊（≥90 天未匯入）提醒訊息。
+  - 「Shortcode 使用說明」新增第 4 組：雙北成屋行情參考 [ur_ai_market_price]。
+  - 「3 組 Shortcode」文字更新為「4 組 Shortcode」。
+
+uninstall.php
+  - 解除安裝清單新增 ur_ai_market_prices 資料表。
+
+readme.txt／docs/installation.md
+  - 主要功能列表、Shortcode 說明、FAQ（解除安裝保留資料表清單）同步更新。
+
+ur-ai-assistant.php
+  - 版本號 1.7.1 → 1.8.0。
+
+四、資料表變更
+
+新增 wp_ur_ai_market_prices 資料表（詳見上方 schema 檔案說明）。
+DB_VERSION 由 1.1.0 → 1.2.0，沿用既有 dbDelta 自動建表機制，
+啟用外掛或外掛更新時會自動建立，不需手動執行 SQL。
+
+五、測試方式
+
+由於本機沙箱環境無法安裝完整 WordPress 且無法連線政府開放資料網站，
+改用使用者實際提供的內政部實價登錄雙北成屋樣本資料（.xls 原始檔，
+以 Python xlrd 轉出等同 Excel「另存為 CSV」格式，含 UTF-8 BOM 與
+英文欄名列，模擬管理員實際會上傳的檔案）搭配 PHP + SQLite 驗證工具，
+直接載入本模組 5 個真實類別檔案（zone-normalizer／repository／
+import-service／settings／service）對真實資料執行完整流程，驗證：
+
+* 台北市樣本（212 筆）與新北市樣本（1058 筆）皆正確匯入，總筆數
+  與資料庫實際筆數一致。
+* 重複上傳同一份檔案時，212 筆全部正確判定為重複、0 筆新增
+  （驗證 source_record_id 去重機制）。
+* 士林區老屋現況（18 筆樣本）正確輸出中位數等統計；新成屋（僅 2 筆）
+  因低於最低樣本數門檻，正確只顯示筆數、不顯示金額。
+* 各行政區樣本數健檢總覽數字與明細資料一致。
+* 100 筆特殊關係交易正確被標記且排除於所有統計之外。
+* 資料庫內儲存的分區欄位皆為正規化後的簡短分類（住三／商一等），
+  原始政府文字（如「都市：其他:第三種住宅區。」）未被原樣存入。
+
+全部 8 項驗證項目皆通過。
+
+六、是否建議上正式站
+
+建議先於後台「行情參考」頁面手動上傳一份完整的雙北實價登錄 CSV，
+確認匯入筆數與樣本數健檢總覽符合預期後，再啟用本模組並公開
+[ur_ai_market_price] 頁面。啟用前請確認免責聲明文字符合網站需求，
+且尚未有自動抓取政府資料的排程機制，需靠人工定期至內政部網站
+下載最新 CSV 並於後台重新匯入。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

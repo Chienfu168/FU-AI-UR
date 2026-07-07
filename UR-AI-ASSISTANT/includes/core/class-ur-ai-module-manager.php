@@ -134,6 +134,16 @@ class UR_AI_Module_Manager {
             'UR_AI_Calculator_Module',
             true
         );
+
+        /*
+         * 行情參考模組（v1.8.0 新增）。
+         * 提供雙北成屋行情（老屋現況／新成屋）查詢 shortcode 與後台匯入功能。
+         */
+        $this->register_module(
+            'market_price',
+            'UR_AI_Market_Price_Module',
+            true
+        );
     }
 
     /**
