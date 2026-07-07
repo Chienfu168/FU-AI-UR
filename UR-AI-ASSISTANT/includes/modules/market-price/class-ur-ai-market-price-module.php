@@ -23,6 +23,7 @@ if (!defined('ABSPATH')) {
 class UR_AI_Market_Price_Module {
 
     const SHORTCODE            = 'ur_ai_market_price';
+    const RANKING_SHORTCODE    = 'ur_ai_market_price_ranking';
     const STYLE_HANDLE         = 'ur-ai-market-price';
     const SCRIPT_HANDLE        = 'ur-ai-market-price';
     const ADMIN_MENU_SLUG      = 'ur-ai-assistant-market-price';
@@ -52,12 +53,22 @@ class UR_AI_Market_Price_Module {
     private $admin;
 
     /**
+     * 排行榜 shortcode 處理器。
+     *
+     * @var UR_AI_Market_Price_Ranking_Shortcode
+     */
+    private $ranking_shortcode;
+
+    /**
      * 建構並組裝相依物件。
      */
     public function __construct() {
-        $this->service = class_exists('UR_AI_Market_Price_Service') ? new UR_AI_Market_Price_Service() : null;
-        $this->ajax    = class_exists('UR_AI_Market_Price_Ajax') ? new UR_AI_Market_Price_Ajax($this->service) : null;
-        $this->admin   = class_exists('UR_AI_Market_Price_Admin') ? new UR_AI_Market_Price_Admin($this->service) : null;
+        $this->service           = class_exists('UR_AI_Market_Price_Service') ? new UR_AI_Market_Price_Service() : null;
+        $this->ajax              = class_exists('UR_AI_Market_Price_Ajax') ? new UR_AI_Market_Price_Ajax($this->service) : null;
+        $this->admin             = class_exists('UR_AI_Market_Price_Admin') ? new UR_AI_Market_Price_Admin($this->service) : null;
+        $this->ranking_shortcode = class_exists('UR_AI_Market_Price_Ranking_Shortcode')
+            ? new UR_AI_Market_Price_Ranking_Shortcode($this->service)
+            : null;
     }
 
     /**
@@ -73,6 +84,7 @@ class UR_AI_Market_Price_Module {
         // 前台。
         add_action('wp_enqueue_scripts', array($this, 'register_assets'));
         add_shortcode(self::SHORTCODE, array($this, 'render_shortcode'));
+        add_shortcode(self::RANKING_SHORTCODE, array($this, 'render_ranking_shortcode'));
 
         // 後台（priority 20 確保父選單已建立）。
         add_action('admin_menu', array($this, 'register_admin_page'), 20);
@@ -168,6 +180,25 @@ class UR_AI_Market_Price_Module {
     }
 
     /**
+     * 排行榜 shortcode 輸出。
+     *
+     * 純伺服器端渲染，不需要 AJAX／JS，只 enqueue CSS（沿用 widget 的
+     * 樣式檔案，class 前綴不同不會互相干擾）。
+     *
+     * @param array|string $atts shortcode 屬性。
+     * @return string
+     */
+    public function render_ranking_shortcode($atts = array()) {
+        if (!$this->ranking_shortcode instanceof UR_AI_Market_Price_Ranking_Shortcode) {
+            return '';
+        }
+
+        wp_enqueue_style(self::STYLE_HANDLE);
+
+        return $this->ranking_shortcode->render($atts);
+    }
+
+    /**
      * localize 前台 JS。
      *
      * @return void
@@ -196,6 +227,8 @@ class UR_AI_Market_Price_Module {
                     /* translators: 1: 屋齡 2: 坪數 3: 建物型態 */
                     'example_feature'  => __('屋齡 %1$s 年、%2$s 坪、%3$s', 'ur-ai-assistant'),
                     'example_price'    => __('單價約 %s/坪', 'ur-ai-assistant'),
+                    'uplift_label'     => __('都更後行情變化約 %s', 'ur-ai-assistant'),
+                    'trend_label'      => __('近一年成長 %s', 'ur-ai-assistant'),
                 ),
             )
         );

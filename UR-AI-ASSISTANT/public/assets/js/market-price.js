@@ -112,7 +112,13 @@
 			var oldTitle = getI18n('old_title', '老屋現況行情（%s 年以上）').replace('%s', data.old_age_threshold);
 			var newTitle = getI18n('new_title', '新成屋行情（%s 年內）').replace('%s', data.new_age_threshold);
 
-			var html = '<div class="ur-ai-market-price-compare">';
+			var html = '';
+
+			if (data.uplift_percent !== null && data.uplift_percent !== undefined) {
+				html += renderUplift(data.uplift_percent);
+			}
+
+			html += '<div class="ur-ai-market-price-compare">';
 			html += renderCard(oldTitle, data.old);
 			html += renderCard(newTitle, data.new);
 			html += '</div>';
@@ -129,6 +135,15 @@
 			}
 
 			resultBox.innerHTML = html;
+		}
+
+		function renderUplift(upliftPercent) {
+			var isPositive = upliftPercent >= 0;
+			var sign = isPositive ? '+' : '';
+			var cls = isPositive ? 'ur-ai-market-price-uplift-up' : 'ur-ai-market-price-uplift-down';
+			var text = getI18n('uplift_label', '都更後行情變化約 %s').replace('%s', sign + upliftPercent + '%');
+
+			return '<p class="ur-ai-market-price-uplift ' + cls + '">' + escapeHtml(text) + '</p>';
 		}
 
 		function renderCard(title, stats) {
@@ -154,10 +169,24 @@
 			html += escapeHtml(getI18n('sample_count', '樣本 %s 筆').replace('%s', stats.count));
 			html += '，' + escapeHtml(getI18n('avg_age', '平均屋齡 %s 年').replace('%s', stats.avg_age));
 			html += '</p>';
+			html += renderTrend(stats.trend);
 			html += renderExamples(stats.examples);
 			html += '</div>';
 
 			return html;
+		}
+
+		function renderTrend(trend) {
+			if (!trend) {
+				return '';
+			}
+
+			var isPositive = trend.change_percent >= 0;
+			var sign = isPositive ? '+' : '';
+			var cls = isPositive ? 'ur-ai-market-price-trend-up' : 'ur-ai-market-price-trend-down';
+			var text = getI18n('trend_label', '近一年成長 %s').replace('%s', sign + trend.change_percent + '%');
+
+			return '<p class="ur-ai-market-price-detail ' + cls + '">' + escapeHtml(text) + '</p>';
 		}
 
 		function renderExamples(examples) {

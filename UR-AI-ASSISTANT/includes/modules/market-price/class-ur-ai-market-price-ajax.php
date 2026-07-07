@@ -109,6 +109,7 @@ class UR_AI_Market_Price_Ajax {
                 'old_age_threshold' => absint($comparison['old_age_threshold']),
                 'new_age_threshold' => absint($comparison['new_age_threshold']),
                 'min_sample_size'   => absint($comparison['min_sample_size']),
+                'uplift_percent'    => $comparison['uplift_percent'],
                 'last_imported_at'  => (string) $this->service->get_last_imported_at(),
                 'disclaimer'        => $this->get_disclaimer(),
             )

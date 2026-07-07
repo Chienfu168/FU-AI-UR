@@ -155,6 +155,7 @@ class UR_AI_Autoloader {
             'UR_AI_Market_Price_Zone_Normalizer'  => 'includes/modules/market-price/class-ur-ai-market-price-zone-normalizer.php',
             'UR_AI_Market_Price_Ajax'             => 'includes/modules/market-price/class-ur-ai-market-price-ajax.php',
             'UR_AI_Market_Price_Admin'            => 'includes/modules/market-price/class-ur-ai-market-price-admin.php',
+            'UR_AI_Market_Price_Ranking_Shortcode' => 'includes/modules/market-price/class-ur-ai-market-price-ranking-shortcode.php',
 
             /*
              * AJAX Module
