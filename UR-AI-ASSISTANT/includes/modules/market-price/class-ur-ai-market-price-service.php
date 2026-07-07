@@ -145,12 +145,13 @@ class UR_AI_Market_Price_Service {
      *     @type string $building_type 建物型態（選填，留空＝不限）。
      * }
      * @return array{
-     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, trend: array|null, sufficient: bool },
-     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, trend: array|null, sufficient: bool },
+     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, recent: array|null, sufficient: bool },
+     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, recent: array|null, sufficient: bool },
      *     old_age_threshold: int,
      *     new_age_threshold: int,
      *     min_sample_size: int,
      *     uplift_percent: float|null,
+     *     total_records: int,
      * }
      */
     public function get_comparison($args = array()) {
@@ -189,6 +190,14 @@ class UR_AI_Market_Price_Service {
             'uplift_percent'    => ($old['sufficient'] && $new['sufficient'] && $old['median'] > 0)
                 ? round((($new['median'] - $old['median']) / $old['median']) * 100, 1)
                 : null,
+            /*
+             * 資料庫累計總筆數（不限查詢條件，全部縣市／行政區加總），
+             * 讓使用者了解本次查詢背後的樣本母數規模，建立對統計數字
+             * 的信任感——這跟每組統計各自的「樣本 X 筆」是不同層次的
+             * 資訊：後者是「這個行政區、這個屋齡桶」的子樣本數，前者
+             * 是整個資料庫的總量。
+             */
+            'total_records'     => $this->count_all(),
         );
     }
 
@@ -199,25 +208,34 @@ class UR_AI_Market_Price_Service {
      * 呈現——樣本數過少時，「代表案例」等同直接指向少數幾筆個別交易，
      * 失去去識別化統計參考的意義，因此比照 median／average 一併隱藏。
      *
-     * 成長趨勢（trend）另外還需要「近一年」與「前一年」兩個時間窗各自
-     * 都達最低樣本數門檻才會顯示——即使整體樣本數充足，近一年單獨的
-     * 樣本數仍可能偏少，用不足的子樣本算出的成長率同樣不具參考意義。
+     * 近一年行情（recent）需要近一年樣本數自己也達最低門檻才會顯示，
+     * 就算整體樣本數充足，近一年單獨的樣本數仍可能偏少——全歷史統計
+     * 會因為早期（通常較便宜）的成交紀錄佔比隨資料量累積而越來越重，
+     * 導致中位數落後於目前實際成交行情，因此額外呈現「近一年」這組
+     * 數字，讓使用者同時看到長期參考與近期實際行情。年成長率
+     * （change_percent）則另外需要「前一年」時間窗也達門檻才會顯示，
+     * 沒有前一年資料可比較時，近一年中位數／區間仍會顯示，只是不
+     * 附成長率。
      *
-     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age／examples／trend）。
+     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age／examples／recent）。
      * @param int   $min_sample_size 最低樣本數門檻。
      * @return array
      */
     private function format_stats($stats, $min_sample_size) {
         $sufficient = $stats['count'] >= $min_sample_size;
 
-        $trend = null;
+        $recent = null;
 
-        if ($sufficient && !empty($stats['trend'])) {
-            $t = $stats['trend'];
+        if ($sufficient && !empty($stats['recent']) && $stats['recent']['count'] >= $min_sample_size) {
+            $r = $stats['recent'];
 
-            if ($t['recent_count'] >= $min_sample_size && $t['prior_count'] >= $min_sample_size) {
-                $trend = $t;
-            }
+            $recent = array(
+                'count'          => $r['count'],
+                'median'         => $r['median'],
+                'range_low'      => $r['range_low'],
+                'range_high'     => $r['range_high'],
+                'change_percent' => ($r['prior_count'] >= $min_sample_size) ? $r['change_percent'] : null,
+            );
         }
 
         return array(
@@ -230,7 +248,7 @@ class UR_AI_Market_Price_Service {
             'range_high' => $sufficient ? $stats['range_high'] : null,
             'avg_age'    => $stats['avg_age'],
             'examples'   => $sufficient ? $stats['examples'] : array(),
-            'trend'      => $trend,
+            'recent'     => $recent,
             'sufficient' => $sufficient,
         );
     }
@@ -251,7 +269,7 @@ class UR_AI_Market_Price_Service {
             'range_high' => 0.0,
             'avg_age'    => 0.0,
             'examples'   => array(),
-            'trend'      => null,
+            'recent'     => null,
         );
     }
 

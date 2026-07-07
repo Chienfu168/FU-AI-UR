@@ -125,6 +125,9 @@
 
 			html += '<p class="ur-ai-market-price-meta">';
 			html += escapeHtml('資料來源：內政部不動產交易實價查詢服務');
+			if (data.total_records) {
+				html += '　' + escapeHtml(getI18n('total_records_label', '資料庫累計 %s 筆歷史成交紀錄').replace('%s', formatNumber(data.total_records)));
+			}
 			if (data.last_imported_at) {
 				html += '　' + escapeHtml('資料最後更新：' + String(data.last_imported_at).slice(0, 10));
 			}
@@ -169,24 +172,37 @@
 			html += escapeHtml(getI18n('sample_count', '樣本 %s 筆').replace('%s', stats.count));
 			html += '，' + escapeHtml(getI18n('avg_age', '平均屋齡 %s 年').replace('%s', stats.avg_age));
 			html += '</p>';
-			html += renderTrend(stats.trend);
+			html += renderRecent(stats.recent);
 			html += renderExamples(stats.examples);
 			html += '</div>';
 
 			return html;
 		}
 
-		function renderTrend(trend) {
-			if (!trend) {
+		function renderRecent(recent) {
+			if (!recent) {
 				return '';
 			}
 
-			var isPositive = trend.change_percent >= 0;
-			var sign = isPositive ? '+' : '';
-			var cls = isPositive ? 'ur-ai-market-price-trend-up' : 'ur-ai-market-price-trend-down';
-			var text = getI18n('trend_label', '近一年成長 %s').replace('%s', sign + trend.change_percent + '%');
+			var html = '<div class="ur-ai-market-price-recent">';
+			html += '<p class="ur-ai-market-price-recent-label">' + escapeHtml(getI18n('recent_label', '近一年行情')) + '</p>';
+			html += '<p class="ur-ai-market-price-recent-median">' + escapeHtml(formatWan(recent.median)) + ' ' + escapeHtml(getI18n('per_ping', '每坪'));
 
-			return '<p class="ur-ai-market-price-detail ' + cls + '">' + escapeHtml(text) + '</p>';
+			if (recent.change_percent !== null && recent.change_percent !== undefined) {
+				var isPositive = recent.change_percent >= 0;
+				var sign = isPositive ? '+' : '';
+				var cls = isPositive ? 'ur-ai-market-price-trend-up' : 'ur-ai-market-price-trend-down';
+				html += ' <span class="' + cls + '">（' + escapeHtml(getI18n('trend_label', '近一年成長 %s').replace('%s', sign + recent.change_percent + '%')) + '）</span>';
+			}
+
+			html += '</p>';
+			html += '<p class="ur-ai-market-price-detail">';
+			html += escapeHtml(getI18n('range_label', '常見區間')) + '：' + escapeHtml(formatWan(recent.range_low)) + ' ~ ' + escapeHtml(formatWan(recent.range_high));
+			html += '　' + escapeHtml(getI18n('sample_count', '樣本 %s 筆').replace('%s', recent.count));
+			html += '</p>';
+			html += '</div>';
+
+			return html;
 		}
 
 		function renderExamples(examples) {
@@ -232,6 +248,14 @@
 			return '0 萬';
 		}
 		return (n / 10000).toFixed(1) + ' 萬';
+	}
+
+	function formatNumber(value) {
+		var n = parseInt(value, 10);
+		if (isNaN(n)) {
+			return '0';
+		}
+		return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
 
 	function getI18n(key, fallback) {
