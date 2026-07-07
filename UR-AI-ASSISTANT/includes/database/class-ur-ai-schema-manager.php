@@ -42,7 +42,15 @@ class UR_AI_Schema_Manager {
 
         self::create_tables();
 
-        update_option(self::DB_VERSION_OPTION, self::DB_VERSION);
+        /*
+         * dbDelta() 不會拋出例外：資料庫帳號權限不足等原因造成建表失敗時，
+         * create_tables() 仍會「執行完畢」。若這裡不做確認就直接把 DB_VERSION
+         * 標記為已完成升級，maybe_upgrade() 之後就永遠不會再重試，資料表會
+         * 一直缺漏卻沒有任何提示。因此只有在確認全部資料表都存在時才標記版本。
+         */
+        if (self::all_tables_exist()) {
+            update_option(self::DB_VERSION_OPTION, self::DB_VERSION);
+        }
 
         if (class_exists('UR_AI_Settings') && method_exists('UR_AI_Settings', 'maybe_install_defaults')) {
             UR_AI_Settings::maybe_install_defaults();

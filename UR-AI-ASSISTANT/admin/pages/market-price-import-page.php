@@ -29,6 +29,28 @@ if (!class_exists('UR_AI_Market_Price_Settings') || !class_exists('UR_AI_Market_
     return;
 }
 
+/*
+ * 資料表若因故未成功建立（例如資料庫帳號權限不足導致 dbDelta 靜默失敗），
+ * 匯入時每一列都會被判定為「略過」且沒有任何明確錯誤訊息，難以排查。
+ * 這裡先明確檢查資料表是否存在，避免管理者誤以為是 CSV 檔案格式問題。
+ */
+if (class_exists('UR_AI_Schema_Manager') && method_exists('UR_AI_Schema_Manager', 'get_table_statuses')) {
+    $ur_ai_mp_table_statuses = UR_AI_Schema_Manager::get_table_statuses();
+    $ur_ai_mp_table_exists   = !isset($ur_ai_mp_table_statuses['UR_AI_Schema_Market_Prices'])
+        || !empty($ur_ai_mp_table_statuses['UR_AI_Schema_Market_Prices']['exists']);
+
+    if (!$ur_ai_mp_table_exists) {
+        echo '<div class="wrap ur-ai-admin-page">';
+        echo '<h1>' . esc_html__('都更 AI 助理｜行情參考', 'ur-ai-assistant') . '</h1>';
+        echo '<div class="notice notice-error"><p>' . esc_html__(
+            '行情參考資料表尚未成功建立，因此匯入時所有資料列都會被判定為「略過」（並非 CSV 檔案格式問題）。請先嘗試：至外掛頁面「停用」後再「重新啟用」本外掛以觸發資料表建立；若重新啟用後仍無法解決，請聯絡主機廠商確認資料庫帳號是否具備 CREATE TABLE 權限。',
+            'ur-ai-assistant'
+        ) . '</p></div>';
+        echo '</div>';
+        return;
+    }
+}
+
 $message  = isset($_GET['ur_message']) ? sanitize_key(wp_unslash($_GET['ur_message'])) : '';
 $msg_type = isset($_GET['ur_msg_type']) ? sanitize_key(wp_unslash($_GET['ur_msg_type'])) : 'updated';
 
@@ -65,7 +87,6 @@ $stale_days = $service->get_stale_days();
         $duplicate = isset($_GET['imp_duplicate']) ? absint($_GET['imp_duplicate']) : 0;
         $skipped   = isset($_GET['imp_skipped']) ? absint($_GET['imp_skipped']) : 0;
         $total     = isset($_GET['imp_total']) ? absint($_GET['imp_total']) : 0;
-        $warning   = !empty($_GET['imp_warning']);
         ?>
         <div class="notice notice-success is-dismissible">
             <p>
@@ -80,9 +101,26 @@ $stale_days = $service->get_stale_days();
                 );
                 ?>
             </p>
-            <?php if ($warning) : ?>
-                <p><?php echo esc_html__('提醒：偵測到部分資料的行政區名稱不屬於所選縣市，建議人工複查是否選錯縣市。', 'ur-ai-assistant'); ?></p>
-            <?php endif; ?>
+        </div>
+    <?php elseif ('import_city_mismatch' === $message) : ?>
+        <?php
+        $detected_key   = isset($_GET['imp_detected']) ? sanitize_key(wp_unslash($_GET['imp_detected'])) : '';
+        $detected_label = isset($cities[$detected_key]) ? $cities[$detected_key] : '';
+        ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+                <?php if ('' !== $detected_label) : ?>
+                    <?php
+                    printf(
+                        /* translators: %s: 系統自動偵測到的縣市名稱 */
+                        esc_html__('已取消匯入：這份 CSV 內容看起來屬於「%s」，但您選擇的縣市不同。系統已自動比對行政區名稱判斷不符，為避免資料錯置，請重新確認後再上傳。', 'ur-ai-assistant'),
+                        esc_html($detected_label)
+                    );
+                    ?>
+                <?php else : ?>
+                    <?php echo esc_html__('已取消匯入：無法從資料內容判斷所屬縣市（目前僅支援台北市／新北市），請確認上傳的是雙北實價登錄開放資料。', 'ur-ai-assistant'); ?>
+                <?php endif; ?>
+            </p>
         </div>
     <?php elseif ('' !== $message && isset($message_texts[$message])) : ?>
         <div class="notice notice-<?php echo 'error' === $msg_type ? 'error' : 'success'; ?> is-dismissible">

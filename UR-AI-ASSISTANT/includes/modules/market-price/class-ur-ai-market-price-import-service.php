@@ -54,9 +54,14 @@ class UR_AI_Market_Price_Import_Service {
     /**
      * 匯入 CSV 檔案內容。
      *
+     * 匯入前會先自動比對資料內容（鄉鎮市區欄位）判斷實際屬於哪個縣市；
+     * 若判斷結果與管理者選擇的縣市不符（或完全無法判斷），會整批拒絕
+     * 匯入並回傳明確原因，避免資料被錯誤標記縣市後污染資料庫、事後
+     * 難以清理。
+     *
      * @param string $file_path 已上傳檔案的暫存路徑。
      * @param string $city      縣市 key（taipei / new_taipei），由管理者於表單指定。
-     * @return array{ created: int, duplicate: int, skipped: int, total: int, warnings: array }
+     * @return array{ created: int, duplicate: int, skipped: int, total: int, warnings: array, city_mismatch?: bool, detected_city?: string }
      */
     public function import_from_csv($file_path, $city) {
         $result = array(
@@ -98,12 +103,29 @@ class UR_AI_Market_Price_Import_Service {
             return $result;
         }
 
-        $known_districts  = class_exists('UR_AI_Schema_Market_Prices')
-            ? UR_AI_Schema_Market_Prices::get_known_districts($city)
-            : array();
-        $mismatched_city  = false;
-        $import_batch     = gmdate('Ymd\THis');
-        $known_ids        = $this->repository->get_existing_source_record_ids($city);
+        $detected_city = $this->detect_city_from_rows($rows, $header_map);
+
+        if (null === $detected_city) {
+            $result['warnings'][]    = __('無法從資料內容判斷所屬縣市（目前僅支援台北市／新北市），請確認上傳的是雙北實價登錄開放資料。', 'ur-ai-assistant');
+            $result['city_mismatch'] = true;
+            return $result;
+        }
+
+        if ($detected_city !== $city) {
+            $cities                  = $this->get_supported_cities();
+            $result['warnings'][]    = sprintf(
+                /* translators: 1: 偵測到的縣市名稱, 2: 使用者選擇的縣市名稱 */
+                __('這份資料內容看起來屬於「%1$s」，但您選擇匯入的縣市是「%2$s」。為避免資料錯置，已取消本次匯入，請重新確認後再上傳。', 'ur-ai-assistant'),
+                isset($cities[$detected_city]) ? $cities[$detected_city] : $detected_city,
+                isset($cities[$city]) ? $cities[$city] : $city
+            );
+            $result['city_mismatch'] = true;
+            $result['detected_city'] = $detected_city;
+            return $result;
+        }
+
+        $import_batch = gmdate('Ymd\THis');
+        $known_ids    = $this->repository->get_existing_source_record_ids($city);
 
         for ($i = 1, $len = count($rows); $i < $len; $i++) {
             $row = $this->extract_row($rows[$i], $header_map);
@@ -114,10 +136,6 @@ class UR_AI_Market_Price_Import_Service {
             }
 
             $result['total']++;
-
-            if (!empty($known_districts) && '' !== $row['district'] && !in_array($row['district'], $known_districts, true)) {
-                $mismatched_city = true;
-            }
 
             $prepared = $this->prepare_record($row, $city, $import_batch);
 
@@ -137,11 +155,53 @@ class UR_AI_Market_Price_Import_Service {
             }
         }
 
-        if ($mismatched_city) {
-            $result['warnings'][] = __('偵測到部分資料的行政區名稱不屬於所選縣市，請確認是否上傳到正確的縣市，資料仍已匯入但建議人工複查。', 'ur-ai-assistant');
+        return $result;
+    }
+
+    /**
+     * 依「鄉鎮市區」欄位的多數決，自動判斷這份 CSV 資料實際屬於哪個縣市。
+     *
+     * 台北市（12 區）與新北市（29 區）的行政區名稱完全不重複，因此可以
+     * 直接以行政區名稱反推所屬縣市，不需要依賴檔名或使用者輸入。
+     *
+     * @param array $rows CSV 二維陣列（含表頭列）。
+     * @param array $header_map 欄位對照表。
+     * @return string|null 判斷出的縣市 key；完全無法判斷時回傳 null。
+     */
+    private function detect_city_from_rows($rows, $header_map) {
+        if (!isset($header_map['鄉鎮市區']) || !class_exists('UR_AI_Schema_Market_Prices')) {
+            return null;
         }
 
-        return $result;
+        $district_index    = $header_map['鄉鎮市區'];
+        $district_city_map = array();
+
+        foreach (array_keys($this->get_supported_cities()) as $city_key) {
+            foreach (UR_AI_Schema_Market_Prices::get_known_districts($city_key) as $district_name) {
+                $district_city_map[$district_name] = $city_key;
+            }
+        }
+
+        $counts = array();
+
+        for ($i = 1, $len = count($rows); $i < $len; $i++) {
+            $district = isset($rows[$i][$district_index]) ? trim((string) $rows[$i][$district_index]) : '';
+
+            if (!isset($district_city_map[$district])) {
+                continue;
+            }
+
+            $matched_city           = $district_city_map[$district];
+            $counts[$matched_city] = isset($counts[$matched_city]) ? $counts[$matched_city] + 1 : 1;
+        }
+
+        if (empty($counts)) {
+            return null;
+        }
+
+        arsort($counts);
+
+        return key($counts);
     }
 
     /**
