@@ -154,7 +154,44 @@
 			html += escapeHtml(getI18n('sample_count', '樣本 %s 筆').replace('%s', stats.count));
 			html += '，' + escapeHtml(getI18n('avg_age', '平均屋齡 %s 年').replace('%s', stats.avg_age));
 			html += '</p>';
+			html += renderExamples(stats.examples);
 			html += '</div>';
+
+			return html;
+		}
+
+		function renderExamples(examples) {
+			if (!examples || !examples.length) {
+				return '';
+			}
+
+			var html = '<p class="ur-ai-market-price-examples-label">' + escapeHtml(getI18n('examples_label', '參考案例（依單價由低到高）')) + '</p>';
+			html += '<ul class="ur-ai-market-price-examples">';
+
+			for (var i = 0; i < examples.length; i++) {
+				var ex = examples[i];
+				var parts = [];
+
+				var place = ex.district || '';
+				if (ex.road_section) {
+					place += ex.road_section;
+				}
+				if (place) {
+					parts.push(place);
+				}
+
+				var feature = getI18n('example_feature', '屋齡 %1$s 年、%2$s 坪、%3$s')
+					.replace('%1$s', ex.building_age_years)
+					.replace('%2$s', ex.ping)
+					.replace('%3$s', ex.building_type || '');
+				parts.push(feature);
+
+				parts.push(getI18n('example_price', '單價約 %s/坪').replace('%s', formatWan(ex.unit_price_per_ping)));
+
+				html += '<li>' + escapeHtml(parts.join('｜')) + '</li>';
+			}
+
+			html += '</ul>';
 
 			return html;
 		}

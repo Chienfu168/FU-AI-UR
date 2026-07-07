@@ -145,8 +145,8 @@ class UR_AI_Market_Price_Service {
      *     @type string $building_type 建物型態（選填，留空＝不限）。
      * }
      * @return array{
-     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, sufficient: bool },
-     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, sufficient: bool },
+     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, sufficient: bool },
+     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, sufficient: bool },
      *     old_age_threshold: int,
      *     new_age_threshold: int,
      *     min_sample_size: int,
@@ -183,7 +183,11 @@ class UR_AI_Market_Price_Service {
     /**
      * 套用最低樣本數門檻判斷，將原始統計轉為前台可直接使用的格式。
      *
-     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age）。
+     * 參考案例（examples）跟其他統計數字一樣，只有在樣本數達門檻時才會
+     * 呈現——樣本數過少時，「代表案例」等同直接指向少數幾筆個別交易，
+     * 失去去識別化統計參考的意義，因此比照 median／average 一併隱藏。
+     *
+     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age／examples）。
      * @param int   $min_sample_size 最低樣本數門檻。
      * @return array
      */
@@ -199,6 +203,7 @@ class UR_AI_Market_Price_Service {
             'range_low'  => $sufficient ? $stats['range_low'] : null,
             'range_high' => $sufficient ? $stats['range_high'] : null,
             'avg_age'    => $stats['avg_age'],
+            'examples'   => $sufficient ? $stats['examples'] : array(),
             'sufficient' => $sufficient,
         );
     }
@@ -218,6 +223,7 @@ class UR_AI_Market_Price_Service {
             'range_low'  => 0.0,
             'range_high' => 0.0,
             'avg_age'    => 0.0,
+            'examples'   => array(),
         );
     }
 
