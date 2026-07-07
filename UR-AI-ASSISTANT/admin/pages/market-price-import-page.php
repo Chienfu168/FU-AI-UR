@@ -304,6 +304,16 @@ $stale_days = $service->get_stale_days();
             </button>
         </p>
         <p class="ur-ai-muted"><?php echo esc_html__('將此短碼放到任一頁面或文章，即可顯示行情查詢區塊（需先啟用上方的「啟用前台行情參考區塊」）。', 'ur-ai-assistant'); ?></p>
+
+        <hr>
+
+        <p>
+            <code class="ur-ai-code" id="ur-ai-market-price-ranking-shortcode">[ur_ai_market_price_ranking]</code>
+            <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-market-price-ranking-shortcode">
+                <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+            </button>
+        </p>
+        <p class="ur-ai-muted"><?php echo esc_html__('不需選擇條件，直接列出雙北全部行政區的都更效益排行榜，建議另外建立一個獨立頁面（例如「都更效益排行榜」）並放上此短碼。', 'ur-ai-assistant'); ?></p>
     </div>
 
 </div>
