@@ -147,8 +147,9 @@
 
 			html += '<p class="ur-ai-market-price-median">' + escapeHtml(formatWan(stats.median)) + ' ' + escapeHtml(getI18n('per_ping', '每坪')) + '</p>';
 			html += '<p class="ur-ai-market-price-detail">';
-			html += escapeHtml(getI18n('range_label', '區間')) + '：' + escapeHtml(formatWan(stats.min)) + ' ~ ' + escapeHtml(formatWan(stats.max));
+			html += escapeHtml(getI18n('range_label', '常見區間')) + '：' + escapeHtml(formatWan(stats.range_low)) + ' ~ ' + escapeHtml(formatWan(stats.range_high));
 			html += '</p>';
+			html += '<p class="ur-ai-market-price-range-note">' + escapeHtml(getI18n('range_note', '（反映同區域內不同樓層、屋況、地點的價格落差，已排除少數極端案例）')) + '</p>';
 			html += '<p class="ur-ai-market-price-detail">';
 			html += escapeHtml(getI18n('sample_count', '樣本 %s 筆').replace('%s', stats.count));
 			html += '，' + escapeHtml(getI18n('avg_age', '平均屋齡 %s 年').replace('%s', stats.avg_age));

@@ -1662,6 +1662,91 @@ detected_city 回報正確、且資料庫筆數不會因此被錯誤寫入的資
 
 ---
 
+## v1.8.2
+
+更新日期
+2026-07-08
+
+版本定位
+
+站方實際上線後回報：老屋現況與新成屋兩組行情，「區間」數字落差
+非常大（例如 16.6 萬～706.2 萬），擔心這樣的呈現方式會讓使用者
+覺得資料失真、參考價值降低。
+
+一、根本原因
+
+原本「區間」顯示的是該篩選條件下所有樣本的最低～最高成交單價
+（min／max）。樣本數一多（例如單一行政區累積上千筆歷史交易），
+min／max 這兩個統計量對極端值特別敏感——只要有一筆特殊樓層、
+瑕疵屋況、法拍尾款或反向的頂樓景觀裝潢戶，就會把區間拉得極寬。
+這個現象是真實資料的反映，並非計算錯誤，但呈現方式容易讓人
+誤解成資料不可靠。
+
+二、修正內容
+
+1. Repository 新增 percentile() 方法（線性內插法，與常見統計軟體
+   預設方法一致），並將 median() 改為呼叫 percentile(0.5)，
+   避免中位數計算邏輯重複兩份。
+2. get_price_stats_pair() 統計結果新增 range_low／range_high
+   （第一、三四分位數，25%～75%），前台「區間」改為顯示這組
+   四分位距，取代原本的 min／max。四分位距代表「扣除最極端的
+   前後各 25% 之後，中間一半案例落在的範圍」，更貼近一般認知的
+   「常見行情」，且不受少數極端案例影響。min／max 兩個欄位仍保留
+   在統計結果中（供未來其他用途），只是前台不再拿來當作「區間」
+   顯示。
+3. 前台區間旁新增一行簡短說明文字：「反映同區域內不同樓層、屋況、
+   地點的價格落差，已排除少數極端案例」，讓使用者理解區間本身的
+   意義，不會誤以為區間寬是系統錯誤。
+4. 順便修正一個先前程式碼審查已發現但尚未修的小缺口：前台 JS 需要
+   的 old_title／new_title 文字先前沒有從後台 localize 過去（一直
+   是用 JS 內建的預設文字頂著），以及 median_label／average_label
+   兩個從未被 JS 讀取的多餘設定，這次一併補上與清理，讓 i18n 設定
+   與實際使用的欄位一致。
+
+三、修改檔案
+
+includes/modules/market-price/class-ur-ai-market-price-repository.php
+  - summarize_rows() 新增 range_low／range_high；新增 percentile()；
+    median() 改為呼叫 percentile(0.5)。
+
+includes/modules/market-price/class-ur-ai-market-price-service.php
+  - format_stats()／empty_raw_stats() 新增 range_low／range_high
+    欄位傳遞。
+
+includes/modules/market-price/class-ur-ai-market-price-module.php
+  - i18n 設定新增 old_title／new_title／range_note，range_label
+    文字由「區間」改為「常見區間」，移除未使用的 median_label／
+    average_label。
+
+public/assets/js/market-price.js
+  - 區間顯示改為 range_low～range_high，新增區間說明文字渲染。
+
+public/assets/css/market-price.css
+  - 新增 .ur-ai-market-price-range-note 樣式。
+
+readme.txt / ur-ai-assistant.php
+  - 版本號 1.8.1 → 1.8.2。
+
+四、修正驗證
+
+* 獨立撰寫 percentile() 驗證腳本，確認計算結果與標準統計方法
+  （R type-7／numpy 預設線性內插）一致，並以刻意設計的偏態資料
+  （含一筆極端值）驗證：min／max 為 10～900，但四分位距僅
+  71～75，證實新呈現方式能有效排除極端值干擾。
+* 重新執行 mp_harness.php（PHP + SQLite，對真實樣本 CSV 資料），
+  原本 8 項測試全數通過，確認本次修正未影響既有匯入與統計邏輯，
+  僅新增欄位與調整前台呈現方式。
+
+五、是否建議上正式站
+
+建議更新。純統計呈現方式調整（min／max 改為四分位距），未變更
+資料庫結構或既有查詢邏輯，風險低；能有效降低使用者對「區間過寬、
+資料是否失真」的疑慮，提升參考價值的可信度。案例呈現（例如列出
+代表性成交案例）留待下一階段再評估是否納入，需另外考量個資／
+去識別化與「非估價」定位的界線問題。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

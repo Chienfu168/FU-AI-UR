@@ -145,8 +145,8 @@ class UR_AI_Market_Price_Service {
      *     @type string $building_type 建物型態（選填，留空＝不限）。
      * }
      * @return array{
-     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, avg_age: float, sufficient: bool },
-     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, avg_age: float, sufficient: bool },
+     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, sufficient: bool },
+     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, sufficient: bool },
      *     old_age_threshold: int,
      *     new_age_threshold: int,
      *     min_sample_size: int,
@@ -183,7 +183,7 @@ class UR_AI_Market_Price_Service {
     /**
      * 套用最低樣本數門檻判斷，將原始統計轉為前台可直接使用的格式。
      *
-     * @param array $stats 原始統計（count／median／average／min／max／avg_age）。
+     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age）。
      * @param int   $min_sample_size 最低樣本數門檻。
      * @return array
      */
@@ -196,6 +196,8 @@ class UR_AI_Market_Price_Service {
             'average'    => $sufficient ? $stats['average'] : null,
             'min'        => $sufficient ? $stats['min'] : null,
             'max'        => $sufficient ? $stats['max'] : null,
+            'range_low'  => $sufficient ? $stats['range_low'] : null,
+            'range_high' => $sufficient ? $stats['range_high'] : null,
             'avg_age'    => $stats['avg_age'],
             'sufficient' => $sufficient,
         );
@@ -208,12 +210,14 @@ class UR_AI_Market_Price_Service {
      */
     private function empty_raw_stats() {
         return array(
-            'count'   => 0,
-            'median'  => 0.0,
-            'average' => 0.0,
-            'min'     => 0.0,
-            'max'     => 0.0,
-            'avg_age' => 0.0,
+            'count'      => 0,
+            'median'     => 0.0,
+            'average'    => 0.0,
+            'min'        => 0.0,
+            'max'        => 0.0,
+            'range_low'  => 0.0,
+            'range_high' => 0.0,
+            'avg_age'    => 0.0,
         );
     }
 
