@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.8.3
+Stable tag: 1.8.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -148,6 +148,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 == Changelog ==
 
+= 1.8.4 =
+* 行情參考前台版面加寬：容器最大寬度由 720px 調整為 960px，讓新增的「參考案例」清單有更充裕的顯示空間，減少長字串（例如建物型態說明）換行過於頻繁的問題。
+
 = 1.8.3 =
 * 行情參考新增「參考案例」：老屋現況、新成屋各自呈現 3 筆依單價由低到高分散取樣的真實成交案例，僅顯示行政區＋路段、屋齡、坪數、建物型態與單價，不含門牌號、樓層、確切交易日期，避免反查回特定一戶。樣本數未達最低門檻時不顯示案例，維持與其他統計數字一致的判斷標準。
 
@@ -234,6 +237,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.8.4 =
+建議更新。純 CSS 版面調整（前台容器加寬），不影響任何功能與資料。
 
 = 1.8.3 =
 建議更新。行情參考新增去識別化的「參考案例」呈現（行政區＋路段＋屋齡＋坪數＋單價，不含門牌與樓層），純新增呈現內容，不影響已匯入的資料與既有統計邏輯。
