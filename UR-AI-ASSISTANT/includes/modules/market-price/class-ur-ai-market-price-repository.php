@@ -179,7 +179,7 @@ class UR_AI_Market_Price_Repository {
         list($where, $values) = $this->build_where($args);
 
         $sql = "SELECT unit_price_per_ping, building_age_years,
-                       district, building_type, building_area_sqm, address_raw
+                       district, building_type, building_area_sqm, address_raw, transaction_date
                 FROM {$this->table_name}
                 WHERE " . implode(' AND ', $where) . '
                   AND unit_price_per_ping > 0';
@@ -209,7 +209,7 @@ class UR_AI_Market_Price_Repository {
         list($where, $values) = $this->build_where($args);
 
         $sql = "SELECT unit_price_per_ping, building_age_years,
-                       district, building_type, building_area_sqm, address_raw
+                       district, building_type, building_area_sqm, address_raw, transaction_date
                 FROM {$this->table_name}
                 WHERE " . implode(' AND ', $where) . '
                   AND unit_price_per_ping > 0';
@@ -260,6 +260,7 @@ class UR_AI_Market_Price_Repository {
                 'range_high' => 0.0,
                 'avg_age'    => 0.0,
                 'examples'   => array(),
+                'trend'      => null,
             );
         }
 
@@ -291,6 +292,60 @@ class UR_AI_Market_Price_Repository {
             'range_high' => $this->percentile($prices, 0.75),
             'avg_age'    => $count > 0 ? round(array_sum($ages) / $count, 1) : 0.0,
             'examples'   => $this->pick_examples($rows),
+            'trend'      => $this->compute_trend($rows),
+        );
+    }
+
+    /**
+     * 比較「近一年」與「前一年（一～二年前）」的中位數單價，計算年成長率。
+     *
+     * 兩個時間窗都採用中位數（而非平均），並沿用與其他統計數字相同的
+     * 穩健性原則。任一時間窗樣本數為 0 時，趨勢視為無法計算，回傳 null，
+     * 由呼叫端決定是否再依最低樣本數門檻進一步隱藏。
+     *
+     * @param array $rows $wpdb->get_results() 回傳的紀錄陣列（需含 transaction_date）。
+     * @return array{ recent_count: int, prior_count: int, change_percent: float }|null
+     */
+    private function compute_trend($rows) {
+        $now            = current_time('timestamp');
+        $one_year_ago   = $now - (365 * DAY_IN_SECONDS);
+        $two_years_ago  = $now - (730 * DAY_IN_SECONDS);
+
+        $recent_prices = array();
+        $prior_prices  = array();
+
+        foreach ($rows as $row) {
+            $timestamp = strtotime((string) $row->transaction_date);
+
+            if (false === $timestamp) {
+                continue;
+            }
+
+            if ($timestamp >= $one_year_ago) {
+                $recent_prices[] = (float) $row->unit_price_per_ping;
+            } elseif ($timestamp >= $two_years_ago) {
+                $prior_prices[] = (float) $row->unit_price_per_ping;
+            }
+        }
+
+        if (empty($recent_prices) || empty($prior_prices)) {
+            return null;
+        }
+
+        sort($recent_prices);
+        sort($prior_prices);
+
+        $recent_median = $this->percentile($recent_prices, 0.5);
+        $prior_median  = $this->percentile($prior_prices, 0.5);
+
+        if ($prior_median <= 0) {
+            return null;
+        }
+
+        return array(
+            'recent_count'   => count($recent_prices),
+            'prior_count'    => count($prior_prices),
+            'change_percent' => round((($recent_median - $prior_median) / $prior_median) * 100, 1),
         );
     }
 
@@ -492,6 +547,86 @@ class UR_AI_Market_Price_Repository {
         $rows = $wpdb->get_col($wpdb->prepare($sql, $values));
 
         return is_array($rows) ? $rows : array();
+    }
+
+    /**
+     * 取得指定縣市每個行政區的老屋／新成屋中位數單價（供排行榜使用）。
+     *
+     * 一次查詢撈出該縣市全部符合基本排除條件的紀錄，於 PHP 端依行政區
+     * 分組、再依屋齡門檻分桶計算中位數，避免對每個行政區各自下一次
+     * 查詢（雙北共 41 個行政區，逐一查詢會是 41 次查詢）。
+     *
+     * @param string $city 縣市 key。
+     * @param int    $old_threshold 老屋門檻（年，含）。
+     * @param int    $new_threshold 新成屋門檻（年，含）。
+     * @return array district => array{ old_count: int, new_count: int, old_median: float, new_median: float }
+     */
+    public function get_ranking_data($city, $old_threshold, $new_threshold) {
+        global $wpdb;
+
+        $old_threshold = absint($old_threshold);
+        $new_threshold = absint($new_threshold);
+
+        $where  = $this->exclusion_where();
+        $values = array();
+
+        if ('' !== (string) $city) {
+            $where[]  = 'city = %s';
+            $values[] = (string) $city;
+        }
+
+        $sql = "SELECT district, building_age_years, unit_price_per_ping
+                FROM {$this->table_name}
+                WHERE " . implode(' AND ', $where) . '
+                  AND unit_price_per_ping > 0';
+
+        $rows = empty($values)
+            ? $wpdb->get_results($sql)
+            : $wpdb->get_results($wpdb->prepare($sql, $values));
+
+        $by_district = array();
+
+        foreach ((array) $rows as $row) {
+            $district = (string) $row->district;
+
+            if ('' === $district) {
+                continue;
+            }
+
+            if (!isset($by_district[$district])) {
+                $by_district[$district] = array(
+                    'old' => array(),
+                    'new' => array(),
+                );
+            }
+
+            $age   = (int) $row->building_age_years;
+            $price = (float) $row->unit_price_per_ping;
+
+            if ($age >= $old_threshold) {
+                $by_district[$district]['old'][] = $price;
+            }
+
+            if ($age <= $new_threshold) {
+                $by_district[$district]['new'][] = $price;
+            }
+        }
+
+        $result = array();
+
+        foreach ($by_district as $district => $buckets) {
+            sort($buckets['old']);
+            sort($buckets['new']);
+
+            $result[$district] = array(
+                'old_count'  => count($buckets['old']),
+                'new_count'  => count($buckets['new']),
+                'old_median' => $this->percentile($buckets['old'], 0.5),
+                'new_median' => $this->percentile($buckets['new'], 0.5),
+            );
+        }
+
+        return $result;
     }
 
     /**

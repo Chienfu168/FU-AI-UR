@@ -1852,6 +1852,95 @@ ur-ai-assistant.php / readme.txt
 
 ---
 
+## v1.8.5
+
+更新日期
+2026-07-08
+
+版本定位
+
+站方實際匯入超過 20 萬筆真實成交資料後，詢問這批規模的資料還能
+再運用做什麼——例如「一個區域的新屋成長」這類趨勢資訊。討論後
+決定分兩類處理：能直接從既有查詢衍生、互動模式不變的功能（都更
+效益百分比、近一年成長率）留在既有 widget 裡；不需要選擇條件、
+瀏覽邏輯完全不同的內容（雙北都更效益排行榜）則另外開一個獨立
+shortcode 承載，不與「簡易查詢」的既有互動模式混在一起。
+
+一、主要新增功能
+
+1. 都更效益指標（uplift_percent）
+   老屋現況與新成屋皆樣本充足時，直接算出「新成屋中位數相對老屋
+   中位數」的漲幅百分比，作為一句話結論呈現在兩張比較卡片上方，
+   取代原本需要使用者自己心算兩個數字差距。
+
+2. 近一年成長率（trend）
+   每組統計（老屋／新成屋各自）新增比較「近一年」與「前一年
+   （一～二年前）」中位數單價的年成長率。兩個時間窗都採中位數
+   而非平均，且需各自的樣本數都達到最低門檻才會顯示，避免用
+   偏少的子樣本算出不具參考意義的成長率。
+
+3. 新 shortcode [ur_ai_market_price_ranking]（雙北都更效益排行榜）
+   不需要使用者選擇任何條件，直接列出雙北全部行政區的都更效益
+   排行榜，依漲幅由高到低排序，只納入老屋與新成屋樣本數皆充足
+   的行政區。伺服器端直接渲染（不需 JavaScript／AJAX），仿照
+   [ur_ai_faq_kb_page] 的既有架構模式，適合另外建立獨立頁面
+   分享、供搜尋引擎收錄。
+
+二、主要修改
+
+1. Repository
+   - get_price_stats_pair()／get_price_stats() 的 SELECT 補上
+     transaction_date 欄位。
+   - summarize_rows() 新增 trend 欄位；新增 compute_trend()：以
+     current_time('timestamp') 為基準，切分「近一年」與「一～
+     二年前」兩個時間窗，各自計算中位數後算出漲跌百分比。
+   - 新增 get_ranking_data($city, $old_threshold, $new_threshold)：
+     一次查詢撈出指定縣市全部紀錄，於 PHP 端依行政區分組、再依
+     屋齡門檻分桶計算中位數，避免對 41 個行政區各自下一次查詢。
+2. Service
+   - get_comparison() 新增頂層 uplift_percent 欄位。
+   - format_stats() 新增 trend 欄位傳遞，並比照 examples 的邏輯，
+     只有在 recent_count／prior_count 都達最低樣本數門檻時才顯示。
+   - 新增 get_ranking($city)：套用最低樣本數門檻篩選、計算漲幅
+     百分比、依漲幅排序，並沿用既有 cached() transient 快取機制
+     （新增 ranking_{city} 快取 key，clear_cache() 一併清除）。
+3. 新增 UR_AI_Market_Price_Ranking_Shortcode 類別與
+   public/views/market-price-ranking-view.php：仿照
+   UR_AI_FAQ_KB_Page_Shortcode 的既有架構（服務層／檢視層分離、
+   缺服務時顯示明確錯誤提示）。
+4. class-ur-ai-market-price-module.php 新增
+   ur_ai_market_price_ranking shortcode 註冊與對應的 CSS-only
+   資產載入（沿用既有 market-price.css，不需要額外的 JS）。
+5. 前台 JS／i18n／CSS 新增 uplift、trend 的渲染與樣式；後台總覽頁
+   「Shortcode 使用說明」新增第 5 組說明，相關「4 組」文字更新為
+   「5 組」。
+
+三、測試方式
+
+* 以真實 CSV 樣本資料驗證都更效益指標：文山區（老屋 12 筆／新
+  成屋 5 筆，皆達門檻）算出 uplift_percent，並手動核對公式
+  （(新成屋中位數－老屋中位數)／老屋中位數 × 100）結果一致。
+* 由於真實樣本資料的交易日期集中在同一~2 個月區間，無法直接
+  驗證跨年度的成長率計算，改為在大同區注入 12 筆日期分別落在
+  「30 天前」與「400 天前」、單價分別為 70 萬／50 萬的合成資料，
+  驗證 compute_trend() 正確算出 +40% 成長率（與手動預期完全相符）。
+* 驗證 get_ranking('taipei')：確認排行榜依 uplift_percent 由高到
+  低正確排序、且每一筆都符合最低樣本數門檻（3 個台北市行政區
+  達標，其餘因樣本不足未列入）。
+* 驗證 UR_AI_Market_Price_Ranking_Shortcode 完整渲染流程（含
+  view 樣板）：補齊沙箱環境缺少的 WordPress 函式模擬（
+  shortcode_atts／current_user_can／esc_html／esc_attr）後，
+  確認渲染出的 HTML 含正確標題與排行榜表格內容。
+* 重新執行 mp_harness.php，原本 8 項測試全數通過。
+
+四、是否建議上正式站
+
+建議更新。新增內容皆為既有查詢的衍生計算或獨立的新 shortcode，
+未變更任何既有欄位的儲存邏輯或既有 shortcode 的既有行為，風險低。
+排行榜 shortcode 需另外建立頁面加入才會顯示，不影響既有頁面。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

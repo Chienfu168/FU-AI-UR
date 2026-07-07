@@ -145,11 +145,12 @@ class UR_AI_Market_Price_Service {
      *     @type string $building_type 建物型態（選填，留空＝不限）。
      * }
      * @return array{
-     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, sufficient: bool },
-     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, sufficient: bool },
+     *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, trend: array|null, sufficient: bool },
+     *     new: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, trend: array|null, sufficient: bool },
      *     old_age_threshold: int,
      *     new_age_threshold: int,
      *     min_sample_size: int,
+     *     uplift_percent: float|null,
      * }
      */
     public function get_comparison($args = array()) {
@@ -171,12 +172,23 @@ class UR_AI_Market_Price_Service {
             ? $this->repository->get_price_stats_pair($base_args, $old_threshold, $new_threshold)
             : array('old' => $this->empty_raw_stats(), 'new' => $this->empty_raw_stats());
 
+        $old = $this->format_stats($pair['old'], $min_sample_size);
+        $new = $this->format_stats($pair['new'], $min_sample_size);
+
         return array(
-            'old'               => $this->format_stats($pair['old'], $min_sample_size),
-            'new'               => $this->format_stats($pair['new'], $min_sample_size),
+            'old'               => $old,
+            'new'               => $new,
             'old_age_threshold' => $old_threshold,
             'new_age_threshold' => $new_threshold,
             'min_sample_size'   => $min_sample_size,
+            /*
+             * 都更效益指標：新成屋中位數相對老屋中位數的漲幅百分比。
+             * 只有在兩組都樣本充足時才計算，避免用不具統計意義的數字
+             * 誤導使用者「都更後大概能漲多少」。
+             */
+            'uplift_percent'    => ($old['sufficient'] && $new['sufficient'] && $old['median'] > 0)
+                ? round((($new['median'] - $old['median']) / $old['median']) * 100, 1)
+                : null,
         );
     }
 
@@ -187,12 +199,26 @@ class UR_AI_Market_Price_Service {
      * 呈現——樣本數過少時，「代表案例」等同直接指向少數幾筆個別交易，
      * 失去去識別化統計參考的意義，因此比照 median／average 一併隱藏。
      *
-     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age／examples）。
+     * 成長趨勢（trend）另外還需要「近一年」與「前一年」兩個時間窗各自
+     * 都達最低樣本數門檻才會顯示——即使整體樣本數充足，近一年單獨的
+     * 樣本數仍可能偏少，用不足的子樣本算出的成長率同樣不具參考意義。
+     *
+     * @param array $stats 原始統計（count／median／average／min／max／range_low／range_high／avg_age／examples／trend）。
      * @param int   $min_sample_size 最低樣本數門檻。
      * @return array
      */
     private function format_stats($stats, $min_sample_size) {
         $sufficient = $stats['count'] >= $min_sample_size;
+
+        $trend = null;
+
+        if ($sufficient && !empty($stats['trend'])) {
+            $t = $stats['trend'];
+
+            if ($t['recent_count'] >= $min_sample_size && $t['prior_count'] >= $min_sample_size) {
+                $trend = $t;
+            }
+        }
 
         return array(
             'count'      => $stats['count'],
@@ -204,6 +230,7 @@ class UR_AI_Market_Price_Service {
             'range_high' => $sufficient ? $stats['range_high'] : null,
             'avg_age'    => $stats['avg_age'],
             'examples'   => $sufficient ? $stats['examples'] : array(),
+            'trend'      => $trend,
             'sufficient' => $sufficient,
         );
     }
@@ -224,7 +251,66 @@ class UR_AI_Market_Price_Service {
             'range_high' => 0.0,
             'avg_age'    => 0.0,
             'examples'   => array(),
+            'trend'      => null,
         );
+    }
+
+    /**
+     * 取得指定縣市的行政區「都更效益」排行榜，依漲幅（新成屋相對老屋
+     * 中位數的漲幅百分比）由高到低排序。
+     *
+     * 供獨立的排行榜 shortcode 使用；只納入老屋與新成屋皆樣本充足的
+     * 行政區，避免把不具統計意義的漲幅數字排進榜單。
+     *
+     * @param string $city 縣市 key。
+     * @return array{ district: string, old_median: float, new_median: float, old_count: int, new_count: int, uplift_percent: float }[]
+     *         已依 uplift_percent 由高到低排序。
+     */
+    public function get_ranking($city) {
+        if (!$this->repository instanceof UR_AI_Market_Price_Repository) {
+            return array();
+        }
+
+        $city = sanitize_key($city);
+
+        $raw = $this->cached('ranking_' . $city, function () use ($city) {
+            return $this->repository->get_ranking_data(
+                $city,
+                $this->get_old_age_threshold(),
+                $this->get_new_age_threshold()
+            );
+        });
+
+        $min_sample_size = $this->get_min_sample_size();
+        $ranking         = array();
+
+        foreach ((array) $raw as $district => $row) {
+            if ($row['old_count'] < $min_sample_size || $row['new_count'] < $min_sample_size) {
+                continue;
+            }
+
+            if ($row['old_median'] <= 0) {
+                continue;
+            }
+
+            $ranking[] = array(
+                'district'       => $district,
+                'old_median'     => $row['old_median'],
+                'new_median'     => $row['new_median'],
+                'old_count'      => $row['old_count'],
+                'new_count'      => $row['new_count'],
+                'uplift_percent' => round((($row['new_median'] - $row['old_median']) / $row['old_median']) * 100, 1),
+            );
+        }
+
+        usort(
+            $ranking,
+            function ($a, $b) {
+                return $b['uplift_percent'] <=> $a['uplift_percent'];
+            }
+        );
+
+        return $ranking;
     }
 
     /**
@@ -315,6 +401,7 @@ class UR_AI_Market_Price_Service {
 
         foreach ($cities as $city) {
             delete_transient(self::CACHE_PREFIX . 'districts_' . $city);
+            delete_transient(self::CACHE_PREFIX . 'ranking_' . $city);
 
             $districts = $this->repository instanceof UR_AI_Market_Price_Repository
                 ? $this->repository->get_districts($city)

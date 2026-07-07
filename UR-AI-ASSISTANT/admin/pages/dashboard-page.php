@@ -97,7 +97,8 @@ $feedback_url          = admin_url('admin.php?page=ur-ai-assistant-feedback');
 $shortcode             = '[ur_ai_assistant]';
 $faq_kb_page_shortcode = '[ur_ai_faq_kb_page]';
 $calculator_shortcode  = '[ur_ai_calculator]';
-$market_price_shortcode = '[ur_ai_market_price]';
+$market_price_shortcode         = '[ur_ai_market_price]';
+$market_price_ranking_shortcode = '[ur_ai_market_price_ranking]';
 
 $market_price_stale_days = null;
 
@@ -252,7 +253,7 @@ if (class_exists('UR_AI_Settings')) {
     <details class="ur-ai-card ur-ai-setup-guide" id="ur-ai-shortcode-guide">
         <summary class="ur-ai-setup-guide-summary">
             <span class="ur-ai-setup-guide-title"><?php echo esc_html__('Shortcode 使用說明', 'ur-ai-assistant'); ?></span>
-            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 4 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
+            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 5 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
         </summary>
 
         <div class="ur-ai-setup-guide-body">
@@ -346,6 +347,20 @@ if (class_exists('UR_AI_Settings')) {
             <p class="ur-ai-muted"><?php echo esc_html__('查詢雙北（台北市／新北市）近期「老屋現況」與「新成屋」成交行情，並排比較都更／危老重建前後的價值落差。僅供歷史成交行情參考，不構成估價。需先於「行情參考」頁面上傳內政部實價登錄開放資料並啟用此功能。', 'ur-ai-assistant'); ?></p>
             <ul class="ur-ai-shortcode-params">
                 <li><code>title</code> — <?php echo esc_html__('自訂標題，留空預設為「雙北成屋行情參考」。', 'ur-ai-assistant'); ?></li>
+            </ul>
+
+            <hr>
+
+            <h3><?php echo esc_html__('5. 雙北都更效益排行榜', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-market-price-ranking"><?php echo esc_html($market_price_ranking_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-market-price-ranking">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('不需要使用者選擇條件，直接列出雙北全部行政區的「都更效益」排行榜（新成屋相對老屋現況中位數單價的漲幅），只納入老屋與新成屋樣本數皆充足的行政區。伺服器端直接輸出（不需 JavaScript），適合另外建立獨立頁面分享，或供搜尋引擎收錄。需先於「行情參考」頁面上傳資料並啟用此功能。', 'ur-ai-assistant'); ?></p>
+            <ul class="ur-ai-shortcode-params">
+                <li><code>title</code> — <?php echo esc_html__('自訂標題，留空預設為「雙北都更效益排行榜」。', 'ur-ai-assistant'); ?></li>
             </ul>
 
         </div>
@@ -489,7 +504,7 @@ if (class_exists('UR_AI_Settings')) {
             </div>
 
             <p class="ur-ai-muted">
-                <?php echo esc_html__('本外掛共有 4 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
+                <?php echo esc_html__('本外掛共有 5 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
                 <a href="#ur-ai-shortcode-guide"><?php echo esc_html__('前往完整說明', 'ur-ai-assistant'); ?></a>
             </p>
         </div>
