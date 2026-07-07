@@ -93,6 +93,17 @@ class UR_AI_Market_Price_Admin {
 
         $result = $this->import_service->import_from_csv($tmp_name, $city);
 
+        if (!empty($result['city_mismatch'])) {
+            $this->redirect_with_message(
+                $redirect_base,
+                'import_city_mismatch',
+                'error',
+                array(
+                    'imp_detected' => isset($result['detected_city']) ? sanitize_key($result['detected_city']) : '',
+                )
+            );
+        }
+
         if (class_exists('UR_AI_Market_Price_Service') && $this->service instanceof UR_AI_Market_Price_Service) {
             $this->service->clear_cache();
         }

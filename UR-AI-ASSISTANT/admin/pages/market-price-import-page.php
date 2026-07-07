@@ -87,7 +87,6 @@ $stale_days = $service->get_stale_days();
         $duplicate = isset($_GET['imp_duplicate']) ? absint($_GET['imp_duplicate']) : 0;
         $skipped   = isset($_GET['imp_skipped']) ? absint($_GET['imp_skipped']) : 0;
         $total     = isset($_GET['imp_total']) ? absint($_GET['imp_total']) : 0;
-        $warning   = !empty($_GET['imp_warning']);
         ?>
         <div class="notice notice-success is-dismissible">
             <p>
@@ -102,9 +101,26 @@ $stale_days = $service->get_stale_days();
                 );
                 ?>
             </p>
-            <?php if ($warning) : ?>
-                <p><?php echo esc_html__('提醒：偵測到部分資料的行政區名稱不屬於所選縣市，建議人工複查是否選錯縣市。', 'ur-ai-assistant'); ?></p>
-            <?php endif; ?>
+        </div>
+    <?php elseif ('import_city_mismatch' === $message) : ?>
+        <?php
+        $detected_key   = isset($_GET['imp_detected']) ? sanitize_key(wp_unslash($_GET['imp_detected'])) : '';
+        $detected_label = isset($cities[$detected_key]) ? $cities[$detected_key] : '';
+        ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+                <?php if ('' !== $detected_label) : ?>
+                    <?php
+                    printf(
+                        /* translators: %s: 系統自動偵測到的縣市名稱 */
+                        esc_html__('已取消匯入：這份 CSV 內容看起來屬於「%s」，但您選擇的縣市不同。系統已自動比對行政區名稱判斷不符，為避免資料錯置，請重新確認後再上傳。', 'ur-ai-assistant'),
+                        esc_html($detected_label)
+                    );
+                    ?>
+                <?php else : ?>
+                    <?php echo esc_html__('已取消匯入：無法從資料內容判斷所屬縣市（目前僅支援台北市／新北市），請確認上傳的是雙北實價登錄開放資料。', 'ur-ai-assistant'); ?>
+                <?php endif; ?>
+            </p>
         </div>
     <?php elseif ('' !== $message && isset($message_texts[$message])) : ?>
         <div class="notice notice-<?php echo 'error' === $msg_type ? 'error' : 'success'; ?> is-dismissible">
