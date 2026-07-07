@@ -64,6 +64,7 @@ $tables = array(
     $wpdb->prefix . 'ur_ai_related_pages',
     $wpdb->prefix . 'ur_ai_popular_questions',
     $wpdb->prefix . 'ur_ai_calculator_leads',
+    $wpdb->prefix . 'ur_ai_market_prices',
 );
 
 foreach ($tables as $table) {

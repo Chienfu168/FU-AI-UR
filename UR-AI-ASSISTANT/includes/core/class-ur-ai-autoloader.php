@@ -117,6 +117,7 @@ class UR_AI_Autoloader {
             'UR_AI_Schema_Related_Pages'     => 'includes/database/schemas/class-ur-ai-schema-related-pages.php',
             'UR_AI_Schema_Popular_Questions' => 'includes/database/schemas/class-ur-ai-schema-popular-questions.php',
             'UR_AI_Schema_Calculator_Leads'  => 'includes/database/schemas/class-ur-ai-schema-calculator-leads.php',
+            'UR_AI_Schema_Market_Prices'     => 'includes/database/schemas/class-ur-ai-schema-market-prices.php',
 
             /*
              * Admin Module
@@ -142,6 +143,18 @@ class UR_AI_Autoloader {
             'UR_AI_Calculator_Lead_Repository' => 'includes/modules/calculator/class-ur-ai-calculator-lead-repository.php',
             'UR_AI_Calculator_Ajax'            => 'includes/modules/calculator/class-ur-ai-calculator-ajax.php',
             'UR_AI_Calculator_CF7'             => 'includes/modules/calculator/class-ur-ai-calculator-cf7.php',
+
+            /*
+             * Market Price Module（行情參考，v1.8.0 新增）
+             */
+            'UR_AI_Market_Price_Module'          => 'includes/modules/market-price/class-ur-ai-market-price-module.php',
+            'UR_AI_Market_Price_Settings'         => 'includes/modules/market-price/class-ur-ai-market-price-settings.php',
+            'UR_AI_Market_Price_Repository'       => 'includes/modules/market-price/class-ur-ai-market-price-repository.php',
+            'UR_AI_Market_Price_Service'          => 'includes/modules/market-price/class-ur-ai-market-price-service.php',
+            'UR_AI_Market_Price_Import_Service'   => 'includes/modules/market-price/class-ur-ai-market-price-import-service.php',
+            'UR_AI_Market_Price_Zone_Normalizer'  => 'includes/modules/market-price/class-ur-ai-market-price-zone-normalizer.php',
+            'UR_AI_Market_Price_Ajax'             => 'includes/modules/market-price/class-ur-ai-market-price-ajax.php',
+            'UR_AI_Market_Price_Admin'            => 'includes/modules/market-price/class-ur-ai-market-price-admin.php',
 
             /*
              * AJAX Module

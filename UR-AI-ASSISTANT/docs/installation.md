@@ -259,7 +259,7 @@ API 額度是否足夠
 FAQ 未命中時才會呼叫 AI
 Q5：刪除外掛會刪除資料嗎？
 
-預設不會刪除 FAQ、Logs、Related Pages、Popular Questions、計算機名單資料表。
+預設不會刪除 FAQ、Logs、Related Pages、Popular Questions、計算機名單、行情參考資料表。
 
 這是為了避免正式營運資料被誤刪。
 

@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.7.1
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,6 +39,7 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 相關頁面推薦。
 * 熱門問題管理。
 * 使用者回饋分析。
+* 雙北成屋行情參考（老屋現況／新成屋，歷史成交統計）。
 * Token 使用量紀錄。
 * CSV 匯出。
 * 每日提問限制。
@@ -102,6 +103,18 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 特色：伺服器端直接輸出問答內容（不需 JavaScript 即可瀏覽），搜尋／分類／換頁皆使用網址參數（`?kb_q=`、`?kb_cat=`、`?kb_page=`），可分享、可被搜尋引擎收錄，並自動輸出 Google 支援的 FAQPage 結構化資料。僅在 FAQ 知識庫功能啟用時顯示。
 
+= 雙北成屋行情參考 =
+
+`[ur_ai_market_price]`
+
+可選參數：
+
+`[ur_ai_market_price title="雙北成屋行情參考"]`
+
+* `title`：自訂區塊標題。
+
+使用者選擇縣市（台北市／新北市）與行政區後，可查詢該行政區「老屋現況」（預設屋齡 30 年以上）與「新成屋」（預設屋齡 5 年內）兩組歷史成交行情統計（中位數／平均／最低／最高，及樣本數不足時的提示）。資料來源為內政部不動產交易實價查詢服務，已排除親友、員工、共有人等特殊關係交易。僅在後台「行情參考」功能啟用且已匯入資料時顯示。資料由後台 CSV 手動匯入政府公開資料維護，不會自動連線外部網站抓取。
+
 == Frequently Asked Questions ==
 
 = 這個外掛會自動回答所有問題嗎？ =
@@ -122,7 +135,7 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 = 刪除外掛時會刪除資料表嗎？ =
 
-預設不會。為避免正式資料被誤刪，解除安裝時預設保留 FAQ、Logs、Related Pages、Popular Questions 與計算機名單資料表。
+預設不會。為避免正式資料被誤刪，解除安裝時預設保留 FAQ、Logs、Related Pages、Popular Questions、計算機名單與行情參考資料表。
 
 == Screenshots ==
 
@@ -134,6 +147,14 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.8.0 =
+* 新增「雙北成屋行情參考」模組，提供獨立 shortcode `[ur_ai_market_price]`：使用者選縣市（台北市／新北市）與行政區後，可查詢「老屋現況」與「新成屋」兩組歷史成交行情統計（中位數／平均／最低／最高）。
+* 資料來源為內政部不動產交易實價查詢服務公開資料，後台新增 CSV 匯入功能（依政府「編號」欄位去重，可重複上傳重疊區間資料而不會產生重複紀錄）。
+* 統計已排除親友、員工、共有人等特殊關係交易，並設有最低樣本數門檻（預設 5 筆，不足則僅顯示筆數、不顯示金額），避免統計失真或誤導。
+* 屋齡分界（老屋／新成屋）與最低樣本數門檻皆可於後台調整。
+* 後台新增「行情參考」管理頁：CSV 匯入、功能開關與門檻設定、各行政區樣本數健檢總覽、資料過舊（90 天未更新）提醒。
+* 後台總覽頁「Shortcode 使用說明」新增第 4 組 Shortcode 說明。
 
 = 1.7.1 =
 * 後台總覽頁新增完整的「Shortcode 使用說明」區塊，一次列出本外掛全部 3 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器）與所有參數，方便日後安裝到不同網站時快速設定。
@@ -202,6 +223,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.8.0 =
+新增雙北成屋行情參考模組，預設關閉且需後台手動匯入 CSV 資料後才會顯示內容，不影響既有頁面與功能。
 
 = 1.7.0 =
 新增 FAQ 知識庫 SEO 查詢頁 shortcode，需另外建立頁面並加入 [ur_ai_faq_kb_page] 才會出現，不影響既有頁面。
