@@ -29,27 +29,58 @@
 			return;
 		}
 
-		function filterDistricts() {
-			var city = citySelect.value;
-			var options = districtSelect.querySelectorAll('option[data-city]');
-			var hasSelected = false;
+		maybeShowInAppBrowserNotice(root);
 
-			Array.prototype.forEach.call(options, function (opt) {
-				var match = opt.getAttribute('data-city') === city;
-				opt.hidden = !match;
-				opt.disabled = !match;
-				if (match && opt.selected) {
-					hasSelected = true;
-				}
+		/*
+		 * 部分社群 App 內建瀏覽器（例如 LINE 的 iOS 內建瀏覽器）對於
+		 * <select> 選項用 hidden／disabled 動態切換的相容性不佳，可能
+		 * 導致下拉選單點不開。改為切換縣市時直接重建整個選項清單
+		 * （只留下屬於該縣市的選項），相容性更好。
+		 *
+		 * 先把伺服器端渲染好的完整選項清單（含 data-city）記錄下來，
+		 * 之後每次重建都從這份記錄取用，不需要再讀一次已經被清空的
+		 * <select>。
+		 */
+		var districtPlaceholder = districtSelect.querySelector('option[value=""]');
+		var placeholderText = districtPlaceholder ? districtPlaceholder.textContent : '';
+		var districtsByCity = {};
+
+		Array.prototype.forEach.call(districtSelect.querySelectorAll('option[data-city]'), function (opt) {
+			var city = opt.getAttribute('data-city');
+			if (!districtsByCity[city]) {
+				districtsByCity[city] = [];
+			}
+			districtsByCity[city].push({ value: opt.value, text: opt.textContent });
+		});
+
+		function rebuildDistrictOptions() {
+			var city = citySelect.value;
+			var list = districtsByCity[city] || [];
+			var previousValue = districtSelect.value;
+
+			districtSelect.innerHTML = '';
+
+			var placeholder = document.createElement('option');
+			placeholder.value = '';
+			placeholder.textContent = placeholderText;
+			districtSelect.appendChild(placeholder);
+
+			list.forEach(function (item) {
+				var opt = document.createElement('option');
+				opt.value = item.value;
+				opt.textContent = item.text;
+				districtSelect.appendChild(opt);
 			});
 
-			if (!hasSelected) {
-				districtSelect.value = '';
-			}
+			var stillValid = list.some(function (item) {
+				return item.value === previousValue;
+			});
+
+			districtSelect.value = stillValid ? previousValue : '';
 		}
 
-		citySelect.addEventListener('change', filterDistricts);
-		filterDistricts();
+		citySelect.addEventListener('change', rebuildDistrictOptions);
+		rebuildDistrictOptions();
 
 		form.addEventListener('submit', function (event) {
 			event.preventDefault();
@@ -240,6 +271,62 @@
 
 			return html;
 		}
+	}
+
+	/**
+	 * 偵測目前是否在已知的社群 App 內建瀏覽器（LINE／Facebook／
+	 * Instagram／WeChat）中開啟。這類內建瀏覽器對原生表單元件
+	 * （尤其是 <select>）的相容性時好時壞，是已知的普遍限制，
+	 * 不是本外掛特有的問題。
+	 *
+	 * @return {string|null} 偵測到的 App 名稱；未偵測到則回傳 null。
+	 */
+	function detectInAppBrowser() {
+		var ua = navigator.userAgent || '';
+
+		if (/\bLine\//i.test(ua)) {
+			return 'LINE';
+		}
+		if (/FBAN|FBAV|FB_IAB/i.test(ua)) {
+			return 'Facebook';
+		}
+		if (/Instagram/i.test(ua)) {
+			return 'Instagram';
+		}
+		if (/MicroMessenger/i.test(ua)) {
+			return 'WeChat';
+		}
+
+		return null;
+	}
+
+	/**
+	 * 偵測到社群 App 內建瀏覽器時，在查詢區塊上方顯示提示，建議使用者
+	 * 改用外部瀏覽器開啟，避免下拉選單等表單元件在內建瀏覽器中失效。
+	 *
+	 * @param {Element} root
+	 */
+	function maybeShowInAppBrowserNotice(root) {
+		var appName = detectInAppBrowser();
+
+		if (!appName) {
+			return;
+		}
+
+		var container = root.querySelector('.ur-ai-market-price-container');
+
+		if (!container || container.querySelector('.ur-ai-market-price-inapp-notice')) {
+			return;
+		}
+
+		var notice = document.createElement('p');
+		notice.className = 'ur-ai-market-price-inapp-notice';
+		notice.textContent = getI18n(
+			'inapp_notice',
+			'偵測到您正在 %s 內建瀏覽器開啟本頁面，下拉選單可能無法正常使用。建議點選右上角「⋯」選單，選擇「在瀏覽器中開啟」以獲得最佳使用體驗。'
+		).replace('%s', appName);
+
+		container.insertBefore(notice, container.firstChild);
 	}
 
 	function formatWan(value) {
