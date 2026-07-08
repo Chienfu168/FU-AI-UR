@@ -2033,6 +2033,77 @@ service->count_all() 回傳值一致。重新執行 mp_harness.php，原本
 
 ---
 
+## v1.8.8
+
+更新日期
+2026-07-08
+
+版本定位
+
+站方回報：透過 LINE 分享連結，在 LINE 內建瀏覽器（in-app browser）
+開啟時，行情參考的縣市／行政區下拉選單無法正常點選，需要另外用
+「在瀏覽器中開啟」才能使用。這是社群 App 內建瀏覽器（LINE／FB／
+IG 等）對原生 HTML 表單元件相容性不佳的已知普遍限制，並非本外掛
+特有問題，但仍評估並實作了兩項改善。
+
+一、根本原因與改善方向
+
+1. 行政區下拉選單原本用 JavaScript 動態切換既有 `<option>` 的
+   hidden／disabled 屬性來篩選（切換縣市時隱藏不相關的行政區）。
+   `hidden` 並非 HTML 規範正式支援用在 `<option>` 上的寫法，部分
+   內建瀏覽器對這種動態修改既有選項的方式相容性不佳，可能是點不開
+   選單的原因之一。改為切換縣市時直接重建整個選項清單（只留下
+   屬於該縣市的真實 `<option>` DOM 節點），相容性更穩定、也是更
+   標準的做法。
+2. 即使修正選單寫法，社群 App 內建瀏覽器本身的相容性問題仍難以
+   完全預期与控制。新增偵測機制：透過 User-Agent 判斷頁面是否在
+   LINE／Facebook／Instagram／WeChat 等內建瀏覽器中開啟，若是，
+   在查詢區塊上方顯示提示，建議使用者改用外部瀏覽器開啟。
+
+二、主要修改
+
+public/assets/js/market-price.js
+  - 移除 filterDistricts()（hidden／disabled 切換寫法），新增
+    rebuildDistrictOptions()：預先讀取伺服器端渲染好的完整行政區
+    清單（依縣市分組存成 JS 物件），每次切換縣市時清空並重新填入
+    <select> 的選項。
+  - 新增 detectInAppBrowser()：以 User-Agent 判斷 LINE／Facebook／
+    Instagram／WeChat。
+  - 新增 maybeShowInAppBrowserNotice()：偵測到內建瀏覽器時，於
+    查詢區塊最上方插入提示文字。
+
+includes/modules/market-price/class-ur-ai-market-price-module.php
+  - i18n 新增 inapp_notice 提示文字。
+
+public/assets/css/market-price.css
+  - 新增 .ur-ai-market-price-inapp-notice 樣式（黃色提示框）。
+
+三、測試方式
+
+由於本機沙箱環境無法連線實際的 LINE／FB 內建瀏覽器，改用 Playwright
+啟動真實 Chromium 引擎進行驗證：
+
+* 建立最小化的獨立 HTML 測試頁（不依賴 WordPress），載入實際的
+  market-price.js／CSS，模擬縣市／行政區下拉選單的 DOM 結構。
+* 一般 Chrome User-Agent：驗證切換縣市後，行政區選單只留下該
+  縣市的選項（確認台北市選項被移除、新北市選項出現），且全部
+  `<option>` 皆不含 hidden 屬性（確認真的改用重建而非隱藏）；
+  同時確認不會顯示內建瀏覽器提示。
+* 模擬 LINE（iOS）User-Agent：確認提示文字正確顯示且包含
+  「LINE」字樣。
+* 模擬 Facebook（FB_IAB）User-Agent：確認提示文字正確顯示且包含
+  「Facebook」字樣。
+* 全部測試皆在真實 Chromium 引擎中執行並通過。
+* 重新執行 mp_harness.php（PHP 端邏輯不受影響），原本 8 項測試
+  全數通過。
+
+四、是否建議上正式站
+
+建議更新。純前台 JavaScript／CSS 呈現層調整，未變更任何後端查詢
+邏輯或資料庫結構，風險低。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

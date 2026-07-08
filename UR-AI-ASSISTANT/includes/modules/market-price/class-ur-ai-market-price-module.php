@@ -231,6 +231,8 @@ class UR_AI_Market_Price_Module {
                     'trend_label'      => __('近一年成長 %s', 'ur-ai-assistant'),
                     'recent_label'     => __('近一年行情', 'ur-ai-assistant'),
                     'total_records_label' => __('資料庫累計 %s 筆歷史成交紀錄', 'ur-ai-assistant'),
+                    /* translators: %s: 偵測到的 App 名稱，例如 LINE */
+                    'inapp_notice'     => __('偵測到您正在 %s 內建瀏覽器開啟本頁面，下拉選單可能無法正常使用。建議點選右上角「⋯」選單，選擇「在瀏覽器中開啟」以獲得最佳使用體驗。', 'ur-ai-assistant'),
                 ),
             )
         );
