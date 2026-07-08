@@ -25,7 +25,7 @@
 
 1. **先備份**：備份現有外掛資料夾與資料庫（正式站務必）。
 2. **覆蓋上傳**：將本補丁所有檔案，依相同路徑覆蓋／放入外掛資料夾
-   （`wp-content/plugins/UR-AI-ASSISTANT/`）。
+   （`wp-content/plugins/ur-ai-assistant/`）。
 3. **觸發升級**：登入 WordPress 後台或開啟任一前台頁面一次。
    - 主程式偵測到 DB 版本由 1.0.0 → 1.1.0，會自動建立資料表
      `urf_ur_ai_calculator_leads`。
