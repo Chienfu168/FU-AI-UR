@@ -161,9 +161,29 @@
     border-radius: 12px;
     background: var(--ur-quiz-surface);
     font-size: 15px;
+    font-family: inherit;
     text-align: left;
     cursor: pointer;
     transition: border-color 0.12s ease, background 0.12s ease, transform 0.08s ease;
+}
+
+/*
+ * 部分佈景主題會全站針對 <button> 設定文字顏色（通常假設按鈕本身有
+ * 深色底），選項按鈕若未明確覆寫文字顏色，會在白底卡片上變成看不見
+ * 的白字，或被主題的 :focus／:hover 樣式染成其他顏色（例如紅色）。
+ * 這裡針對每個互動狀態都明確指定顏色，確保選擇器優先度高於主題的
+ * 泛用 button 樣式。
+ */
+.ur-ai-quiz-option,
+.ur-ai-quiz-option:hover,
+.ur-ai-quiz-option:focus,
+.ur-ai-quiz-option:active,
+.ur-ai-quiz-option:visited {
+    color: var(--ur-quiz-ink);
+}
+
+.ur-ai-quiz-option-text {
+    color: inherit;
 }
 
 .ur-ai-quiz-option:hover {
