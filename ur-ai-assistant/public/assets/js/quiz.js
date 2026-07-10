@@ -143,6 +143,7 @@
 				letterBadge.textContent = letter.toUpperCase();
 
 				var text = document.createElement('span');
+				text.className = 'ur-ai-quiz-option-text';
 				text.textContent = question.options[letter];
 
 				button.appendChild(letterBadge);
