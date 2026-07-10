@@ -314,6 +314,37 @@
     margin-top: 18px;
 }
 
+.ur-ai-quiz-faq-picker {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #fbfbfc;
+}
+
+.ur-ai-quiz-faq-picker-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    font-weight: 400;
+    border-bottom: 1px solid #f0f0f1;
+    cursor: pointer;
+}
+
+.ur-ai-quiz-faq-picker-item:last-child {
+    border-bottom: none;
+}
+
+.ur-ai-quiz-faq-picker-item input[type="checkbox"] {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.ur-ai-quiz-faq-picker-item .ur-ai-badge {
+    margin-right: 6px;
+}
+
 /* =========================================================
    Toolbar / Filters
 ========================================================= */

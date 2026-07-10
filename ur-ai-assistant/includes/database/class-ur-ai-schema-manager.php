@@ -30,7 +30,7 @@ class UR_AI_Schema_Manager {
      *
      * @var string
      */
-    const DB_VERSION = '1.2.0';
+    const DB_VERSION = '1.3.0';
 
     /**
      * 安裝或更新資料表。
@@ -211,6 +211,9 @@ class UR_AI_Schema_Manager {
             'UR_AI_Schema_Calculator_Leads',
             // 行情參考表（v1.8.0 新增）。
             'UR_AI_Schema_Market_Prices',
+            // 知識大考驗題庫與作答紀錄表（v1.9.0 新增）。
+            'UR_AI_Schema_Quiz_Questions',
+            'UR_AI_Schema_Quiz_Attempts',
         );
     }
 

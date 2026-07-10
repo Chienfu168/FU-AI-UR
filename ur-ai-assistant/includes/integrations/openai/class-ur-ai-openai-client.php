@@ -104,6 +104,188 @@ class UR_AI_OpenAI_Client {
     }
 
     /**
+     * 依 FAQ 問答內容，請 OpenAI 產生一則選擇題草稿（供知識大考驗題庫使用）。
+     *
+     * 與 chat() 使用完全獨立的 system prompt 與 payload，不受後台「AI 助理
+     * 系統提示詞」設定影響，避免管理者調整 FAQ 問答語氣時意外影響到出題格式。
+     *
+     * @param string $faq_question 來源 FAQ 標準問題。
+     * @param string $faq_answer   來源 FAQ 固定回答。
+     * @return array 成功時包含 question/option_a../correct_option/explanation，
+     *               失敗時包含 success=false 與 message。
+     */
+    public function generate_quiz_question($faq_question, $faq_answer) {
+        $faq_question = $this->sanitize_question($faq_question);
+        $faq_answer   = is_scalar($faq_answer) ? trim((string) $faq_answer) : '';
+
+        if ('' === $faq_question || '' === $faq_answer) {
+            return $this->error_result(
+                __('來源 FAQ 內容為空，無法出題。', 'ur-ai-assistant'),
+                'empty_source'
+            );
+        }
+
+        $api_key = $this->get_api_key();
+
+        if ('' === $api_key) {
+            return $this->error_result(
+                __('尚未設定 OpenAI API Key。', 'ur-ai-assistant'),
+                'api_key_missing'
+            );
+        }
+
+        $payload = array(
+            'model'       => $this->get_model(),
+            'messages'    => array(
+                array(
+                    'role'    => 'system',
+                    'content' => $this->quiz_system_prompt(),
+                ),
+                array(
+                    'role'    => 'user',
+                    'content' => "FAQ 標準問題：{$faq_question}\n\nFAQ 固定回答：{$faq_answer}",
+                ),
+            ),
+            'temperature' => 0.4,
+            'max_tokens'  => 700,
+        );
+
+        /**
+         * Filter 出題用 OpenAI payload。
+         *
+         * @param array  $payload      OpenAI payload。
+         * @param string $faq_question 來源 FAQ 問題。
+         * @param string $faq_answer   來源 FAQ 回答。
+         */
+        $payload = apply_filters('ur_ai_quiz_openai_payload', $payload, $faq_question, $faq_answer);
+
+        $response = wp_remote_post(
+            self::API_ENDPOINT,
+            array(
+                'timeout' => 45,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ),
+                'body' => wp_json_encode($payload),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return $this->error_result($response->get_error_message(), 'wp_remote_error');
+        }
+
+        $status_code = absint(wp_remote_retrieve_response_code($response));
+        $body        = wp_remote_retrieve_body($response);
+
+        if ($status_code < 200 || $status_code >= 300) {
+            return $this->handle_api_error($body, $status_code);
+        }
+
+        $decoded = json_decode($body, true);
+
+        if (!is_array($decoded)) {
+            return $this->error_result(__('OpenAI 回傳格式無法解析。', 'ur-ai-assistant'), 'invalid_json');
+        }
+
+        $content = $this->extract_answer($decoded);
+
+        if ('' === trim($content)) {
+            return $this->error_result(__('OpenAI 回傳內容為空。', 'ur-ai-assistant'), 'empty_response');
+        }
+
+        return $this->parse_quiz_json($content);
+    }
+
+    /**
+     * 出題用 system prompt：要求輸出嚴格 JSON 格式的單選題。
+     *
+     * @return string
+     */
+    private function quiz_system_prompt() {
+        return implode(
+            "\n",
+            array(
+                '你是「都更危老 AI 助理」知識庫的出題助手，任務是依據提供的 FAQ 問答內容，',
+                '出一題「四選一單選題」，用來測試民眾對都市更新／危老重建基礎知識的理解。',
+                '',
+                '出題原則：',
+                '1. 題目與正確答案必須完全依據提供的 FAQ 內容，不可自行添加 FAQ 沒有提到的資訊或數字。',
+                '2. 四個選項長度應盡量接近，避免用「選項特別長」或「選項特別完整」暗示正確答案。',
+                '3. 錯誤選項（誘答）應該是「看起來合理、但確實錯誤」的內容，不可以是明顯荒謬或離題的選項。',
+                '4. 不要在題目或選項中直接引用「根據 FAQ」「依本知識庫」等字眼，題目應該像是獨立的知識問答。',
+                '5. explanation 欄位請用 1-2 句話說明為什麼正確答案是對的，供作答後顯示。',
+                '',
+                '請務必只回傳一個 JSON 物件，不要包含任何 JSON 以外的文字、Markdown 標記或程式碼區塊符號，格式如下：',
+                '{"question":"題目文字","option_a":"選項A","option_b":"選項B","option_c":"選項C","option_d":"選項D","correct_option":"a","explanation":"簡短說明","difficulty":"medium"}',
+                'difficulty 請填 easy、medium 或 hard 三者之一，依內容複雜度自行判斷。',
+            )
+        );
+    }
+
+    /**
+     * 解析出題 JSON 回應，並做基本結構驗證。
+     *
+     * @param string $content OpenAI 回傳的文字內容。
+     * @return array
+     */
+    private function parse_quiz_json($content) {
+        $content = trim($content);
+
+        // 部分模型仍會包住 ```json ... ``` 區塊，先行剝除。
+        $content = preg_replace('/^```(?:json)?/i', '', $content);
+        $content = preg_replace('/```$/', '', $content);
+        $content = trim($content);
+
+        $data = json_decode($content, true);
+
+        if (!is_array($data)) {
+            return $this->error_result(
+                __('AI 回傳內容不是有效的 JSON 格式，無法自動建立題目。', 'ur-ai-assistant'),
+                'invalid_quiz_json'
+            );
+        }
+
+        $required = array('question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option');
+
+        foreach ($required as $field) {
+            if (empty($data[$field]) || !is_string($data[$field])) {
+                return $this->error_result(
+                    __('AI 回傳的題目缺少必要欄位，無法自動建立題目。', 'ur-ai-assistant'),
+                    'incomplete_quiz_json'
+                );
+            }
+        }
+
+        $correct_option = strtolower(trim((string) $data['correct_option']));
+
+        if (!in_array($correct_option, array('a', 'b', 'c', 'd'), true)) {
+            return $this->error_result(
+                __('AI 回傳的正確答案格式無法辨識。', 'ur-ai-assistant'),
+                'invalid_correct_option'
+            );
+        }
+
+        $difficulty = isset($data['difficulty']) ? strtolower(trim((string) $data['difficulty'])) : 'medium';
+
+        if (!in_array($difficulty, array('easy', 'medium', 'hard'), true)) {
+            $difficulty = 'medium';
+        }
+
+        return array(
+            'success'        => true,
+            'question'       => sanitize_textarea_field($data['question']),
+            'option_a'       => sanitize_textarea_field($data['option_a']),
+            'option_b'       => sanitize_textarea_field($data['option_b']),
+            'option_c'       => sanitize_textarea_field($data['option_c']),
+            'option_d'       => sanitize_textarea_field($data['option_d']),
+            'correct_option' => $correct_option,
+            'explanation'    => isset($data['explanation']) ? sanitize_textarea_field((string) $data['explanation']) : '',
+            'difficulty'     => $difficulty,
+        );
+    }
+
+    /**
      * 建立 OpenAI payload.
      *
      * @param string $question 使用者問題。

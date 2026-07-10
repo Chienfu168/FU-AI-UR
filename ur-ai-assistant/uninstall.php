@@ -36,6 +36,7 @@ if (is_array($settings) && !empty($settings['delete_data_on_uninstall'])) {
  */
 delete_option('ur_ai_assistant_settings');
 delete_option('ur_ai_assistant_db_version');
+delete_option('ur_ai_quiz_settings');
 
 /**
  * 清除每日提問限制 transient。
@@ -65,6 +66,8 @@ $tables = array(
     $wpdb->prefix . 'ur_ai_popular_questions',
     $wpdb->prefix . 'ur_ai_calculator_leads',
     $wpdb->prefix . 'ur_ai_market_prices',
+    $wpdb->prefix . 'ur_ai_quiz_questions',
+    $wpdb->prefix . 'ur_ai_quiz_attempts',
 );
 
 foreach ($tables as $table) {
