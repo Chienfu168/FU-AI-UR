@@ -29,6 +29,37 @@ if (!class_exists('UR_AI_Quiz_Service') || !class_exists('UR_AI_Quiz_Admin') || 
     return;
 }
 
+/*
+ * 資料表若因故未成功建立（例如資料庫帳號權限不足導致 dbDelta 靜默失敗），
+ * 新增／匯入題目時每一筆都會被判定為「略過」且沒有任何明確錯誤訊息，
+ * 容易讓人誤以為是 CSV 格式問題。這裡比照「行情參考」頁的既有做法，
+ * 先明確檢查兩張資料表是否存在。
+ */
+if (class_exists('UR_AI_Schema_Manager') && method_exists('UR_AI_Schema_Manager', 'get_table_statuses')) {
+    $ur_ai_quiz_table_statuses = UR_AI_Schema_Manager::get_table_statuses();
+    $ur_ai_quiz_missing_tables = array();
+
+    foreach (array('UR_AI_Schema_Quiz_Questions' => '題庫', 'UR_AI_Schema_Quiz_Attempts' => '排行榜') as $schema_class => $label) {
+        if (isset($ur_ai_quiz_table_statuses[$schema_class]) && empty($ur_ai_quiz_table_statuses[$schema_class]['exists'])) {
+            $ur_ai_quiz_missing_tables[] = $label;
+        }
+    }
+
+    if (!empty($ur_ai_quiz_missing_tables)) {
+        echo '<div class="wrap ur-ai-admin-page">';
+        echo '<h1>' . esc_html__('都更 AI 助理｜知識大考驗', 'ur-ai-assistant') . '</h1>';
+        echo '<div class="notice notice-error"><p>';
+        printf(
+            /* translators: %s: 缺漏的資料表名稱（例如「題庫、排行榜」） */
+            esc_html__('知識大考驗「%s」資料表尚未成功建立，因此新增或匯入題目時，所有資料都會被判定為「略過」（並非 CSV 檔案格式問題）。請先嘗試：至外掛頁面「停用」後再「重新啟用」本外掛以觸發資料表建立；若重新啟用後仍無法解決，請聯絡主機廠商確認資料庫帳號是否具備 CREATE TABLE 權限。', 'ur-ai-assistant'),
+            esc_html(implode('、', $ur_ai_quiz_missing_tables))
+        );
+        echo '</p></div>';
+        echo '</div>';
+        return;
+    }
+}
+
 $service     = new UR_AI_Quiz_Service();
 $quiz_admin  = new UR_AI_Quiz_Admin($service);
 
