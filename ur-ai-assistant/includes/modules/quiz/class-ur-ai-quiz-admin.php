@@ -105,6 +105,10 @@ class UR_AI_Quiz_Admin {
             case 'import_questions':
                 $this->handle_import_questions();
                 break;
+
+            case 'bulk_questions':
+                $this->handle_bulk_questions();
+                break;
         }
     }
 
@@ -229,10 +233,89 @@ class UR_AI_Quiz_Admin {
         }
 
         $decision = isset($_POST['decision']) ? sanitize_key($_POST['decision']) : '';
+
+        if (!in_array($decision, array('approve', 'reject'), true)) {
+            $this->redirect_with_message('invalid_review_decision', 'error');
+        }
+
+        $updated = $this->apply_review_decision($id, $decision);
+
+        $this->redirect_with_message(
+            $updated ? 'question_reviewed' : 'question_review_failed',
+            $updated ? 'updated' : 'error'
+        );
+    }
+
+    /**
+     * 批次操作題目：核准、退回或刪除。
+     *
+     * 解決單筆審核每次都要回到第一頁、逐題點擊的操作不便問題：可勾選
+     * 多筆題目一次核准／退回／刪除，並保留原本所在的頁碼與篩選條件。
+     *
+     * @return void
+     */
+    private function handle_bulk_questions() {
+        if (!$this->service instanceof UR_AI_Quiz_Service) {
+            $this->redirect_with_message('quiz_service_missing', 'error');
+        }
+
+        $ids = isset($_POST['question_ids']) ? (array) wp_unslash($_POST['question_ids']) : array();
+        $ids = class_exists('UR_AI_Security') ? UR_AI_Security::sanitize_ids($ids) : array_values(array_unique(array_filter(array_map('absint', $ids))));
+
+        if (empty($ids)) {
+            $this->redirect_with_message('no_items_selected', 'error');
+        }
+
+        $bulk_action = isset($_POST['bulk_action']) ? sanitize_key($_POST['bulk_action']) : '';
+        $success     = 0;
+
+        foreach ($ids as $id) {
+            if (in_array($bulk_action, array('approve', 'reject'), true)) {
+                $ok = $this->apply_review_decision($id, $bulk_action);
+            } elseif ('delete' === $bulk_action) {
+                $ok = $this->service->delete_question($id);
+            } else {
+                $this->redirect_with_message('invalid_review_decision', 'error');
+                return;
+            }
+
+            if ($ok) {
+                $success++;
+            }
+        }
+
+        $message_map = array(
+            'approve' => 'questions_bulk_approved',
+            'reject'  => 'questions_bulk_rejected',
+            'delete'  => 'questions_bulk_deleted',
+        );
+
+        $this->redirect_with_message(
+            $message_map[$bulk_action],
+            $success > 0 ? 'updated' : 'error',
+            array('bulk_count' => $success)
+        );
+    }
+
+    /**
+     * 套用審核決定（核准並上線／退回並停用）到單一題目。
+     *
+     * 供單筆審核與批次審核共用，避免兩處分別維護「先取出既有欄位、
+     * 再套用審核狀態」的合併邏輯。
+     *
+     * @param int    $id 題目 ID。
+     * @param string $decision 'approve' 或 'reject'。
+     * @return bool
+     */
+    private function apply_review_decision($id, $decision) {
+        if (!$this->service instanceof UR_AI_Quiz_Service) {
+            return false;
+        }
+
         $question = $this->service->find_question($id);
 
         if (!$question) {
-            $this->redirect_with_message('invalid_question_id', 'error');
+            return false;
         }
 
         $data = array(
@@ -255,15 +338,10 @@ class UR_AI_Quiz_Admin {
             $data['review_status'] = 'rejected';
             $data['status']        = 'inactive';
         } else {
-            $this->redirect_with_message('invalid_review_decision', 'error');
+            return false;
         }
 
-        $updated = $this->service->update_question($id, $data);
-
-        $this->redirect_with_message(
-            $updated ? 'question_reviewed' : 'question_review_failed',
-            $updated ? 'updated' : 'error'
-        );
+        return $this->service->update_question($id, $data);
     }
 
     /**
@@ -575,16 +653,35 @@ class UR_AI_Quiz_Admin {
     /**
      * 導向後台頁面並帶上訊息代碼。
      *
+     * 會一併帶回送出表單時記錄的頁碼與篩選條件（若表單有附上對應的
+     * 隱藏欄位），避免每次審核或刪除單一題目後，畫面都被重置回第一頁、
+     * 篩選條件也被清空，造成需要逐頁往後翻找待審題目的操作不便。
+     *
      * @param string $message 訊息代碼。
      * @param string $type 訊息類型。
      * @param array  $extra_args 額外查詢字串參數。
      * @return void
      */
     private function redirect_with_message($message, $type = 'updated', $extra_args = array()) {
-        $args = array(
-            'page'        => 'ur-ai-assistant-quiz',
-            'ur_message'  => sanitize_key($message),
-            'ur_msg_type' => sanitize_key($type),
+        $list_state = array();
+
+        foreach (array('paged', 'q_status', 'q_review_status', 'q_category', 'q_s', 'attempts_paged') as $field) {
+            if (isset($_POST[$field])) {
+                $value = sanitize_text_field(wp_unslash($_POST[$field]));
+
+                if ('' !== $value) {
+                    $list_state[$field] = $value;
+                }
+            }
+        }
+
+        $args = array_merge(
+            $list_state,
+            array(
+                'page'        => 'ur-ai-assistant-quiz',
+                'ur_message'  => sanitize_key($message),
+                'ur_msg_type' => sanitize_key($type),
+            )
         );
 
         if (is_array($extra_args) && !empty($extra_args)) {
@@ -617,6 +714,10 @@ class UR_AI_Quiz_Admin {
             'question_delete_failed'    => __('題目刪除失敗。', 'ur-ai-assistant'),
             'question_reviewed'         => __('審核結果已更新。', 'ur-ai-assistant'),
             'question_review_failed'    => __('審核操作失敗。', 'ur-ai-assistant'),
+            'questions_bulk_approved'   => __('已批次核准所選題目。', 'ur-ai-assistant'),
+            'questions_bulk_rejected'   => __('已批次退回所選題目。', 'ur-ai-assistant'),
+            'questions_bulk_deleted'    => __('已批次刪除所選題目。', 'ur-ai-assistant'),
+            'no_items_selected'         => __('請先選擇要操作的題目。', 'ur-ai-assistant'),
             'invalid_question_id'       => __('題目 ID 不正確。', 'ur-ai-assistant'),
             'invalid_review_decision'   => __('審核結果不正確。', 'ur-ai-assistant'),
             'invalid_attempt_id'        => __('排行榜紀錄 ID 不正確。', 'ur-ai-assistant'),
