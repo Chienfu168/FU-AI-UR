@@ -434,15 +434,46 @@ class UR_AI_Quiz_Admin {
      * 英文欄名，依表頭自動對應欄位；找不到題目或選項 A／B 欄位時視為
      * 格式錯誤。
      *
+     * 常見情境：使用者用 Excel 開啟並另存 CSV 時，若未明確選擇
+     * 「CSV UTF-8」，Excel 可能把檔案存成 Big5／ANSI 編碼。WordPress
+     * 的 sanitize_text_field()／sanitize_textarea_field() 遇到不合法的
+     * UTF-8 位元組序列會直接回傳空字串，導致每一列的題目與選項全部被
+     * 清空、在後續的必填檢查中被判定為「格式錯誤」而略過（即使 CSV
+     * 表頭與列數其實都正確解析）。因此讀取檔案內容後，會先確認是否為
+     * 合法 UTF-8，不是的話嘗試偵測常見中文編碼並轉換，避免整批誤判。
+     *
      * @param string $path 上傳暫存檔路徑。
      * @return array|null 成功回傳資料列陣列；讀取失敗回傳 null。
      */
     private function parse_quiz_csv($path) {
-        $handle = fopen($path, 'r');
+        $content = file_get_contents($path);
+
+        if (false === $content) {
+            return null;
+        }
+
+        if ('' !== $content && function_exists('mb_check_encoding') && !mb_check_encoding($content, 'UTF-8')) {
+            $detected = function_exists('mb_detect_encoding')
+                ? mb_detect_encoding($content, array('UTF-8', 'BIG5', 'GB2312', 'GBK', 'EUC-TW'), true)
+                : false;
+
+            if ($detected && 'UTF-8' !== $detected && function_exists('mb_convert_encoding')) {
+                $converted = mb_convert_encoding($content, 'UTF-8', $detected);
+
+                if (false !== $converted) {
+                    $content = $converted;
+                }
+            }
+        }
+
+        $handle = fopen('php://temp', 'r+');
 
         if (false === $handle) {
             return null;
         }
+
+        fwrite($handle, $content);
+        rewind($handle);
 
         $aliases = array(
             'category'       => array('分類', 'category'),
