@@ -131,7 +131,14 @@ if (class_exists('UR_AI_FAQ_Service')) {
     );
 }
 
-$base_url = admin_url('admin.php?page=ur-ai-assistant-quiz');
+$base_url     = admin_url('admin.php?page=ur-ai-assistant-quiz');
+$settings_url = admin_url('admin.php?page=ur-ai-assistant-settings');
+
+$api_key_set = false;
+
+if (class_exists('UR_AI_Settings')) {
+    $api_key_set = '' !== trim((string) UR_AI_Settings::get_api_key());
+}
 
 ?>
 
@@ -241,10 +248,19 @@ $base_url = admin_url('admin.php?page=ur-ai-assistant-quiz');
                 <div>
                     <h2 class="ur-ai-card-title"><?php echo esc_html__('AI 依 FAQ 出題', 'ur-ai-assistant'); ?></h2>
                     <p class="ur-ai-card-description">
-                        <?php echo esc_html__('勾選要出題的 FAQ，AI 會依其問答內容產生選擇題草稿。草稿一律為「停用／待審核」狀態，需人工審核通過後才會上線。', 'ur-ai-assistant'); ?>
+                        <?php echo esc_html__('勾選要出題的 FAQ，AI 會依其問答內容產生選擇題草稿。草稿一律為「停用／待審核」狀態，需人工審核通過後才會上線。此功能與前台 AI 問答共用同一組 OpenAI API Key，不需另外設定。', 'ur-ai-assistant'); ?>
                     </p>
                 </div>
             </div>
+
+            <?php if (!$api_key_set) : ?>
+                <div class="notice notice-warning inline">
+                    <p>
+                        <strong><?php echo esc_html__('尚未設定 OpenAI API Key，AI 出題會失敗。', 'ur-ai-assistant'); ?></strong>
+                        <a href="<?php echo esc_url($settings_url); ?>"><?php echo esc_html__('前往「功能設定」填入 API Key', 'ur-ai-assistant'); ?></a>
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <?php if (empty($faq_candidates)) : ?>
                 <p class="ur-ai-muted"><?php echo esc_html__('目前沒有啟用中的 FAQ 可供出題，請先至「FAQ 知識庫」新增並啟用內容。', 'ur-ai-assistant'); ?></p>
@@ -271,7 +287,7 @@ $base_url = admin_url('admin.php?page=ur-ai-assistant-quiz');
                                 </label>
                             <?php endforeach; ?>
                         </div>
-                        <p class="ur-ai-form-help"><?php echo esc_html__('可複選多筆一次產生。需先於「AI 設定」頁設定 OpenAI API Key。', 'ur-ai-assistant'); ?></p>
+                        <p class="ur-ai-form-help"><?php echo esc_html__('可複選多筆一次產生。', 'ur-ai-assistant'); ?></p>
                     </div>
 
                     <div class="ur-ai-form-actions">
