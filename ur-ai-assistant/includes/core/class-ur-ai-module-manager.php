@@ -144,6 +144,16 @@ class UR_AI_Module_Manager {
             'UR_AI_Market_Price_Module',
             true
         );
+
+        /*
+         * 知識大考驗模組（v1.9.0 新增）。
+         * 提供依 FAQ 出題的隨機挑戰 shortcode、排行榜與後台題庫管理。
+         */
+        $this->register_module(
+            'quiz',
+            'UR_AI_Quiz_Module',
+            true
+        );
     }
 
     /**

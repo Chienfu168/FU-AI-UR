@@ -118,6 +118,8 @@ class UR_AI_Autoloader {
             'UR_AI_Schema_Popular_Questions' => 'includes/database/schemas/class-ur-ai-schema-popular-questions.php',
             'UR_AI_Schema_Calculator_Leads'  => 'includes/database/schemas/class-ur-ai-schema-calculator-leads.php',
             'UR_AI_Schema_Market_Prices'     => 'includes/database/schemas/class-ur-ai-schema-market-prices.php',
+            'UR_AI_Schema_Quiz_Questions'    => 'includes/database/schemas/class-ur-ai-schema-quiz-questions.php',
+            'UR_AI_Schema_Quiz_Attempts'     => 'includes/database/schemas/class-ur-ai-schema-quiz-attempts.php',
 
             /*
              * Admin Module
@@ -156,6 +158,18 @@ class UR_AI_Autoloader {
             'UR_AI_Market_Price_Ajax'             => 'includes/modules/market-price/class-ur-ai-market-price-ajax.php',
             'UR_AI_Market_Price_Admin'            => 'includes/modules/market-price/class-ur-ai-market-price-admin.php',
             'UR_AI_Market_Price_Ranking_Shortcode' => 'includes/modules/market-price/class-ur-ai-market-price-ranking-shortcode.php',
+
+            /*
+             * Quiz Module（知識大考驗，v1.9.0 新增）
+             */
+            'UR_AI_Quiz_Module'              => 'includes/modules/quiz/class-ur-ai-quiz-module.php',
+            'UR_AI_Quiz_Settings'             => 'includes/modules/quiz/class-ur-ai-quiz-settings.php',
+            'UR_AI_Quiz_Repository'           => 'includes/modules/quiz/class-ur-ai-quiz-repository.php',
+            'UR_AI_Quiz_Service'              => 'includes/modules/quiz/class-ur-ai-quiz-service.php',
+            'UR_AI_Quiz_Draft_Service'        => 'includes/modules/quiz/class-ur-ai-quiz-draft-service.php',
+            'UR_AI_Quiz_Ajax'                 => 'includes/modules/quiz/class-ur-ai-quiz-ajax.php',
+            'UR_AI_Quiz_Admin'                => 'includes/modules/quiz/class-ur-ai-quiz-admin.php',
+            'UR_AI_Quiz_Leaderboard_Shortcode' => 'includes/modules/quiz/class-ur-ai-quiz-leaderboard-shortcode.php',
 
             /*
              * AJAX Module
