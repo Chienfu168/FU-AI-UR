@@ -92,6 +92,17 @@ if ('quiz_imported' === $message) {
     );
 }
 
+if (in_array($message, array('questions_bulk_approved', 'questions_bulk_rejected', 'questions_bulk_deleted'), true)) {
+    $bulk_count = isset($_GET['bulk_count']) ? absint($_GET['bulk_count']) : 0;
+
+    $admin_message = sprintf(
+        /* translators: 1: 訊息文字 2: 筆數 */
+        __('%1$s（共 %2$d 筆）', 'ur-ai-assistant'),
+        $admin_message,
+        $bulk_count
+    );
+}
+
 $difficulties    = class_exists('UR_AI_Schema_Quiz_Questions') ? UR_AI_Schema_Quiz_Questions::get_difficulties() : array();
 $statuses        = class_exists('UR_AI_Schema_Quiz_Questions') ? UR_AI_Schema_Quiz_Questions::get_statuses() : array();
 $review_statuses = class_exists('UR_AI_Schema_Quiz_Questions') ? UR_AI_Schema_Quiz_Questions::get_review_statuses() : array();
@@ -164,6 +175,20 @@ if (class_exists('UR_AI_FAQ_Service')) {
 
 $base_url     = admin_url('admin.php?page=ur-ai-assistant-quiz');
 $settings_url = admin_url('admin.php?page=ur-ai-assistant-settings');
+
+/*
+ * 輸出目前頁碼與篩選條件的隱藏欄位，讓審核／刪除／批次操作送出後，
+ * 後台能導回原本所在的頁碼與篩選結果，不用每次都被重置回第一頁。
+ */
+$render_list_state_fields = function () use ($paged, $status_filter, $review_status_filter, $category_filter, $search) {
+    ?>
+    <input type="hidden" name="paged" value="<?php echo esc_attr($paged); ?>">
+    <input type="hidden" name="q_status" value="<?php echo esc_attr($status_filter); ?>">
+    <input type="hidden" name="q_review_status" value="<?php echo esc_attr($review_status_filter); ?>">
+    <input type="hidden" name="q_category" value="<?php echo esc_attr($category_filter); ?>">
+    <input type="hidden" name="q_s" value="<?php echo esc_attr($search); ?>">
+    <?php
+};
 
 $api_key_set = false;
 
@@ -544,140 +569,182 @@ if (class_exists('UR_AI_Settings')) {
         </form>
     </div>
 
-    <div class="ur-ai-muted ur-ai-mt-12">
+    <form method="post" class="ur-ai-bulk-form">
         <?php
-        printf(
-            /* translators: %d: 題目筆數 */
-            esc_html__('共 %d 筆題目', 'ur-ai-assistant'),
-            absint($total)
-        );
+        if (class_exists('UR_AI_Security')) {
+            UR_AI_Security::admin_form_nonce_field();
+        } else {
+            wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+        }
+        $render_list_state_fields();
         ?>
-    </div>
+        <input type="hidden" name="ur_ai_quiz_action" value="bulk_questions">
 
-    <div class="ur-ai-table-wrap">
-        <table class="ur-ai-table">
-            <thead>
-                <tr>
-                    <th><?php echo esc_html__('題目', 'ur-ai-assistant'); ?></th>
-                    <th><?php echo esc_html__('分類', 'ur-ai-assistant'); ?></th>
-                    <th><?php echo esc_html__('難度', 'ur-ai-assistant'); ?></th>
-                    <th><?php echo esc_html__('狀態', 'ur-ai-assistant'); ?></th>
-                    <th><?php echo esc_html__('審核', 'ur-ai-assistant'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($questions)) : ?>
-                    <?php foreach ($questions as $question) : ?>
-                        <?php
-                        $question_id      = absint($question->id);
-                        $edit_url         = add_query_arg(array('page' => 'ur-ai-assistant-quiz', 'edit' => $question_id), admin_url('admin.php'));
-                        $question_status  = (string) $question->status;
-                        $review_status    = (string) $question->review_status;
-                        $status_cls       = 'active' === $question_status ? 'active' : 'inactive';
-                        $review_cls       = 'approved' === $review_status ? 'active' : ('rejected' === $review_status ? 'danger' : 'draft');
-                        $question_excerpt = wp_trim_words(wp_strip_all_tags($question->question), 24);
-                        ?>
+        <div class="ur-ai-toolbar">
+            <div class="ur-ai-filter-form">
+                <select name="bulk_action" class="ur-ai-bulk-action">
+                    <option value=""><?php echo esc_html__('批次操作', 'ur-ai-assistant'); ?></option>
+                    <option value="approve"><?php echo esc_html__('核准上線', 'ur-ai-assistant'); ?></option>
+                    <option value="reject"><?php echo esc_html__('退回', 'ur-ai-assistant'); ?></option>
+                    <option value="delete"><?php echo esc_html__('刪除', 'ur-ai-assistant'); ?></option>
+                </select>
+
+                <button type="submit" class="button">
+                    <?php echo esc_html__('套用', 'ur-ai-assistant'); ?>
+                </button>
+            </div>
+
+            <div class="ur-ai-muted">
+                <?php
+                printf(
+                    /* translators: %d: 題目筆數 */
+                    esc_html__('共 %d 筆題目', 'ur-ai-assistant'),
+                    absint($total)
+                );
+                ?>
+            </div>
+        </div>
+
+        <div class="ur-ai-table-wrap">
+            <table class="ur-ai-table">
+                <thead>
+                    <tr>
+                        <th class="check-column">
+                            <input type="checkbox" class="ur-ai-check-all">
+                        </th>
+                        <th><?php echo esc_html__('題目', 'ur-ai-assistant'); ?></th>
+                        <th><?php echo esc_html__('分類', 'ur-ai-assistant'); ?></th>
+                        <th><?php echo esc_html__('難度', 'ur-ai-assistant'); ?></th>
+                        <th><?php echo esc_html__('狀態', 'ur-ai-assistant'); ?></th>
+                        <th><?php echo esc_html__('審核', 'ur-ai-assistant'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($questions)) : ?>
+                        <?php foreach ($questions as $question) : ?>
+                            <?php
+                            $question_id      = absint($question->id);
+                            $edit_url         = add_query_arg(array('page' => 'ur-ai-assistant-quiz', 'edit' => $question_id), admin_url('admin.php'));
+                            $question_status  = (string) $question->status;
+                            $review_status    = (string) $question->review_status;
+                            $status_cls       = 'active' === $question_status ? 'active' : 'inactive';
+                            $review_cls       = 'approved' === $review_status ? 'active' : ('rejected' === $review_status ? 'danger' : 'draft');
+                            $question_excerpt = wp_trim_words(wp_strip_all_tags($question->question), 24);
+                            ?>
+                            <tr>
+                                <td class="check-column">
+                                    <input
+                                        type="checkbox"
+                                        class="ur-ai-item-checkbox"
+                                        name="question_ids[]"
+                                        value="<?php echo esc_attr($question_id); ?>"
+                                    >
+                                </td>
+
+                                <td class="ur-ai-cell-wide">
+                                    <div class="ur-ai-row-title"><?php echo esc_html($question_excerpt); ?></div>
+
+                                    <div class="ur-ai-row-actions">
+                                        <a href="<?php echo esc_url($edit_url); ?>">
+                                            <?php echo esc_html__('編輯', 'ur-ai-assistant'); ?>
+                                        </a>
+
+                                        <?php if ('approved' !== $review_status) : ?>
+                                            <form method="post">
+                                                <?php
+                                                if (class_exists('UR_AI_Security')) {
+                                                    UR_AI_Security::admin_form_nonce_field();
+                                                } else {
+                                                    wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                                                }
+                                                $render_list_state_fields();
+                                                ?>
+                                                <input type="hidden" name="ur_ai_quiz_action" value="review_question">
+                                                <input type="hidden" name="question_id" value="<?php echo esc_attr($question_id); ?>">
+                                                <input type="hidden" name="decision" value="approve">
+                                                <button type="submit" class="button-link">
+                                                    <?php echo esc_html__('核准上線', 'ur-ai-assistant'); ?>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+
+                                        <?php if ('rejected' !== $review_status) : ?>
+                                            <form method="post">
+                                                <?php
+                                                if (class_exists('UR_AI_Security')) {
+                                                    UR_AI_Security::admin_form_nonce_field();
+                                                } else {
+                                                    wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                                                }
+                                                $render_list_state_fields();
+                                                ?>
+                                                <input type="hidden" name="ur_ai_quiz_action" value="review_question">
+                                                <input type="hidden" name="question_id" value="<?php echo esc_attr($question_id); ?>">
+                                                <input type="hidden" name="decision" value="reject">
+                                                <button type="submit" class="button-link">
+                                                    <?php echo esc_html__('退回', 'ur-ai-assistant'); ?>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+
+                                        <form method="post">
+                                            <?php
+                                            if (class_exists('UR_AI_Security')) {
+                                                UR_AI_Security::admin_form_nonce_field();
+                                            } else {
+                                                wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                                            }
+                                            $render_list_state_fields();
+                                            ?>
+                                            <input type="hidden" name="ur_ai_quiz_action" value="delete_question">
+                                            <input type="hidden" name="question_id" value="<?php echo esc_attr($question_id); ?>">
+                                            <button
+                                                type="submit"
+                                                class="button-link-delete ur-ai-delete-button"
+                                                onclick="return confirm('<?php echo esc_js(__('確定要刪除此題目嗎？此動作無法復原。', 'ur-ai-assistant')); ?>');"
+                                            >
+                                                <?php echo esc_html__('刪除', 'ur-ai-assistant'); ?>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <?php echo $question->category ? esc_html($question->category) : '<span class="ur-ai-muted">' . esc_html__('未分類', 'ur-ai-assistant') . '</span>'; ?>
+                                </td>
+
+                                <td>
+                                    <span class="ur-ai-badge ur-ai-badge-info">
+                                        <?php echo isset($difficulties[$question->difficulty]) ? esc_html($difficulties[$question->difficulty]) : esc_html($question->difficulty); ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="ur-ai-badge ur-ai-badge-<?php echo esc_attr($status_cls); ?>">
+                                        <?php echo isset($statuses[$question_status]) ? esc_html($statuses[$question_status]) : esc_html($question_status); ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="ur-ai-badge ur-ai-badge-<?php echo esc_attr($review_cls); ?>">
+                                        <?php echo isset($review_statuses[$review_status]) ? esc_html($review_statuses[$review_status]) : esc_html($review_status); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else : ?>
                         <tr>
-                            <td class="ur-ai-cell-wide">
-                                <div class="ur-ai-row-title"><?php echo esc_html($question_excerpt); ?></div>
-
-                                <div class="ur-ai-row-actions">
-                                    <a href="<?php echo esc_url($edit_url); ?>">
-                                        <?php echo esc_html__('編輯', 'ur-ai-assistant'); ?>
-                                    </a>
-
-                                    <?php if ('approved' !== $review_status) : ?>
-                                        <form method="post">
-                                            <?php
-                                            if (class_exists('UR_AI_Security')) {
-                                                UR_AI_Security::admin_form_nonce_field();
-                                            } else {
-                                                wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
-                                            }
-                                            ?>
-                                            <input type="hidden" name="ur_ai_quiz_action" value="review_question">
-                                            <input type="hidden" name="question_id" value="<?php echo esc_attr($question_id); ?>">
-                                            <input type="hidden" name="decision" value="approve">
-                                            <button type="submit" class="button-link">
-                                                <?php echo esc_html__('核准上線', 'ur-ai-assistant'); ?>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-
-                                    <?php if ('rejected' !== $review_status) : ?>
-                                        <form method="post">
-                                            <?php
-                                            if (class_exists('UR_AI_Security')) {
-                                                UR_AI_Security::admin_form_nonce_field();
-                                            } else {
-                                                wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
-                                            }
-                                            ?>
-                                            <input type="hidden" name="ur_ai_quiz_action" value="review_question">
-                                            <input type="hidden" name="question_id" value="<?php echo esc_attr($question_id); ?>">
-                                            <input type="hidden" name="decision" value="reject">
-                                            <button type="submit" class="button-link">
-                                                <?php echo esc_html__('退回', 'ur-ai-assistant'); ?>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-
-                                    <form method="post">
-                                        <?php
-                                        if (class_exists('UR_AI_Security')) {
-                                            UR_AI_Security::admin_form_nonce_field();
-                                        } else {
-                                            wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
-                                        }
-                                        ?>
-                                        <input type="hidden" name="ur_ai_quiz_action" value="delete_question">
-                                        <input type="hidden" name="question_id" value="<?php echo esc_attr($question_id); ?>">
-                                        <button
-                                            type="submit"
-                                            class="button-link-delete ur-ai-delete-button"
-                                            onclick="return confirm('<?php echo esc_js(__('確定要刪除此題目嗎？此動作無法復原。', 'ur-ai-assistant')); ?>');"
-                                        >
-                                            <?php echo esc_html__('刪除', 'ur-ai-assistant'); ?>
-                                        </button>
-                                    </form>
+                            <td colspan="6">
+                                <div class="ur-ai-empty-state">
+                                    <?php echo esc_html__('目前沒有符合條件的題目。', 'ur-ai-assistant'); ?>
                                 </div>
                             </td>
-
-                            <td>
-                                <?php echo $question->category ? esc_html($question->category) : '<span class="ur-ai-muted">' . esc_html__('未分類', 'ur-ai-assistant') . '</span>'; ?>
-                            </td>
-
-                            <td>
-                                <span class="ur-ai-badge ur-ai-badge-info">
-                                    <?php echo isset($difficulties[$question->difficulty]) ? esc_html($difficulties[$question->difficulty]) : esc_html($question->difficulty); ?>
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="ur-ai-badge ur-ai-badge-<?php echo esc_attr($status_cls); ?>">
-                                    <?php echo isset($statuses[$question_status]) ? esc_html($statuses[$question_status]) : esc_html($question_status); ?>
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="ur-ai-badge ur-ai-badge-<?php echo esc_attr($review_cls); ?>">
-                                    <?php echo isset($review_statuses[$review_status]) ? esc_html($review_statuses[$review_status]) : esc_html($review_status); ?>
-                                </span>
-                            </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php else : ?>
-                    <tr>
-                        <td colspan="5">
-                            <div class="ur-ai-empty-state">
-                                <?php echo esc_html__('目前沒有符合條件的題目。', 'ur-ai-assistant'); ?>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </form>
 
     <?php if ($total_pages > 1) : ?>
         <div class="ur-ai-pagination">
@@ -763,6 +830,7 @@ if (class_exists('UR_AI_Settings')) {
                                         ?>
                                         <input type="hidden" name="ur_ai_quiz_action" value="delete_attempt">
                                         <input type="hidden" name="attempt_id" value="<?php echo esc_attr(absint($attempt->id)); ?>">
+                                        <input type="hidden" name="attempts_paged" value="<?php echo esc_attr($attempts_paged); ?>">
                                         <button
                                             type="submit"
                                             class="button-link-delete ur-ai-delete-button"
