@@ -450,6 +450,121 @@ class UR_AI_Log_Repository {
     }
 
     /**
+     * 依模型統計 AI 回答的 token 用量（供後台估算花費使用）。
+     *
+     * @param int $days 統計天數，0 表示不限天數（全部歷史資料）。
+     * @return array
+     */
+    public function get_token_usage_by_model($days = 0) {
+        global $wpdb;
+
+        $days = absint($days);
+
+        if ($days > 0) {
+            return $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT model,
+                            COUNT(*) AS requests,
+                            SUM(tokens_used) AS tokens
+                     FROM {$this->table_name}
+                     WHERE answer_source = 'ai'
+                       AND created_at >= DATE_SUB(%s, INTERVAL %d DAY)
+                     GROUP BY model
+                     ORDER BY tokens DESC",
+                    current_time('mysql'),
+                    $days
+                )
+            );
+        }
+
+        return $wpdb->get_results(
+            "SELECT model,
+                    COUNT(*) AS requests,
+                    SUM(tokens_used) AS tokens
+             FROM {$this->table_name}
+             WHERE answer_source = 'ai'
+             GROUP BY model
+             ORDER BY tokens DESC"
+        );
+    }
+
+    /**
+     * 取得重複被問、卻一直落到 AI 回答（沒有對應 FAQ）的問題清單。
+     *
+     * 依「問題文字完全相同」分組計數，屬於粗略比對（不同措辭的相同問題
+     * 不會被合併），但足以找出「明顯該建 FAQ 卻還沒建」的候選題目。
+     * 已轉過 FAQ 草稿的問題（converted_faq_id > 0）不會再列入，避免重複提醒。
+     *
+     * @param int $min_count 至少被問幾次才列入，預設 2。
+     * @param int $limit 筆數上限。
+     * @return array
+     */
+    public function get_frequent_ai_questions($min_count = 2, $limit = 20) {
+        global $wpdb;
+
+        $min_count = absint($min_count);
+
+        if ($min_count <= 0) {
+            $min_count = 2;
+        }
+
+        $limit = absint($limit);
+
+        if ($limit <= 0) {
+            $limit = 20;
+        }
+
+        return $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT question,
+                        COUNT(*) AS total,
+                        MAX(created_at) AS last_asked_at
+                 FROM {$this->table_name}
+                 WHERE answer_source = 'ai'
+                   AND status = 'success'
+                   AND converted_faq_id = 0
+                 GROUP BY question
+                 HAVING COUNT(*) >= %d
+                 ORDER BY total DESC, last_asked_at DESC
+                 LIMIT %d",
+                $min_count,
+                $limit
+            )
+        );
+    }
+
+    /**
+     * 依 FAQ 分組統計「沒幫助」回饋次數，找出最需要改寫的 FAQ。
+     *
+     * @param int $limit 筆數上限。
+     * @return array
+     */
+    public function get_not_helpful_faq_summary($limit = 20) {
+        global $wpdb;
+
+        $limit = absint($limit);
+
+        if ($limit <= 0) {
+            $limit = 20;
+        }
+
+        return $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT faq_id,
+                        COUNT(*) AS not_helpful_count
+                 FROM {$this->table_name}
+                 WHERE answer_source = 'faq'
+                   AND feedback = 'not_helpful'
+                   AND faq_id > 0
+                 GROUP BY faq_id
+                 ORDER BY not_helpful_count DESC
+                 LIMIT %d",
+                $limit
+            )
+        );
+    }
+
+    /**
      * 建立 where 條件。
      *
      * @param array $args 查詢參數。

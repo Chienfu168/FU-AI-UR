@@ -31,7 +31,8 @@ if (!class_exists('UR_AI_Log_Admin')) {
     return;
 }
 
-$admin = new UR_AI_Log_Admin();
+$admin       = new UR_AI_Log_Admin();
+$log_service = new UR_AI_Log_Service();
 
 $list_data = $admin->get_list_data($_GET);
 
@@ -72,6 +73,10 @@ $date_to                  = isset($query_args['date_to']) ? $query_args['date_to
 
 $current_page = isset($pagination['current']) ? absint($pagination['current']) : 1;
 $total_pages  = isset($pagination['total_pages']) ? absint($pagination['total_pages']) : 1;
+
+$cost_recent   = $log_service->get_cost_estimate(30);
+$cost_all_time = $log_service->get_cost_estimate(0);
+$settings_url  = admin_url('admin.php?page=ur-ai-assistant-settings');
 
 ?>
 
@@ -154,6 +159,79 @@ $total_pages  = isset($pagination['total_pages']) ? absint($pagination['total_pa
                 <?php echo esc_html__('被標示沒幫助的回答，建議優先檢查是否需要新增 FAQ 或調整提示詞。', 'ur-ai-assistant'); ?>
             </p>
         </div>
+    </div>
+
+    <div class="ur-ai-card">
+        <div class="ur-ai-card-header">
+            <div>
+                <h2 class="ur-ai-card-title"><?php echo esc_html__('API 花費估算', 'ur-ai-assistant'); ?></h2>
+                <p class="ur-ai-card-description">
+                    <?php
+                    printf(
+                        /* translators: %s: 目前設定的費率連結文字 */
+                        esc_html__('依「功能設定」頁填寫的每百萬 Tokens 費率（目前 %s 美元）粗估，僅供內部參考，非 OpenAI 官方帳單金額。', 'ur-ai-assistant'),
+                        esc_html($cost_all_time['rate'])
+                    );
+                    ?>
+                    <a href="<?php echo esc_url($settings_url); ?>"><?php echo esc_html__('前往調整費率', 'ur-ai-assistant'); ?></a>
+                </p>
+            </div>
+        </div>
+
+        <div class="ur-ai-grid ur-ai-grid-2">
+            <div>
+                <p class="ur-ai-summary-label"><?php echo esc_html__('近 30 天估算花費', 'ur-ai-assistant'); ?></p>
+                <p class="ur-ai-summary-value">US$ <?php echo esc_html(number_format_i18n($cost_recent['estimated_cost'], 2)); ?></p>
+                <p class="ur-ai-muted">
+                    <?php
+                    printf(
+                        /* translators: 1: 請求數 2: token 用量 */
+                        esc_html__('%1$s 次 AI 回答，共 %2$s tokens', 'ur-ai-assistant'),
+                        esc_html(number_format_i18n($cost_recent['total_requests'])),
+                        esc_html(number_format_i18n($cost_recent['total_tokens']))
+                    );
+                    ?>
+                </p>
+            </div>
+
+            <div>
+                <p class="ur-ai-summary-label"><?php echo esc_html__('全部歷史估算花費', 'ur-ai-assistant'); ?></p>
+                <p class="ur-ai-summary-value">US$ <?php echo esc_html(number_format_i18n($cost_all_time['estimated_cost'], 2)); ?></p>
+                <p class="ur-ai-muted">
+                    <?php
+                    printf(
+                        /* translators: 1: 請求數 2: token 用量 */
+                        esc_html__('%1$s 次 AI 回答，共 %2$s tokens', 'ur-ai-assistant'),
+                        esc_html(number_format_i18n($cost_all_time['total_requests'])),
+                        esc_html(number_format_i18n($cost_all_time['total_tokens']))
+                    );
+                    ?>
+                </p>
+            </div>
+        </div>
+
+        <?php if (!empty($cost_all_time['rows'])) : ?>
+            <div class="ur-ai-table-wrap ur-ai-mt-12">
+                <table class="ur-ai-table">
+                    <thead>
+                        <tr>
+                            <th><?php echo esc_html__('模型', 'ur-ai-assistant'); ?></th>
+                            <th class="ur-ai-cell-number"><?php echo esc_html__('請求數（全部歷史）', 'ur-ai-assistant'); ?></th>
+                            <th class="ur-ai-cell-number"><?php echo esc_html__('Tokens（全部歷史）', 'ur-ai-assistant'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($cost_all_time['rows'] as $row) : ?>
+                            <tr>
+                                <td><?php echo esc_html($row->model ? $row->model : __('（未記錄）', 'ur-ai-assistant')); ?></td>
+                                <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n(absint($row->requests))); ?></td>
+                                <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n(absint($row->tokens))); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="ur-ai-toolbar">
