@@ -101,6 +101,15 @@ class UR_AI_Admin_Menu {
             'ur-ai-assistant-feedback',
             array($this, 'render_feedback_page')
         );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            __('內容缺口', 'ur-ai-assistant'),
+            __('內容缺口', 'ur-ai-assistant'),
+            $this->get_view_logs_capability(),
+            'ur-ai-assistant-content-gap',
+            array($this, 'render_content_gap_page')
+        );
     }
 
     /**
@@ -164,6 +173,15 @@ class UR_AI_Admin_Menu {
      */
     public function render_feedback_page() {
         $this->render_page('admin/pages/feedback-page.php');
+    }
+
+    /**
+     * 顯示內容缺口總覽頁。
+     *
+     * @return void
+     */
+    public function render_content_gap_page() {
+        $this->render_page('admin/pages/content-gap-page.php');
     }
 
     /**

@@ -205,6 +205,75 @@ class UR_AI_Log_Service {
     }
 
     /**
+     * 依模型統計 AI 回答的 token 用量。
+     *
+     * @param int $days 統計天數，0 表示全部歷史資料。
+     * @return array
+     */
+    public function get_token_usage_by_model($days = 0) {
+        if (!$this->repository instanceof UR_AI_Log_Repository) {
+            return array();
+        }
+
+        return $this->repository->get_token_usage_by_model($days);
+    }
+
+    /**
+     * 依「每百萬 tokens 費用」設定，估算指定天數（或全部）的 AI 花費。
+     *
+     * @param int $days 統計天數，0 表示全部歷史資料。
+     * @return array array('rows'=>..., 'total_tokens'=>int, 'total_requests'=>int, 'estimated_cost'=>float, 'rate'=>float)
+     */
+    public function get_cost_estimate($days = 0) {
+        $rows  = $this->get_token_usage_by_model($days);
+        $rate  = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_cost_per_million_tokens() : 0.5;
+        $total_tokens   = 0;
+        $total_requests = 0;
+
+        foreach ($rows as $row) {
+            $total_tokens   += absint($this->get_value($row, 'tokens', 0));
+            $total_requests += absint($this->get_value($row, 'requests', 0));
+        }
+
+        return array(
+            'rows'           => $rows,
+            'total_tokens'   => $total_tokens,
+            'total_requests' => $total_requests,
+            'estimated_cost' => ($total_tokens / 1000000) * $rate,
+            'rate'           => $rate,
+        );
+    }
+
+    /**
+     * 取得重複被問、卻一直落到 AI 回答（沒有對應 FAQ）的問題清單。
+     *
+     * @param int $min_count 至少被問幾次才列入。
+     * @param int $limit 筆數上限。
+     * @return array
+     */
+    public function get_frequent_ai_questions($min_count = 2, $limit = 20) {
+        if (!$this->repository instanceof UR_AI_Log_Repository) {
+            return array();
+        }
+
+        return $this->repository->get_frequent_ai_questions($min_count, $limit);
+    }
+
+    /**
+     * 依 FAQ 分組統計「沒幫助」回饋次數。
+     *
+     * @param int $limit 筆數上限。
+     * @return array
+     */
+    public function get_not_helpful_faq_summary($limit = 20) {
+        if (!$this->repository instanceof UR_AI_Log_Repository) {
+            return array();
+        }
+
+        return $this->repository->get_not_helpful_faq_summary($limit);
+    }
+
+    /**
      * 格式化後台列表單筆資料。
      *
      * @param object|array $log 問答紀錄。

@@ -308,6 +308,28 @@ class UR_AI_Settings {
     }
 
     /**
+     * 每百萬 tokens 的預估費用（美元）。
+     *
+     * 這是站方自行填寫的粗估數字（依所用模型的定價換算），非 OpenAI
+     * 官方即時匯率或帳單金額，僅供後台成本估算參考。
+     *
+     * @return float
+     */
+    public static function get_cost_per_million_tokens() {
+        $rate = (float) self::get('cost_per_million_tokens', 0.5);
+
+        if ($rate < 0) {
+            $rate = 0;
+        }
+
+        if ($rate > 1000) {
+            $rate = 1000;
+        }
+
+        return $rate;
+    }
+
+    /**
      * 預設設定。
      *
      * @return array
@@ -336,6 +358,8 @@ class UR_AI_Settings {
             'logging_enabled'     => 1,
             'kb_browse_enabled'   => 0,
             'kb_browse_per_page'  => 10,
+
+            'cost_per_million_tokens' => 0.5,
         );
     }
 
@@ -454,6 +478,19 @@ class UR_AI_Settings {
                 }
 
                 return $limit;
+
+            case 'cost_per_million_tokens':
+                $rate = (float) $value;
+
+                if ($rate < 0) {
+                    $rate = 0;
+                }
+
+                if ($rate > 1000) {
+                    $rate = 1000;
+                }
+
+                return $rate;
 
             default:
                 if (is_scalar($value)) {

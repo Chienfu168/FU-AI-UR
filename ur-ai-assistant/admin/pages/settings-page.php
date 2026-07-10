@@ -77,6 +77,7 @@ if (
         'logging_enabled'     => !empty($_POST['logging_enabled']) ? 1 : 0,
         'kb_browse_enabled'   => !empty($_POST['kb_browse_enabled']) ? 1 : 0,
         'kb_browse_per_page'  => isset($_POST['kb_browse_per_page']) ? wp_unslash($_POST['kb_browse_per_page']) : '',
+        'cost_per_million_tokens' => isset($_POST['cost_per_million_tokens']) ? wp_unslash($_POST['cost_per_million_tokens']) : '',
     );
 
     $updated = UR_AI_Settings::update_many($settings_to_save);
@@ -109,6 +110,8 @@ $logging_enabled = UR_AI_Settings::is_logging_enabled();
 
 $kb_browse_enabled  = UR_AI_Settings::is_kb_browse_enabled();
 $kb_browse_per_page = UR_AI_Settings::get_kb_browse_per_page();
+
+$cost_per_million_tokens = UR_AI_Settings::get_cost_per_million_tokens();
 
 ?>
 
@@ -327,6 +330,23 @@ $kb_browse_per_page = UR_AI_Settings::get_kb_browse_per_page();
                         max="9999"
                     >
                 </div>
+            </div>
+
+            <div class="ur-ai-form-row">
+                <label for="cost_per_million_tokens"><?php echo esc_html__('每百萬 Tokens 預估費用（美元）', 'ur-ai-assistant'); ?></label>
+                <input
+                    type="number"
+                    id="cost_per_million_tokens"
+                    name="cost_per_million_tokens"
+                    value="<?php echo esc_attr($cost_per_million_tokens); ?>"
+                    min="0"
+                    max="1000"
+                    step="0.01"
+                    class="small-text"
+                >
+                <p class="ur-ai-form-help">
+                    <?php echo esc_html__('請依實際使用的模型定價自行填入（輸入／輸出合併估算的參考費率），用於「問答紀錄」頁的花費估算，非 OpenAI 官方即時金額。', 'ur-ai-assistant'); ?>
+                </p>
             </div>
         </div>
 

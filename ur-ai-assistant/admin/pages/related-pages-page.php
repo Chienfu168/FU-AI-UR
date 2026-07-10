@@ -59,6 +59,9 @@ $search          = isset($query_args['search']) ? $query_args['search'] : '';
 $current_page = isset($pagination['current']) ? absint($pagination['current']) : 1;
 $total_pages  = isset($pagination['total_pages']) ? absint($pagination['total_pages']) : 1;
 
+$low_ctr_pages      = $service->get_low_ctr_pages(10);
+$shown_no_click_pages = $service->get_shown_no_click_pages(10);
+
 $categories = $service->get_categories();
 $statuses   = $service->get_statuses();
 $sources    = $service->get_sources();
@@ -138,6 +141,90 @@ $import_posts   = '' !== $import_keyword ? $admin->search_importable_posts($impo
             <p class="ur-ai-summary-note">
                 <?php echo esc_html__('有曝光但尚無點擊', 'ur-ai-assistant'); ?>
             </p>
+        </div>
+    </div>
+
+    <div class="ur-ai-card">
+        <div class="ur-ai-card-header">
+            <div>
+                <h2 class="ur-ai-card-title"><?php echo esc_html__('推薦成效健檢', 'ur-ai-assistant'); ?></h2>
+                <p class="ur-ai-card-description">
+                    <?php echo esc_html__('列出曝光數已足夠、但點擊率明顯偏低，或有曝光卻完全沒有點擊的推薦頁面，建議檢查標題／描述是否需要調整，或考慮停用換成其他頁面。', 'ur-ai-assistant'); ?>
+                </p>
+            </div>
+        </div>
+
+        <div class="ur-ai-grid ur-ai-grid-2">
+            <div>
+                <h3><?php echo esc_html__('點擊率偏低（曝光 ≥20、CTR &lt; 3%）', 'ur-ai-assistant'); ?></h3>
+                <?php if (empty($low_ctr_pages)) : ?>
+                    <p class="ur-ai-muted"><?php echo esc_html__('目前沒有符合條件的頁面。', 'ur-ai-assistant'); ?></p>
+                <?php else : ?>
+                    <div class="ur-ai-table-wrap">
+                        <table class="ur-ai-table">
+                            <thead>
+                                <tr>
+                                    <th><?php echo esc_html__('標題', 'ur-ai-assistant'); ?></th>
+                                    <th class="ur-ai-cell-number"><?php echo esc_html__('曝光', 'ur-ai-assistant'); ?></th>
+                                    <th class="ur-ai-cell-number"><?php echo esc_html__('點擊', 'ur-ai-assistant'); ?></th>
+                                    <th class="ur-ai-cell-number"><?php echo esc_html__('CTR', 'ur-ai-assistant'); ?></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($low_ctr_pages as $page) : ?>
+                                    <?php
+                                    $page_id    = absint($page->id);
+                                    $show_count = absint($page->show_count);
+                                    $click_count = absint($page->click_count);
+                                    $ctr        = $show_count > 0 ? round(($click_count / $show_count) * 100, 1) : 0;
+                                    $page_edit_url = add_query_arg(array('page' => 'ur-ai-assistant-related-pages', 'edit' => $page_id), admin_url('admin.php'));
+                                    ?>
+                                    <tr>
+                                        <td><?php echo esc_html(wp_trim_words((string) $page->title, 12)); ?></td>
+                                        <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n($show_count)); ?></td>
+                                        <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n($click_count)); ?></td>
+                                        <td class="ur-ai-cell-number"><?php echo esc_html($ctr); ?>%</td>
+                                        <td><a href="<?php echo esc_url($page_edit_url); ?>"><?php echo esc_html__('編輯', 'ur-ai-assistant'); ?></a></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div>
+                <h3><?php echo esc_html__('有曝光、目前零點擊', 'ur-ai-assistant'); ?></h3>
+                <?php if (empty($shown_no_click_pages)) : ?>
+                    <p class="ur-ai-muted"><?php echo esc_html__('目前沒有符合條件的頁面。', 'ur-ai-assistant'); ?></p>
+                <?php else : ?>
+                    <div class="ur-ai-table-wrap">
+                        <table class="ur-ai-table">
+                            <thead>
+                                <tr>
+                                    <th><?php echo esc_html__('標題', 'ur-ai-assistant'); ?></th>
+                                    <th class="ur-ai-cell-number"><?php echo esc_html__('曝光', 'ur-ai-assistant'); ?></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($shown_no_click_pages as $page) : ?>
+                                    <?php
+                                    $page_id       = absint($page->id);
+                                    $page_edit_url = add_query_arg(array('page' => 'ur-ai-assistant-related-pages', 'edit' => $page_id), admin_url('admin.php'));
+                                    ?>
+                                    <tr>
+                                        <td><?php echo esc_html(wp_trim_words((string) $page->title, 12)); ?></td>
+                                        <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n(absint($page->show_count))); ?></td>
+                                        <td><a href="<?php echo esc_url($page_edit_url); ?>"><?php echo esc_html__('編輯', 'ur-ai-assistant'); ?></a></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
