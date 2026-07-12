@@ -290,6 +290,28 @@ class UR_AI_Popular_Question_Repository {
     }
 
     /**
+     * 查詢符合條件的全部 ID（不分頁），供「跨頁全選」批次操作使用。
+     *
+     * @param array $args 查詢參數。
+     * @return array
+     */
+    public function query_ids($args = array()) {
+        global $wpdb;
+
+        list($where, $values) = $this->build_where($args);
+
+        $sql = "SELECT id FROM {$this->table_name} WHERE " . implode(' AND ', $where);
+
+        if (!empty($values)) {
+            $ids = $wpdb->get_col($wpdb->prepare($sql, $values));
+        } else {
+            $ids = $wpdb->get_col($sql);
+        }
+
+        return array_map('absint', is_array($ids) ? $ids : array());
+    }
+
+    /**
      * 統計熱門問題數量。
      *
      * @param array $args 查詢參數。

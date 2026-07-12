@@ -561,6 +561,23 @@
     background: #fcf0f1;
 }
 
+.ur-ai-select-all-banner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-left: 4px solid #2271b1;
+    border-radius: 8px;
+    background: #f0f6fc;
+    font-size: 13px;
+}
+
+.ur-ai-select-all-banner[hidden] {
+    display: none;
+}
+
 .ur-ai-success-box {
     margin: 16px 0;
     padding: 14px 16px;

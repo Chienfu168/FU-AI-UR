@@ -252,6 +252,17 @@ class UR_AI_Popular_Question_Admin {
             $ids = array_values(array_unique(array_filter(array_map('absint', $ids))));
         }
 
+        if (!empty($_POST['select_all_matching'])) {
+            $ids = $this->service->query_ids(
+                array(
+                    'status'   => isset($_POST['filter_status']) ? sanitize_key(wp_unslash($_POST['filter_status'])) : '',
+                    'category' => isset($_POST['filter_category']) ? sanitize_text_field(wp_unslash($_POST['filter_category'])) : '',
+                    'source'   => isset($_POST['filter_source']) ? sanitize_key(wp_unslash($_POST['filter_source'])) : '',
+                    'search'   => isset($_POST['filter_search']) ? sanitize_text_field(wp_unslash($_POST['filter_search'])) : '',
+                )
+            );
+        }
+
         if (empty($ids)) {
             $this->redirect_with_message('no_items_selected', 'error');
         }

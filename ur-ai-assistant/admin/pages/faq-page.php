@@ -469,7 +469,12 @@ $base_url = admin_url('admin.php?page=ur-ai-assistant-faqs');
         </form>
     </div>
 
-    <form method="post" class="ur-ai-bulk-form">
+    <form
+        method="post"
+        class="ur-ai-bulk-form"
+        data-total-matching="<?php echo esc_attr($total); ?>"
+        data-page-count="<?php echo esc_attr(count($faqs)); ?>"
+    >
         <?php
         if (class_exists('UR_AI_Security')) {
             UR_AI_Security::admin_form_nonce_field();
@@ -479,6 +484,21 @@ $base_url = admin_url('admin.php?page=ur-ai-assistant-faqs');
         ?>
 
         <input type="hidden" name="ur_ai_action" value="bulk_faqs">
+        <input type="hidden" name="filter_status" value="<?php echo esc_attr($status_filter); ?>">
+        <input type="hidden" name="filter_category" value="<?php echo esc_attr($category_filter); ?>">
+        <input type="hidden" name="filter_source" value="<?php echo esc_attr($source_filter); ?>">
+        <input type="hidden" name="filter_search" value="<?php echo esc_attr($search); ?>">
+        <input type="hidden" name="select_all_matching" value="0" class="ur-ai-select-all-flag">
+
+        <div class="ur-ai-select-all-banner" hidden>
+            <span class="ur-ai-select-all-banner-text"></span>
+            <button type="button" class="button ur-ai-select-all-confirm">
+                <?php echo esc_html__('選取全部', 'ur-ai-assistant'); ?>
+            </button>
+            <button type="button" class="button-link ur-ai-select-all-cancel">
+                <?php echo esc_html__('僅本頁', 'ur-ai-assistant'); ?>
+            </button>
+        </div>
 
         <div class="ur-ai-toolbar">
             <div class="ur-ai-filter-form">

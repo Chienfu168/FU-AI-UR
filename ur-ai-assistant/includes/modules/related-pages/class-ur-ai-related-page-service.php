@@ -335,6 +335,20 @@ class UR_AI_Related_Page_Service {
     }
 
     /**
+     * 查詢符合條件的全部 ID（不分頁），供「跨頁全選」批次操作使用。
+     *
+     * @param array $args 查詢參數。
+     * @return array
+     */
+    public function query_ids($args = array()) {
+        if (!$this->repository instanceof UR_AI_Related_Page_Repository) {
+            return array();
+        }
+
+        return $this->repository->query_ids($args);
+    }
+
+    /**
      * 批次啟用。
      *
      * @param array $ids 推薦頁面 ID 陣列。
