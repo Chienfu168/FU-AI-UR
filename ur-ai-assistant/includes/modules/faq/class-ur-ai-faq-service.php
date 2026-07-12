@@ -300,6 +300,20 @@ class UR_AI_FAQ_Service {
     }
 
     /**
+     * 依篩選條件查出全部符合條件的 FAQ ID（不分頁），供跨頁全選批次操作使用。
+     *
+     * @param array $args 查詢參數。
+     * @return array
+     */
+    public function query_ids($args = array()) {
+        if (!$this->repository instanceof UR_AI_FAQ_Repository) {
+            return array();
+        }
+
+        return $this->repository->query_ids($args);
+    }
+
+    /**
      * 取得啟用中的 FAQ。
      *
      * M1 快取：以 Transient 快取查詢結果，降低每次提問的全表查詢。

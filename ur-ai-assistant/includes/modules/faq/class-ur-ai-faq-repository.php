@@ -340,6 +340,32 @@ class UR_AI_FAQ_Repository {
     }
 
     /**
+     * 依篩選條件查出「全部」符合條件的 FAQ ID（不分頁）。
+     *
+     * 供後台「跨頁全選」批次操作使用：使用者在清單頁勾選「全選」時，
+     * 若符合目前篩選條件的總筆數超過當頁筆數，可改為對全部符合條件的
+     * 資料一次套用批次操作，而不只是這一頁看到的項目。
+     *
+     * @param array $args 查詢參數（與 query() 共用同一套篩選條件）。
+     * @return array 整數 ID 陣列。
+     */
+    public function query_ids($args = array()) {
+        global $wpdb;
+
+        list($where, $values) = $this->build_where($args);
+
+        $sql = "SELECT id FROM {$this->table_name} WHERE " . implode(' AND ', $where);
+
+        if (!empty($values)) {
+            $ids = $wpdb->get_col($wpdb->prepare($sql, $values));
+        } else {
+            $ids = $wpdb->get_col($sql);
+        }
+
+        return array_map('absint', is_array($ids) ? $ids : array());
+    }
+
+    /**
      * 計算 FAQ 數量。
      *
      * @param array $args 查詢參數。

@@ -229,6 +229,22 @@ class UR_AI_FAQ_Admin {
             $ids = array_values(array_unique(array_filter(array_map('absint', $ids))));
         }
 
+        /*
+         * 「全選」在畫面上只會勾選當頁看得到的項目。若使用者在跨頁全選
+         * 提示中確認要套用到「全部符合目前篩選條件」的資料，改用篩選
+         * 條件重新查出全部 ID，而不是只用當頁勾選送出的 faq_ids。
+         */
+        if (!empty($_POST['select_all_matching'])) {
+            $ids = $this->service->query_ids(
+                array(
+                    'status'   => isset($_POST['filter_status']) ? sanitize_key(wp_unslash($_POST['filter_status'])) : '',
+                    'category' => isset($_POST['filter_category']) ? sanitize_text_field(wp_unslash($_POST['filter_category'])) : '',
+                    'source'   => isset($_POST['filter_source']) ? sanitize_key(wp_unslash($_POST['filter_source'])) : '',
+                    'search'   => isset($_POST['filter_search']) ? sanitize_text_field(wp_unslash($_POST['filter_search'])) : '',
+                )
+            );
+        }
+
         if (empty($ids)) {
             $this->redirect_with_message('no_items_selected', 'error');
         }

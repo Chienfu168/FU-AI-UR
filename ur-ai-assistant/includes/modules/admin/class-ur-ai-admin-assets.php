@@ -88,6 +88,12 @@ class UR_AI_Admin_Assets {
                     'copy_success'         => __('已複製。', 'ur-ai-assistant'),
                     'copy_failed'          => __('複製失敗，請手動選取文字。', 'ur-ai-assistant'),
                     'processing'           => __('處理中...', 'ur-ai-assistant'),
+                    /* translators: 1: 本頁筆數 2: 符合條件的全部筆數 */
+                    'select_all_prompt'    => __('已選取本頁 %1$s 筆，是否改為選取符合目前篩選條件的全部 %2$s 筆？', 'ur-ai-assistant'),
+                    /* translators: %1$s: 符合條件的全部筆數 */
+                    'select_all_confirmed' => __('已選取全部 %1$s 筆，套用批次操作時會套用到全部符合條件的資料。', 'ur-ai-assistant'),
+                    'select_all_confirm_button' => __('選取全部', 'ur-ai-assistant'),
+                    'select_all_cancel_button'  => __('僅本頁', 'ur-ai-assistant'),
                 ),
             )
         );

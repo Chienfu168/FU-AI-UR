@@ -11,8 +11,26 @@
         importButton: '.ur-ai-import-button',
         copyButton: '.ur-ai-copy-button',
         toggleButton: '.ur-ai-toggle-button',
-        toggleTarget: '.ur-ai-toggle-target'
+        toggleTarget: '.ur-ai-toggle-target',
+        selectAllBanner: '.ur-ai-select-all-banner',
+        selectAllConfirm: '.ur-ai-select-all-confirm',
+        selectAllCancel: '.ur-ai-select-all-cancel',
+        selectAllFlag: '.ur-ai-select-all-flag'
     };
+
+    /**
+     * 簡易 sprintf 風格格式化，支援 PHP 慣用的位置型佔位符（%1$s、%2$d…），
+     * 對應 wp_localize_script 傳過來、原本設計給 PHP sprintf() 用的 i18n
+     * 字串。
+     */
+    function format(template) {
+        const args = Array.prototype.slice.call(arguments, 1);
+
+        return String(template).replace(/%(\d+)\$[ds]/g, function (match, position) {
+            const value = args[parseInt(position, 10) - 1];
+            return typeof value === 'undefined' ? '' : value;
+        });
+    }
 
     function getConfig() {
         return window.UR_AI_ADMIN || {};
@@ -29,7 +47,62 @@
     }
 
     function hasCheckedItems($form) {
+        if (isSelectAllMatchingActive($form)) {
+            return true;
+        }
+
         return $form.find(selectors.itemCheckbox + ':checked').length > 0;
+    }
+
+    function isSelectAllMatchingActive($form) {
+        return $form.find(selectors.selectAllFlag).val() === '1';
+    }
+
+    /**
+     * 「全選」目前只會勾選畫面上這一頁看得到的項目，不會自動涵蓋其他頁的
+     * 資料（分頁／篩選後可能還有更多筆符合條件）。若符合條件的總筆數比
+     * 這一頁多，勾選全選時提示是否要改為套用到「全部符合條件」的資料，
+     * 而不只是這一頁看到的。實際筆數與頁面筆數由頁面模板寫在
+     * data-total-matching／data-page-count 屬性上。
+     */
+    function maybeShowSelectAllBanner($form) {
+        const $banner = $form.find(selectors.selectAllBanner);
+
+        if (!$banner.length) {
+            return;
+        }
+
+        const totalMatching = parseInt($form.data('total-matching'), 10) || 0;
+        const pageCount = parseInt($form.data('page-count'), 10) || 0;
+
+        if (totalMatching <= pageCount) {
+            return;
+        }
+
+        $banner
+            .find('.ur-ai-select-all-banner-text')
+            .text(format(getI18n('select_all_prompt', '已選取本頁 %1$s 筆，是否改為選取符合目前篩選條件的全部 %2$s 筆？'), pageCount, totalMatching));
+
+        $banner.find(selectors.selectAllConfirm).show().prop('disabled', false);
+        $banner.removeAttr('hidden');
+    }
+
+    function hideSelectAllBanner($form) {
+        $form.find(selectors.selectAllFlag).val('0');
+        $form.find(selectors.selectAllBanner).attr('hidden', 'hidden');
+    }
+
+    function confirmSelectAllMatching($form) {
+        const totalMatching = parseInt($form.data('total-matching'), 10) || 0;
+
+        $form.find(selectors.selectAllFlag).val('1');
+
+        $form
+            .find(selectors.selectAllBanner)
+            .find('.ur-ai-select-all-banner-text')
+            .text(format(getI18n('select_all_confirmed', '已選取全部 %1$s 筆，套用批次操作時會套用到全部符合條件的資料。'), totalMatching));
+
+        $form.find(selectors.selectAllConfirm).hide();
     }
 
     function getBulkAction($form) {
@@ -71,10 +144,21 @@
 
         if ($scope.length) {
             $scope.find(selectors.itemCheckbox).prop('checked', checked);
+        } else {
+            $(selectors.itemCheckbox).prop('checked', checked);
+        }
+
+        const $form = $checkAll.closest(selectors.bulkForm);
+
+        if (!$form.length) {
             return;
         }
 
-        $(selectors.itemCheckbox).prop('checked', checked);
+        if (checked) {
+            maybeShowSelectAllBanner($form);
+        } else {
+            hideSelectAllBanner($form);
+        }
     }
 
     function syncCheckAllState() {
@@ -90,6 +174,14 @@
         const checked = $scope.find(selectors.itemCheckbox + ':checked').length;
 
         $checkAll.prop('checked', total > 0 && total === checked);
+
+        // 手動取消勾選單一項目，代表使用者不再是「全部符合條件」的意圖，
+        // 跨頁全選狀態應一併取消，避免批次操作套用到超出畫面所見的資料。
+        const $form = $checkbox.closest(selectors.bulkForm);
+
+        if ($form.length && isSelectAllMatchingActive($form) && checked < total) {
+            hideSelectAllBanner($form);
+        }
     }
 
     function handleBulkSubmit(event) {
@@ -314,6 +406,16 @@
         $(document).on('click', selectors.importButton, handleImportClick);
         $(document).on('click', selectors.copyButton, handleCopyClick);
         $(document).on('click', selectors.toggleButton, handleToggleClick);
+
+        $(document).on('click', selectors.selectAllConfirm, function (event) {
+            event.preventDefault();
+            confirmSelectAllMatching($(this).closest(selectors.bulkForm));
+        });
+
+        $(document).on('click', selectors.selectAllCancel, function (event) {
+            event.preventDefault();
+            hideSelectAllBanner($(this).closest(selectors.bulkForm));
+        });
     }
 
     function init() {
