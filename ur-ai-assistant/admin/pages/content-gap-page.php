@@ -50,6 +50,10 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
 
     <h1><?php echo esc_html__('都更 AI 助理｜內容缺口總覽', 'ur-ai-assistant'); ?></h1>
 
+    <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
+        <?php UR_AI_Admin_Menu::render_group_tabs('knowledge'); ?>
+    <?php endif; ?>
+
     <div class="ur-ai-help-box">
         <strong><?php echo esc_html__('這頁在做什麼：', 'ur-ai-assistant'); ?></strong>
         <?php echo esc_html__('整合熱門問題、問答紀錄與使用者回饋三個既有資料源，整理出「知識庫可能缺什麼」「哪些 FAQ 該優先改寫」的候選清單，方便定期檢視。這裡不會自動新增或修改任何內容，實際動作請透過下方連結前往對應管理頁完成。', 'ur-ai-assistant'); ?>

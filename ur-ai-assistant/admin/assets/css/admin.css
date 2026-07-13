@@ -533,6 +533,42 @@
     padding-top: 16px;
 }
 
+/*
+ * 選單分組導覽列（合併後的「知識庫管理」「問答數據分析」「都更分回
+ * 試算」用）：每個項目是真正的整頁連結，不是 JS 面板切換，外觀比照
+ * .ur-ai-admin-tab 但刻意用不同的 class 名稱，避免被 admin.js 裡監聽
+ * .ur-ai-admin-tab 點擊、呼叫 preventDefault() 的分頁籤切換邏輯攔截。
+ */
+.ur-ai-admin-group-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0 20px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.ur-ai-admin-group-tab {
+    padding: 10px 14px;
+    border: 1px solid #dcdcde;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    background: #f6f7f7;
+    color: #1d2327;
+    text-decoration: none;
+}
+
+.ur-ai-admin-group-tab:hover,
+.ur-ai-admin-group-tab:focus {
+    background: #ffffff;
+    color: #135e96;
+}
+
+.ur-ai-admin-group-tab.is-active {
+    background: #ffffff;
+    color: #135e96;
+    font-weight: 700;
+}
+
 /* =========================================================
    Notices / Hints
 ========================================================= */
