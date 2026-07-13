@@ -87,7 +87,24 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
                                     <td><?php echo esc_html(wp_trim_words((string) $item->question, 16)); ?></td>
                                     <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n(absint($item->click_count))); ?></td>
                                     <td>
-                                        <a href="<?php echo esc_url($popular_admin_url); ?>"><?php echo esc_html__('前往熱門問題頁', 'ur-ai-assistant'); ?></a>
+                                        <div class="ur-ai-row-actions">
+                                            <a href="<?php echo esc_url($popular_admin_url); ?>"><?php echo esc_html__('前往熱門問題頁', 'ur-ai-assistant'); ?></a>
+
+                                            <form method="post">
+                                                <?php
+                                                if (class_exists('UR_AI_Security')) {
+                                                    UR_AI_Security::admin_form_nonce_field();
+                                                } else {
+                                                    wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                                                }
+                                                ?>
+                                                <input type="hidden" name="ur_ai_action" value="convert_popular_question_to_faq">
+                                                <input type="hidden" name="popular_question_id" value="<?php echo esc_attr(absint($item->id)); ?>">
+                                                <button type="submit" class="button-link ur-ai-convert-faq-button">
+                                                    <?php echo esc_html__('轉 FAQ 草稿', 'ur-ai-assistant'); ?>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -95,7 +112,7 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
                     </table>
                 </div>
                 <p class="ur-ai-muted ur-ai-mt-12">
-                    <?php echo esc_html__('可在「熱門問題」頁針對這些項目使用「轉成 FAQ 草稿」，草稿仍需人工審閱後才會啟用。', 'ur-ai-assistant'); ?>
+                    <?php echo esc_html__('點擊「轉 FAQ 草稿」可直接建立草稿，完成後會導向熱門問題頁；草稿仍需人工審閱後才會啟用。', 'ur-ai-assistant'); ?>
                 </p>
             <?php endif; ?>
         </div>
@@ -139,7 +156,24 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
                                     <td><?php echo esc_html(wp_trim_words((string) $item->question, 16)); ?></td>
                                     <td class="ur-ai-cell-number"><?php echo esc_html(number_format_i18n(absint($item->total))); ?></td>
                                     <td>
-                                        <a href="<?php echo esc_url($log_search_url); ?>"><?php echo esc_html__('查看紀錄', 'ur-ai-assistant'); ?></a>
+                                        <div class="ur-ai-row-actions">
+                                            <a href="<?php echo esc_url($log_search_url); ?>"><?php echo esc_html__('查看紀錄', 'ur-ai-assistant'); ?></a>
+
+                                            <form method="post">
+                                                <?php
+                                                if (class_exists('UR_AI_Security')) {
+                                                    UR_AI_Security::admin_form_nonce_field();
+                                                } else {
+                                                    wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                                                }
+                                                ?>
+                                                <input type="hidden" name="ur_ai_action" value="convert_log_to_faq">
+                                                <input type="hidden" name="log_id" value="<?php echo esc_attr(absint($item->sample_log_id)); ?>">
+                                                <button type="submit" class="button-link ur-ai-convert-faq-button">
+                                                    <?php echo esc_html__('轉 FAQ 草稿', 'ur-ai-assistant'); ?>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -147,7 +181,7 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
                     </table>
                 </div>
                 <p class="ur-ai-muted ur-ai-mt-12">
-                    <?php echo esc_html__('可在「問答紀錄」頁找到對應紀錄後，使用「轉成 FAQ 草稿」建立固定回答，草稿仍需人工審閱後才會啟用。', 'ur-ai-assistant'); ?>
+                    <?php echo esc_html__('點擊「轉 FAQ 草稿」會取這批重複問題中最新一筆紀錄的內容建立草稿，完成後會導向問答紀錄頁；草稿仍需人工審閱後才會啟用。', 'ur-ai-assistant'); ?>
                 </p>
             <?php endif; ?>
         </div>

@@ -45,10 +45,18 @@ class UR_AI_Quiz_Service {
     private $repository;
 
     /**
+     * FAQ Service，用於作答結果串接相關 FAQ 供複習。
+     *
+     * @var UR_AI_FAQ_Service|null
+     */
+    private $faq_service;
+
+    /**
      * 建構子。
      */
     public function __construct() {
-        $this->repository = class_exists('UR_AI_Quiz_Repository') ? new UR_AI_Quiz_Repository() : null;
+        $this->repository  = class_exists('UR_AI_Quiz_Repository') ? new UR_AI_Quiz_Repository() : null;
+        $this->faq_service = class_exists('UR_AI_FAQ_Service') ? new UR_AI_FAQ_Service() : null;
     }
 
     /* =====================================================================
@@ -175,14 +183,15 @@ class UR_AI_Quiz_Service {
             $shuffled_letters = $letters;
             shuffle($shuffled_letters);
 
-            $shuffled_options = array();
-            $correct_position = 'a';
+            $shuffled_options    = array();
+            $correct_position    = 'a';
+            $original_correct    = strtolower((string) $row->correct_option);
 
             foreach ($letters as $slot_index => $new_letter) {
                 $original_letter               = $shuffled_letters[$slot_index];
                 $shuffled_options[$new_letter] = $options[$original_letter];
 
-                if ($original_letter === strtolower((string) $row->correct_option)) {
+                if ($original_letter === $original_correct) {
                     $correct_position = $new_letter;
                 }
             }
@@ -196,8 +205,12 @@ class UR_AI_Quiz_Service {
             );
 
             $answer_key[$question_uid] = array(
-                'question_id' => absint($row->id),
-                'correct'     => $correct_position,
+                'question_id'   => absint($row->id),
+                'correct'       => $correct_position,
+                'question'      => (string) $row->question,
+                'correct_text'  => isset($options[$original_correct]) ? $options[$original_correct] : '',
+                'explanation'   => (string) $row->explanation,
+                'source_faq_id' => absint($row->source_faq_id),
             );
         }
 
@@ -255,13 +268,38 @@ class UR_AI_Quiz_Service {
 
         $total   = count($answer_key);
         $correct = 0;
+        $review  = array();
 
         foreach ($answer_key as $question_uid => $expected) {
-            $submitted = isset($answers[$question_uid]) ? strtolower(sanitize_key($answers[$question_uid])) : '';
+            $submitted  = isset($answers[$question_uid]) ? strtolower(sanitize_key($answers[$question_uid])) : '';
+            $is_correct = ($submitted === $expected['correct']);
 
-            if ($submitted === $expected['correct']) {
+            if ($is_correct) {
                 $correct++;
             }
+
+            $review_item = array(
+                'uid'            => $question_uid,
+                'question'       => isset($expected['question']) ? $expected['question'] : '',
+                'is_correct'     => $is_correct,
+                'your_answer'    => $submitted,
+                'correct_answer' => $expected['correct'],
+                'correct_text'   => isset($expected['correct_text']) ? $expected['correct_text'] : '',
+                'explanation'    => isset($expected['explanation']) ? $expected['explanation'] : '',
+            );
+
+            $faq_id = isset($expected['source_faq_id']) ? absint($expected['source_faq_id']) : 0;
+
+            if (!$is_correct && $faq_id > 0 && $this->faq_service instanceof UR_AI_FAQ_Service) {
+                $faq = $this->faq_service->find($faq_id);
+
+                if ($faq && 'active' === $faq->status) {
+                    $review_item['faq_question'] = (string) $faq->question;
+                    $review_item['faq_category'] = (string) $faq->category;
+                }
+            }
+
+            $review[] = $review_item;
         }
 
         $score = $total > 0 ? (int) round(($correct / $total) * 100) : 0;
@@ -304,6 +342,7 @@ class UR_AI_Quiz_Service {
             'correct_count'   => $correct,
             'total_questions' => $total,
             'is_new_best'     => $is_new_best,
+            'review'          => $review,
         );
     }
 

@@ -321,6 +321,67 @@
     font-size: 14px;
 }
 
+/* ---------- Result review (per-question breakdown) ---------- */
+
+.ur-ai-quiz-review {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 20px;
+    text-align: left;
+}
+
+.ur-ai-quiz-review-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ur-quiz-ink);
+}
+
+.ur-ai-quiz-review-item {
+    padding: 12px 14px;
+    border: 1.5px solid var(--ur-quiz-line);
+    border-left-width: 4px;
+    border-radius: 10px;
+    background: var(--ur-quiz-surface);
+}
+
+.ur-ai-quiz-review-item.is-correct {
+    border-left-color: var(--ur-quiz-correct);
+}
+
+.ur-ai-quiz-review-item.is-incorrect {
+    border-left-color: var(--ur-quiz-incorrect);
+}
+
+.ur-ai-quiz-review-question {
+    margin: 0 0 6px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ur-quiz-ink);
+}
+
+.ur-ai-quiz-review-answer {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ur-quiz-ink-soft);
+}
+
+.ur-ai-quiz-review-item.is-correct .ur-ai-quiz-review-answer {
+    color: var(--ur-quiz-correct);
+}
+
+.ur-ai-quiz-review-item.is-incorrect .ur-ai-quiz-review-answer {
+    color: var(--ur-quiz-incorrect);
+}
+
+.ur-ai-quiz-review-faq {
+    margin: 8px 0 0;
+    padding-top: 8px;
+    border-top: 1px dashed var(--ur-quiz-line);
+    font-size: 13px;
+    color: var(--ur-quiz-ink-soft);
+}
+
 /* ---------- Loading / Error ---------- */
 
 .ur-ai-quiz-loading {

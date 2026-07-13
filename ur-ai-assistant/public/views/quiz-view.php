@@ -81,6 +81,9 @@ $instance_id = 'ur-ai-quiz-' . wp_rand(1000, 999999);
             </div>
             <p class="ur-ai-quiz-result-detail"></p>
             <p class="ur-ai-quiz-result-status"></p>
+
+            <div class="ur-ai-quiz-review"></div>
+
             <button type="button" class="ur-ai-quiz-retry-button">
                 <?php echo esc_html__('再挑戰一次', 'ur-ai-assistant'); ?>
             </button>

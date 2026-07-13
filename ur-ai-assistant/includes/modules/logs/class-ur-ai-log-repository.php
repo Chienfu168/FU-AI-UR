@@ -518,7 +518,8 @@ class UR_AI_Log_Repository {
             $wpdb->prepare(
                 "SELECT question,
                         COUNT(*) AS total,
-                        MAX(created_at) AS last_asked_at
+                        MAX(created_at) AS last_asked_at,
+                        MAX(id) AS sample_log_id
                  FROM {$this->table_name}
                  WHERE answer_source = 'ai'
                    AND status = 'success'
