@@ -214,8 +214,8 @@ class UR_AI_Quiz_Module {
                     'please_answer'     => __('請先選擇一個答案。', 'ur-ai-assistant'),
                     'review_title'      => __('作答回顧', 'ur-ai-assistant'),
                     'review_correct'    => __('✓ 答對了', 'ur-ai-assistant'),
-                    /* translators: %s: 正確答案文字 */
-                    'review_incorrect'  => __('✕ 答錯了，正確答案：%s', 'ur-ai-assistant'),
+                    /* translators: %1$s: 正確答案文字 */
+                    'review_incorrect'  => __('✕ 答錯了，正確答案：%1$s', 'ur-ai-assistant'),
                     /* translators: 1: 題號 2: 題目文字 */
                     'review_question'   => __('第 %1$s 題．%2$s', 'ur-ai-assistant'),
                     /* translators: 1: FAQ 分類 2: FAQ 問題 */
