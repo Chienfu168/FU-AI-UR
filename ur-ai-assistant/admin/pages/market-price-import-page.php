@@ -60,9 +60,12 @@ $message_texts = array(
     'import_bad_type'         => __('檔案格式不符，請上傳 CSV（.csv）檔案。', 'ur-ai-assistant'),
     'import_upload_error'     => __('檔案上傳失敗，請重新嘗試。', 'ur-ai-assistant'),
     'import_service_missing'  => __('匯入服務尚未正確載入。', 'ur-ai-assistant'),
+    'fetch_service_missing'   => __('自動抓取服務尚未正確載入。', 'ur-ai-assistant'),
+    'fetch_bad_season'        => __('請選擇要抓取的季別。', 'ur-ai-assistant'),
 );
 
-$service = new UR_AI_Market_Price_Service();
+$service        = new UR_AI_Market_Price_Service();
+$fetch_service  = class_exists('UR_AI_Market_Price_Remote_Fetch_Service') ? new UR_AI_Market_Price_Remote_Fetch_Service() : null;
 
 $enabled           = UR_AI_Market_Price_Settings::is_enabled();
 $old_age_threshold = UR_AI_Market_Price_Settings::get_old_age_threshold();
@@ -130,6 +133,41 @@ $stale_days = $service->get_stale_days();
                     ?>
                 <?php else : ?>
                     <?php echo esc_html__('已取消匯入：無法從資料內容判斷所屬縣市（目前僅支援台北市／新北市），請確認上傳的是雙北實價登錄開放資料。', 'ur-ai-assistant'); ?>
+                <?php endif; ?>
+            </p>
+        </div>
+    <?php elseif ('fetched' === $message) : ?>
+        <?php
+        $fetch_created   = isset($_GET['fetch_created']) ? absint($_GET['fetch_created']) : 0;
+        $fetch_duplicate = isset($_GET['fetch_duplicate']) ? absint($_GET['fetch_duplicate']) : 0;
+        $fetch_skipped   = isset($_GET['fetch_skipped']) ? absint($_GET['fetch_skipped']) : 0;
+        $fetch_total     = isset($_GET['fetch_total']) ? absint($_GET['fetch_total']) : 0;
+        $fetch_has_warning = !empty($_GET['fetch_warning']);
+        ?>
+        <div class="notice notice-success is-dismissible">
+            <p>
+                <?php
+                printf(
+                    /* translators: 1: total rows, 2: created, 3: duplicate, 4: skipped */
+                    esc_html__('自動抓取匯入完成。共讀取 %1$d 筆成屋交易，新增 %2$d 筆、略過重複 %3$d 筆、略過格式錯誤 %4$d 筆。', 'ur-ai-assistant'),
+                    $fetch_total,
+                    $fetch_created,
+                    $fetch_duplicate,
+                    $fetch_skipped
+                );
+                ?>
+                <?php if ($fetch_has_warning) : ?>
+                    <?php echo esc_html__('（部分項目有警告訊息，請參考下方抓取紀錄）', 'ur-ai-assistant'); ?>
+                <?php endif; ?>
+            </p>
+        </div>
+    <?php elseif ('fetch_failed' === $message) : ?>
+        <?php $fetch_reason = isset($_GET['fetch_reason']) ? sanitize_text_field(wp_unslash($_GET['fetch_reason'])) : ''; ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+                <?php echo esc_html__('自動抓取失敗。', 'ur-ai-assistant'); ?>
+                <?php if ('' !== $fetch_reason) : ?>
+                    <?php echo esc_html($fetch_reason); ?>
                 <?php endif; ?>
             </p>
         </div>
@@ -255,6 +293,84 @@ $stale_days = $service->get_stale_days();
         </div>
 
     </div>
+
+    <?php if ($fetch_service instanceof UR_AI_Market_Price_Remote_Fetch_Service) : ?>
+        <?php
+        $fetch_seasons = $fetch_service->get_available_seasons();
+        $fetch_log     = $fetch_service->get_fetch_log();
+        ?>
+        <div class="ur-ai-card">
+            <div class="ur-ai-card-header">
+                <div>
+                    <h2 class="ur-ai-card-title"><?php echo esc_html__('自動抓取（內政部開放資料）', 'ur-ai-assistant'); ?></h2>
+                    <p class="ur-ai-card-description">
+                        <?php echo esc_html__('直接向內政部不動產交易實價查詢服務下載選定季別的開放資料並自動匯入，免除手動下載、另存 CSV、上傳的步驟。選單中已標示「已抓取過」的季別供參考，重複抓取同一季別不會造成重複資料（仍以政府編號防重複），適合用來補齊政府資料事後更正、遲繳登記新增的紀錄。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="<?php echo esc_attr(UR_AI_Market_Price_Module::FETCH_ACTION); ?>">
+                <?php wp_nonce_field(UR_AI_Market_Price_Module::FETCH_ACTION); ?>
+
+                <div class="ur-ai-form-row">
+                    <label for="mp_fetch_season"><?php echo esc_html__('要抓取的季別', 'ur-ai-assistant'); ?></label>
+                    <select name="season" id="mp_fetch_season">
+                        <?php foreach ($fetch_seasons as $season_tag => $season_label) : ?>
+                            <?php $log_entry = isset($fetch_log[$season_tag]) ? $fetch_log[$season_tag] : null; ?>
+                            <option value="<?php echo esc_attr($season_tag); ?>">
+                                <?php echo esc_html($season_label); ?>
+                                <?php if (null !== $log_entry) : ?>
+                                    <?php
+                                    printf(
+                                        /* translators: %s: 上次抓取時間 */
+                                        esc_html__('（已於 %s 抓取過）', 'ur-ai-assistant'),
+                                        esc_html(mysql2date('Y-m-d H:i', $log_entry['fetched_at']))
+                                    );
+                                    ?>
+                                <?php endif; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="ur-ai-form-help">
+                        <?php echo esc_html__('「本期」為政府每月 1/11/21 更新的最新一批資料，適合日常更新；歷史季別可用來一次補齊過去尚未匯入的資料。抓取過程需下載並解壓政府 zip 檔，資料量較大時可能需要數十秒，請耐心等候頁面回應。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+
+                <button type="submit" class="button button-primary">
+                    <?php echo esc_html__('立即抓取並匯入', 'ur-ai-assistant'); ?>
+                </button>
+            </form>
+
+            <?php if (!empty($fetch_log)) : ?>
+                <h3 style="margin-top:24px;"><?php echo esc_html__('抓取紀錄', 'ur-ai-assistant'); ?></h3>
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th><?php echo esc_html__('季別', 'ur-ai-assistant'); ?></th>
+                            <th><?php echo esc_html__('上次抓取時間', 'ur-ai-assistant'); ?></th>
+                            <th><?php echo esc_html__('新增', 'ur-ai-assistant'); ?></th>
+                            <th><?php echo esc_html__('略過重複', 'ur-ai-assistant'); ?></th>
+                            <th><?php echo esc_html__('略過格式錯誤', 'ur-ai-assistant'); ?></th>
+                            <th><?php echo esc_html__('讀取總筆數', 'ur-ai-assistant'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($fetch_log as $season_tag => $log_entry) : ?>
+                            <tr>
+                                <td><?php echo esc_html(isset($fetch_seasons[$season_tag]) ? $fetch_seasons[$season_tag] : $season_tag); ?></td>
+                                <td><?php echo esc_html(mysql2date('Y-m-d H:i', $log_entry['fetched_at'])); ?></td>
+                                <td><?php echo esc_html(absint($log_entry['created'])); ?></td>
+                                <td><?php echo esc_html(absint($log_entry['duplicate'])); ?></td>
+                                <td><?php echo esc_html(absint($log_entry['skipped'])); ?></td>
+                                <td><?php echo esc_html(absint($log_entry['total'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
     <div class="ur-ai-card">
         <div class="ur-ai-card-header">

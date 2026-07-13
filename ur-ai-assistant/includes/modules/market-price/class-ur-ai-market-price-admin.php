@@ -31,6 +31,13 @@ class UR_AI_Market_Price_Admin {
     private $import_service;
 
     /**
+     * Remote Fetch Service。
+     *
+     * @var UR_AI_Market_Price_Remote_Fetch_Service|null
+     */
+    private $remote_fetch_service;
+
+    /**
      * 建構子。
      *
      * @param UR_AI_Market_Price_Service|null $service Service。
@@ -41,6 +48,9 @@ class UR_AI_Market_Price_Admin {
             : (class_exists('UR_AI_Market_Price_Service') ? new UR_AI_Market_Price_Service() : null);
         $this->import_service = class_exists('UR_AI_Market_Price_Import_Service')
             ? new UR_AI_Market_Price_Import_Service()
+            : null;
+        $this->remote_fetch_service = class_exists('UR_AI_Market_Price_Remote_Fetch_Service')
+            ? new UR_AI_Market_Price_Remote_Fetch_Service($this->import_service)
             : null;
     }
 
@@ -119,6 +129,63 @@ class UR_AI_Market_Price_Admin {
                 'imp_total'     => absint($result['total']),
                 'imp_warning'   => !empty($result['warnings']) ? 1 : 0,
                 'imp_city'      => isset($result['detected_city']) ? sanitize_key($result['detected_city']) : '',
+            )
+        );
+    }
+
+    /**
+     * 處理自內政部開放資料端點下載並匯入。
+     *
+     * @return void
+     */
+    public function handle_fetch() {
+        $this->require_admin_capability();
+        check_admin_referer(UR_AI_Market_Price_Module::FETCH_ACTION);
+
+        $redirect_base = admin_url('admin.php?page=' . UR_AI_Market_Price_Module::ADMIN_MENU_SLUG);
+
+        if (!$this->remote_fetch_service instanceof UR_AI_Market_Price_Remote_Fetch_Service) {
+            $this->redirect_with_message($redirect_base, 'fetch_service_missing', 'error');
+        }
+
+        $season = isset($_POST['season']) ? sanitize_text_field(wp_unslash($_POST['season'])) : '';
+
+        if (!$this->remote_fetch_service->is_valid_season($season)) {
+            $this->redirect_with_message($redirect_base, 'fetch_bad_season', 'error');
+        }
+
+        $result = $this->remote_fetch_service->fetch_and_import($season);
+
+        if (empty($result['success'])) {
+            $first_warning = !empty($result['warnings']) ? (string) reset($result['warnings']) : '';
+
+            $this->redirect_with_message(
+                $redirect_base,
+                'fetch_failed',
+                'error',
+                array(
+                    'fetch_season'  => $season,
+                    // 只帶第一則警告訊息做提示，避免過長警告內容塞進網址造成問題。
+                    'fetch_reason'  => mb_substr($first_warning, 0, 150),
+                )
+            );
+        }
+
+        if (class_exists('UR_AI_Market_Price_Service') && $this->service instanceof UR_AI_Market_Price_Service) {
+            $this->service->clear_cache();
+        }
+
+        $this->redirect_with_message(
+            $redirect_base,
+            'fetched',
+            'updated',
+            array(
+                'fetch_season'    => $season,
+                'fetch_created'   => absint($result['created']),
+                'fetch_duplicate' => absint($result['duplicate']),
+                'fetch_skipped'   => absint($result['skipped']),
+                'fetch_total'     => absint($result['total']),
+                'fetch_warning'   => !empty($result['warnings']) ? 1 : 0,
             )
         );
     }

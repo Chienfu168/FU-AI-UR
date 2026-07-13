@@ -155,6 +155,7 @@ class UR_AI_Autoloader {
             'UR_AI_Market_Price_Repository'       => 'includes/modules/market-price/class-ur-ai-market-price-repository.php',
             'UR_AI_Market_Price_Service'          => 'includes/modules/market-price/class-ur-ai-market-price-service.php',
             'UR_AI_Market_Price_Import_Service'   => 'includes/modules/market-price/class-ur-ai-market-price-import-service.php',
+            'UR_AI_Market_Price_Remote_Fetch_Service' => 'includes/modules/market-price/class-ur-ai-market-price-remote-fetch-service.php',
             'UR_AI_Market_Price_Zone_Normalizer'  => 'includes/modules/market-price/class-ur-ai-market-price-zone-normalizer.php',
             'UR_AI_Market_Price_Ajax'             => 'includes/modules/market-price/class-ur-ai-market-price-ajax.php',
             'UR_AI_Market_Price_Admin'            => 'includes/modules/market-price/class-ur-ai-market-price-admin.php',
