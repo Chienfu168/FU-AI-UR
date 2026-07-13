@@ -97,6 +97,7 @@ class UR_AI_Autoloader {
             'UR_AI_Activator'      => 'includes/core/class-ur-ai-activator.php',
             'UR_AI_Deactivator'    => 'includes/core/class-ur-ai-deactivator.php',
             'UR_AI_Module_Manager' => 'includes/core/class-ur-ai-module-manager.php',
+            'UR_AI_Updater'        => 'includes/core/class-ur-ai-updater.php',
 
             /*
              * Shared

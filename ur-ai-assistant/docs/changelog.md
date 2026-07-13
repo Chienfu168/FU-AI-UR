@@ -2502,6 +2502,83 @@ WordPress 內部的權限判斷表維持完整），另外用純 CSS（`admin_he
 
 建議立即更新，修正 v1.13.0 造成的存取問題。
 
+---
+
+## v1.14.0
+
+更新日期
+2026-07-13
+
+版本定位
+
+這個外掛目前沒有上架 wordpress.org，過去每次更新都要手動把檔案
+上傳到站台，容易忘記或漏傳檔案。這個版本加入自動更新檢查功能，讓
+後台「外掛」頁可以像 wordpress.org 上架的外掛一樣，自動看到「有
+新版本可更新」並一鍵更新，不需要再手動上傳。
+
+一、主要新增
+
+1. 內建 Plugin Update Checker（第三方函式庫，MIT 授權，版本 v5.7，
+   完整原始碼與授權聲明皆隨外掛附上於 vendor/plugin-update-checker/
+   目錄）：這是專門給沒有上架 wordpress.org 的外掛使用的更新檢查
+   函式庫，讓後台更新體驗與正式上架的外掛一致。
+2. 新增 UR_AI_Updater 類別，於外掛啟動時初始化更新檢查器，指向
+   GitHub repo（Chienfu168/FU-AI-UR），並設定只採用 Release 附加
+   檔案中副檔名為 .zip 的檔案（避免誤用 GitHub 自動產生、資料夾
+   結構不符的原始碼壓縮檔）。
+3. 主檔新增 `Update URI` 標頭，避免 WordPress 核心誤以為這個外掛
+   有對應的 wordpress.org 上架版本而執行不必要的檢查。
+4. 新增 .github/workflows/release.yml：每次 push 一個 vX.Y.Z 格式
+   的 git tag，會自動打包 ur-ai-assistant/ 資料夾（保留正確的頂層
+   資料夾名稱）成 zip，並自動建立對應的 GitHub Release、附上這個
+   zip，供更新檢查器讀取。往後的發布流程只需要在合併版本後多下
+   一個 tag（例如 `git tag v1.14.0 && git push origin v1.14.0`），
+   不需要在 GitHub 網頁上手動建立 Release。
+
+二、設計原則
+
+外掛實際檔案放在 repo 的 ur-ai-assistant/ 子目錄下（repo 根目錄還有
+其他非外掛內容），因此不能直接使用 GitHub 對 tag 自動產生的原始碼
+壓縮檔（那會把整個 repo 根目錄結構包進去，資料夾名稱與內容都不符
+預期）。改用「Release 附加檔案」模式，由 GitHub Actions 在 tag
+建立時自動打包出結構正確的 zip，讓更新檢查器抓到的一定是可以直接
+覆蓋安裝的正確內容。
+
+三、測試方式
+
+撰寫 PHP 驗證腳本，直接載入實際 vendor 進來的 Plugin Update Checker
+函式庫（非簡化模擬），確認：（1）UR_AI_Updater::init() 可以在
+沒有真實 WordPress 環境、只提供必要函式與常數樁的情況下正常執行完
+畢，不噴出未預期的錯誤；（2）確實建立了一個對應到本外掛 slug 的
+update checker 實例；（3）該實例指向正確的 GitHub repo 網址；
+（4）enableReleaseAssets() 確實被呼叫，且篩選條件正確設定為只採用
+副檔名 .zip 的附加檔案。全部情境通過。
+
+需要說明的限制：這個環境沒有真實的 WordPress 站台，也無法實際觸發
+一次 GitHub Actions tag push 後的完整流程，因此「後台外掛頁實際顯示
+有新版本」與「點擊立即更新後確實正確覆蓋安裝」這兩個步驟，仍需要在
+真實站台上，於第一次實際發布新版本時親自確認一次。
+
+四、上線前需要你完成的兩件事
+
+1. 把這個 GitHub repo（Chienfu168/FU-AI-UR）從私有改成公開：GitHub
+   repo 設定頁 → Danger Zone → Change repository visibility。更新
+   檢查器需要能讀取這個 repo 的 Release 資訊。
+2. 把外掛更新到 v1.14.0 之後，之後每次發布新版本，除了合併版本更新
+   的 PR，還要多下一個對應的 git tag 並 push 到 GitHub（例如
+   `git tag v1.14.0 && git push origin v1.14.0`），GitHub Actions
+   才會自動建立這一版的 Release 與 zip。
+
+五、是否建議上正式站
+
+建議更新，但上線後第一次實際發布新版本時，請留意後台「外掛」頁是否
+正確顯示更新通知，並實際完整走過一次「點擊更新」的流程，確認外掛
+檔案正確被覆蓋且功能正常，之後的版本就會是同樣、已驗證過的流程。
+
+---
+
+## 這個檔案的設計重點
+
 ### 1. 留下完整版本脈絡
 
 未來回頭看 v1.0.0，就能知道這一版是「模組化架構整理版」。

@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.13.1
+Stable tag: 1.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -173,6 +173,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 == Changelog ==
 
+= 1.14.0 =
+* 新增自動更新檢查功能：後台「外掛」頁現在可以像 wordpress.org 上架的外掛一樣，自動偵測新版本並一鍵更新，不需要再手動上傳檔案。內建 Plugin Update Checker（第三方函式庫，MIT 授權）指向本外掛的 GitHub repo，並透過 GitHub Actions 在每次發布新版本（推送 git tag）時自動打包正確結構的 zip。
+
 = 1.13.1 =
 * 修正 1.13.0 造成熱門問題、相關頁面推薦、內容缺口、回饋分析、試算器設定這幾個合併進分頁籤的頁面，直接用網址進入時出現「沒有存取這個頁面的權限」的問題（即使系統管理員帳號也一樣）。原因是移除側邊選單項目的方式用錯了函式，導致 WordPress 內部誤判頁面未註冊；已改用純 CSS 隱藏，不影響頁面存取權限。
 
@@ -307,6 +310,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.14.0 =
+建議更新。新增自動更新檢查功能，之後可直接在後台一鍵更新，不需再手動上傳檔案。上線前需先將 GitHub repo 改為公開，並在第一次發布新版本時實際確認自動更新流程是否正常運作。
 
 = 1.13.1 =
 緊急建議更新。修正 1.13.0 造成部分後台頁面無法直接存取（誤判權限不足）的問題。
