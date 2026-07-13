@@ -1,19 +1,23 @@
 name: Build plugin zip and publish release
 
-# 每次 push 一個 vX.Y.Z 格式的 tag，就自動打包 ur-ai-assistant/ 資料夾
-# 成一個結構正確（單一頂層資料夾 ur-ai-assistant/）的 zip，建立對應的
-# GitHub Release 並附上這個 zip，供外掛內建的 Plugin Update Checker
-# 讀取，讓後台可以看到「有新版本可更新」並一鍵更新。
+# 每次有 commit 進到 main（PR 合併），就自動讀取
+# ur-ai-assistant/ur-ai-assistant.php 裡的 Version 標頭；如果這個版本號
+# 還沒有對應的 Release，就自動打包 ur-ai-assistant/ 資料夾成一個結構
+# 正確（單一頂層資料夾 ur-ai-assistant/）的 zip、建立 vX.Y.Z 格式的
+# tag 與對應的 GitHub Release，並附上這個 zip，供外掛內建的
+# Plugin Update Checker 讀取，讓後台可以看到「有新版本可更新」並
+# 一鍵更新。
 #
-# 使用方式：完成版本號 bump、changelog、readme 更新並合併到 main 後，
-#   git tag v1.2.3
-#   git push origin v1.2.3
-# 其餘全部自動完成，不需要在 GitHub 網頁上手動建立 Release。
+# 全程自動，合併版本更新的 PR 之後不需要再手動打 tag 或建立 Release。
+# 若同一版本號已經有 Release（例如這次合併沒有改版本號），會直接
+# 跳過，不會重複建立。也可以在 GitHub 的 Actions 頁面手動觸發
+# （workflow_dispatch）重新執行一次。
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -25,12 +29,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Read plugin version
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^ \* Version:' ur-ai-assistant/ur-ai-assistant.php | sed 's/.*Version: *//' | tr -d '[:space:]')
+          if [ -z "$VERSION" ]; then
+            echo "Could not read plugin version from ur-ai-assistant.php" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version already has a release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build plugin zip
+        if: steps.check.outputs.exists == 'false'
         run: |
           zip -r ur-ai-assistant.zip ur-ai-assistant
 
       - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
           files: ur-ai-assistant.zip
           generate_release_notes: true
