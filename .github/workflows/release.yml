@@ -1,0 +1,36 @@
+name: Build plugin zip and publish release
+
+# 每次 push 一個 vX.Y.Z 格式的 tag，就自動打包 ur-ai-assistant/ 資料夾
+# 成一個結構正確（單一頂層資料夾 ur-ai-assistant/）的 zip，建立對應的
+# GitHub Release 並附上這個 zip，供外掛內建的 Plugin Update Checker
+# 讀取，讓後台可以看到「有新版本可更新」並一鍵更新。
+#
+# 使用方式：完成版本號 bump、changelog、readme 更新並合併到 main 後，
+#   git tag v1.2.3
+#   git push origin v1.2.3
+# 其餘全部自動完成，不需要在 GitHub 網頁上手動建立 Release。
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build plugin zip
+        run: |
+          zip -r ur-ai-assistant.zip ur-ai-assistant
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ur-ai-assistant.zip
+          generate_release_notes: true

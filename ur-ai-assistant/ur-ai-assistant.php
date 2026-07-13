@@ -3,7 +3,7 @@
  * Plugin Name: UR AI Assistant
  * Plugin URI: https://www.ur-promoter.com/
  * Description: 都更危老 AI 助理，提供都市更新、危老重建、更新會、自主更新、權利變換、協議合建等知識問答、FAQ 知識庫、相關文章推薦、熱門問題導覽與後台分析功能。
- * Version: 1.13.1
+ * Version: 1.14.0
  * Author: UR Promoter
  * Author URI: https://www.ur-promoter.com/
  * Text Domain: ur-ai-assistant
@@ -12,6 +12,7 @@
  * Requires PHP: 7.4
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI: https://github.com/Chienfu168/FU-AI-UR/
  *
  * @package UR_AI_Assistant
  */
@@ -25,7 +26,7 @@ if (!defined('ABSPATH')) {
  *
  * 從零重寫版，作為長期穩定架構起點。
  */
-define('UR_AI_ASSISTANT_VERSION', '1.13.1');
+define('UR_AI_ASSISTANT_VERSION', '1.14.0');
 
 /**
  * 外掛基本路徑常數

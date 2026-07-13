@@ -49,6 +49,7 @@ class UR_AI_Bootstrap {
     public function run() {
         $this->register_core_hooks();
         $this->boot_modules();
+        $this->init_updater();
     }
 
     /**
@@ -99,5 +100,17 @@ class UR_AI_Bootstrap {
      */
     public function get_module_manager() {
         return $this->module_manager;
+    }
+
+    /**
+     * 初始化外掛更新檢查（讓後台「外掛」頁能顯示新版本並一鍵更新，
+     * 詳見 UR_AI_Updater）。
+     *
+     * @return void
+     */
+    private function init_updater() {
+        if (class_exists('UR_AI_Updater')) {
+            UR_AI_Updater::init();
+        }
     }
 }
