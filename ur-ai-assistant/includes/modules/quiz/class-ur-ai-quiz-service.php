@@ -125,6 +125,16 @@ class UR_AI_Quiz_Service {
     }
 
     /**
+     * 查詢符合條件的全部題目 ID（不分頁），供「跨頁全選」批次操作使用。
+     *
+     * @param array $args 查詢參數。
+     * @return array
+     */
+    public function query_question_ids($args = array()) {
+        return $this->repository instanceof UR_AI_Quiz_Repository ? $this->repository->query_question_ids($args) : array();
+    }
+
+    /**
      * 已啟用且已審核的題目總數。
      *
      * @return int

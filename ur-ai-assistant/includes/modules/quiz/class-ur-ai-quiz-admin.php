@@ -262,6 +262,17 @@ class UR_AI_Quiz_Admin {
         $ids = isset($_POST['question_ids']) ? (array) wp_unslash($_POST['question_ids']) : array();
         $ids = class_exists('UR_AI_Security') ? UR_AI_Security::sanitize_ids($ids) : array_values(array_unique(array_filter(array_map('absint', $ids))));
 
+        if (!empty($_POST['select_all_matching'])) {
+            $ids = $this->service->query_question_ids(
+                array(
+                    'status'        => isset($_POST['q_status']) ? sanitize_key(wp_unslash($_POST['q_status'])) : '',
+                    'review_status' => isset($_POST['q_review_status']) ? sanitize_key(wp_unslash($_POST['q_review_status'])) : '',
+                    'category'      => isset($_POST['q_category']) ? sanitize_text_field(wp_unslash($_POST['q_category'])) : '',
+                    'search'        => isset($_POST['q_s']) ? sanitize_text_field(wp_unslash($_POST['q_s'])) : '',
+                )
+            );
+        }
+
         if (empty($ids)) {
             $this->redirect_with_message('no_items_selected', 'error');
         }

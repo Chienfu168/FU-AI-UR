@@ -312,6 +312,28 @@ class UR_AI_Quiz_Repository {
     }
 
     /**
+     * 查詢符合條件的全部題目 ID（不分頁），供「跨頁全選」批次操作使用。
+     *
+     * @param array $args 查詢參數。
+     * @return array
+     */
+    public function query_question_ids($args = array()) {
+        global $wpdb;
+
+        list($where, $values) = $this->build_question_where($args);
+
+        $sql = "SELECT id FROM {$this->questions_table} WHERE " . implode(' AND ', $where);
+
+        if (!empty($values)) {
+            $ids = $wpdb->get_col($wpdb->prepare($sql, $values));
+        } else {
+            $ids = $wpdb->get_col($sql);
+        }
+
+        return array_map('absint', is_array($ids) ? $ids : array());
+    }
+
+    /**
      * 隨機抽取指定數量的「已啟用且已審核」題目。
      *
      * @param int $count 抽題數量。
