@@ -47,6 +47,10 @@ $massing_coverage_hint = isset($settings['massing_coverage_hint']) ? $settings['
 <div class="wrap">
     <h1><?php esc_html_e('都更試算器設定', 'ur-ai-assistant'); ?></h1>
 
+    <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
+        <?php UR_AI_Admin_Menu::render_group_tabs('calculator'); ?>
+    <?php endif; ?>
+
     <?php if (!empty($saved)) : ?>
         <div class="notice notice-success is-dismissible"><p><?php esc_html_e('設定已儲存。', 'ur-ai-assistant'); ?></p></div>
     <?php endif; ?>

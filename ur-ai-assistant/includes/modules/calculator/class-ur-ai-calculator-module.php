@@ -220,7 +220,7 @@ class UR_AI_Calculator_Module {
         add_submenu_page(
             self::PARENT_SLUG,
             __('試算名單', 'ur-ai-assistant'),
-            __('試算名單', 'ur-ai-assistant'),
+            __('都更分回試算', 'ur-ai-assistant'),
             $capability,
             self::ADMIN_MENU_SLUG,
             array($this, 'render_admin_page')
@@ -234,6 +234,10 @@ class UR_AI_Calculator_Module {
             self::SETTINGS_MENU_SLUG,
             array($this, 'render_settings_page')
         );
+
+        // 試算器設定併入「都更分回試算」（即試算名單頁）底下的分頁籤，
+        // 不再各自佔用一個側邊選單項目；網址與 render 邏輯完全不變。
+        remove_submenu_page(self::PARENT_SLUG, self::SETTINGS_MENU_SLUG);
     }
 
     /**

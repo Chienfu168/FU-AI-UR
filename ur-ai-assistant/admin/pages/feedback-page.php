@@ -56,6 +56,10 @@ $not_helpful_rate = isset($summary['not_helpful_rate']) ? (float) $summary['not_
 
     <h1><?php echo esc_html__('都更 AI 助理｜回饋分析', 'ur-ai-assistant'); ?></h1>
 
+    <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
+        <?php UR_AI_Admin_Menu::render_group_tabs('analytics'); ?>
+    <?php endif; ?>
+
     <div class="ur-ai-help-box">
         <strong><?php echo esc_html__('分析目的：', 'ur-ai-assistant'); ?></strong>
         <?php echo esc_html__('回饋分析可協助判斷哪些回答需要修正、哪些 AI 回答適合轉成 FAQ，以及 FAQ 命中策略是否需要調整。', 'ur-ai-assistant'); ?>

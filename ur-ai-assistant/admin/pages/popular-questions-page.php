@@ -101,6 +101,10 @@ $importable_faqs = $admin->get_importable_faqs(30);
 
     <h1><?php echo esc_html__('都更 AI 助理｜熱門問題', 'ur-ai-assistant'); ?></h1>
 
+    <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
+        <?php UR_AI_Admin_Menu::render_group_tabs('knowledge'); ?>
+    <?php endif; ?>
+
     <?php if ('' !== $admin_message) : ?>
         <div class="notice notice-<?php echo 'error' === $msg_type ? 'error' : 'success'; ?> is-dismissible">
             <p><?php echo esc_html($admin_message); ?></p>

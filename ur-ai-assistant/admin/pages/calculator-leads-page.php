@@ -26,6 +26,10 @@ $base_url    = admin_url('admin.php?page=' . UR_AI_Calculator_Module::ADMIN_MENU
 <div class="wrap">
     <h1><?php esc_html_e('都更試算名單', 'ur-ai-assistant'); ?></h1>
 
+    <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
+        <?php UR_AI_Admin_Menu::render_group_tabs('calculator'); ?>
+    <?php endif; ?>
+
     <p class="description">
         <?php esc_html_e('每筆名單帶有完整試算情境（縣市、分區、坪數、分回坪數），供業務跟進使用。', 'ur-ai-assistant'); ?>
     </p>

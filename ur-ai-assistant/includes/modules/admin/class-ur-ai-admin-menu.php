@@ -60,7 +60,7 @@ class UR_AI_Admin_Menu {
         add_submenu_page(
             self::MENU_SLUG,
             __('FAQ 知識庫', 'ur-ai-assistant'),
-            __('FAQ 知識庫', 'ur-ai-assistant'),
+            __('知識庫管理', 'ur-ai-assistant'),
             $this->get_manage_faq_capability(),
             'ur-ai-assistant-faqs',
             array($this, 'render_faqs_page')
@@ -69,7 +69,7 @@ class UR_AI_Admin_Menu {
         add_submenu_page(
             self::MENU_SLUG,
             __('問答紀錄', 'ur-ai-assistant'),
-            __('問答紀錄', 'ur-ai-assistant'),
+            __('問答數據分析', 'ur-ai-assistant'),
             $this->get_view_logs_capability(),
             'ur-ai-assistant-logs',
             array($this, 'render_logs_page')
@@ -110,6 +110,80 @@ class UR_AI_Admin_Menu {
             'ur-ai-assistant-content-gap',
             array($this, 'render_content_gap_page')
         );
+
+        /*
+         * 熱門問題／相關頁面推薦／內容缺口三頁的功能與「FAQ 知識庫」高度
+         * 相關，合併進「知識庫管理」這個選單項目底下，改用頁面內的分頁籤
+         * 切換（見 render_group_tabs()），不再各自佔用一個側邊選單項目。
+         * 這裡只是把項目從可見選單移除，網址、頁面本身與所有既有的
+         * redirect／連結都完全不變。
+         */
+        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-popular-questions');
+        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-related-pages');
+        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-content-gap');
+
+        // 回饋分析併入「問答數據分析」（即問答紀錄頁），理由同上。
+        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-feedback');
+    }
+
+    /**
+     * 各選單分組的頁面清單，供 render_group_tabs() 畫出分頁籤列。
+     *
+     * @return array
+     */
+    private static function get_group_definitions() {
+        return array(
+            'knowledge' => array(
+                array('slug' => 'ur-ai-assistant-faqs', 'label' => __('FAQ 知識庫', 'ur-ai-assistant')),
+                array('slug' => 'ur-ai-assistant-popular-questions', 'label' => __('熱門問題', 'ur-ai-assistant')),
+                array('slug' => 'ur-ai-assistant-related-pages', 'label' => __('相關頁面推薦', 'ur-ai-assistant')),
+                array('slug' => 'ur-ai-assistant-content-gap', 'label' => __('內容缺口', 'ur-ai-assistant')),
+            ),
+            'analytics' => array(
+                array('slug' => 'ur-ai-assistant-logs', 'label' => __('問答紀錄', 'ur-ai-assistant')),
+                array('slug' => 'ur-ai-assistant-feedback', 'label' => __('回饋分析', 'ur-ai-assistant')),
+            ),
+            'calculator' => array(
+                array('slug' => 'ur-ai-assistant-leads', 'label' => __('試算名單', 'ur-ai-assistant')),
+                array('slug' => 'ur-ai-assistant-calc-settings', 'label' => __('試算器設定', 'ur-ai-assistant')),
+            ),
+        );
+    }
+
+    /**
+     * 畫出分組頁面之間的分頁籤導覽列（真實整頁連結，非 JS 切換面板）。
+     *
+     * 對應「知識庫管理」「問答數據分析」「都更分回試算」三個合併後的選單
+     * 項目：底下每個子頁面仍是各自獨立的網址與 render 邏輯，這裡只是在
+     * 頁面最上方加一列導覽，讓使用者可以在同一組的子頁面之間快速切換。
+     *
+     * @param string $group 分組代號：knowledge｜analytics｜calculator。
+     * @return void
+     */
+    public static function render_group_tabs($group) {
+        $groups = self::get_group_definitions();
+
+        if (empty($groups[$group])) {
+            return;
+        }
+
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+
+        echo '<div class="ur-ai-admin-group-tabs">';
+
+        foreach ($groups[$group] as $item) {
+            $is_active = ($item['slug'] === $current_page);
+            $url       = admin_url('admin.php?page=' . $item['slug']);
+
+            printf(
+                '<a href="%1$s" class="ur-ai-admin-group-tab%2$s">%3$s</a>',
+                esc_url($url),
+                $is_active ? ' is-active' : '',
+                esc_html($item['label'])
+            );
+        }
+
+        echo '</div>';
     }
 
     /**
