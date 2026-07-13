@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.14.0
+Stable tag: 1.14.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -173,6 +173,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 == Changelog ==
 
+= 1.14.1 =
+* 知識大考驗後台「題庫」清單新增跨頁全選：全選後套用批次操作（核准上線／退回／刪除），若符合篩選條件的題目多於本頁筆數，可選擇套用到全部符合條件的題目，不再只作用於目前頁面看到的項目，與 FAQ 知識庫、熱門問題、相關頁面推薦的跨頁全選體驗一致。
+
 = 1.14.0 =
 * 新增自動更新檢查功能：後台「外掛」頁現在可以像 wordpress.org 上架的外掛一樣，自動偵測新版本並一鍵更新，不需要再手動上傳檔案。內建 Plugin Update Checker（第三方函式庫，MIT 授權）指向本外掛的 GitHub repo，並透過 GitHub Actions 在每次發布新版本（推送 git tag）時自動打包正確結構的 zip。
 
@@ -310,6 +313,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.14.1 =
+建議更新。知識大考驗題庫清單新增跨頁全選功能，為選擇性功能，不改變既有批次操作預設行為，風險低。
 
 = 1.14.0 =
 建議更新。新增自動更新檢查功能，之後可直接在後台一鍵更新，不需再手動上傳檔案。上線前需先將 GitHub repo 改為公開，並在第一次發布新版本時實際確認自動更新流程是否正常運作。
