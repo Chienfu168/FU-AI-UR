@@ -112,18 +112,45 @@ class UR_AI_Admin_Menu {
         );
 
         /*
-         * 熱門問題／相關頁面推薦／內容缺口三頁的功能與「FAQ 知識庫」高度
-         * 相關，合併進「知識庫管理」這個選單項目底下，改用頁面內的分頁籤
-         * 切換（見 render_group_tabs()），不再各自佔用一個側邊選單項目。
-         * 這裡只是把項目從可見選單移除，網址、頁面本身與所有既有的
-         * redirect／連結都完全不變。
+         * 熱門問題／相關頁面推薦／內容缺口／回饋分析四頁合併進「知識庫
+         * 管理」「問答數據分析」選單項目底下，改用頁面內的分頁籤切換
+         * （見 render_group_tabs()），不再各自佔用一個側邊選單項目。
+         *
+         * 重要：這裡刻意不使用 remove_submenu_page()。該函式會把項目從
+         * WordPress 內部的 $submenu 陣列整個移除，而 WordPress 自己判斷
+         * 「目前登入身分能否存取 admin.php?page=X」的
+         * user_can_access_admin_page() 邏輯，正是靠查詢這個陣列來確認
+         * 頁面已註冊與所需權限；一旦移除，即使是系統管理員直接用網址
+         * 進入也會被 WordPress 判定為「頁面未登記」而擋下（顯示「沒有
+         * 存取這個頁面的權限」），而不是真的權限不足。因此改用純 CSS
+         * 只在畫面上隱藏側邊選單裡的這幾個項目，保留完整的選單註冊，
+         * 讓網址、權限判斷與所有既有連結都正常運作。
          */
-        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-popular-questions');
-        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-related-pages');
-        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-content-gap');
+        add_action('admin_head', array($this, 'print_hidden_submenu_css'));
+    }
 
-        // 回饋分析併入「問答數據分析」（即問答紀錄頁），理由同上。
-        remove_submenu_page(self::MENU_SLUG, 'ur-ai-assistant-feedback');
+    /**
+     * 在側邊選單畫面上隱藏已合併進分頁籤的重複項目（純顯示層，不影響
+     * WordPress 內部的選單註冊與權限判斷，見 register() 內的說明）。
+     *
+     * @return void
+     */
+    public function print_hidden_submenu_css() {
+        $hidden_slugs = array(
+            'ur-ai-assistant-popular-questions',
+            'ur-ai-assistant-related-pages',
+            'ur-ai-assistant-content-gap',
+            'ur-ai-assistant-feedback',
+            'ur-ai-assistant-calc-settings',
+        );
+
+        $selectors = array();
+
+        foreach ($hidden_slugs as $slug) {
+            $selectors[] = '#adminmenu a[href$="page=' . esc_attr($slug) . '"]';
+        }
+
+        echo '<style>' . implode(',', $selectors) . '{display:none;}</style>';
     }
 
     /**

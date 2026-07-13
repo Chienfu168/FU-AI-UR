@@ -235,9 +235,16 @@ class UR_AI_Calculator_Module {
             array($this, 'render_settings_page')
         );
 
-        // 試算器設定併入「都更分回試算」（即試算名單頁）底下的分頁籤，
-        // 不再各自佔用一個側邊選單項目；網址與 render 邏輯完全不變。
-        remove_submenu_page(self::PARENT_SLUG, self::SETTINGS_MENU_SLUG);
+        /*
+         * 試算器設定併入「都更分回試算」（即試算名單頁）底下的分頁籤，
+         * 不再各自佔用一個側邊選單項目。這裡刻意不呼叫
+         * remove_submenu_page()：該函式會把項目從 WordPress 內部的
+         * $submenu 陣列整個移除，導致 WordPress 自己的
+         * user_can_access_admin_page() 權限判斷失效，即使系統管理員
+         * 直接用網址進入也會被擋下「沒有存取這個頁面的權限」。實際的
+         * 隱藏改由 UR_AI_Admin_Menu::print_hidden_submenu_css()
+         * 統一以純 CSS 處理，保留完整的選單註冊。
+         */
     }
 
     /**
