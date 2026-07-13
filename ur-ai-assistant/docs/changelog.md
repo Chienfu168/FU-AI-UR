@@ -2621,6 +2621,54 @@ update checker 實例；（3）該實例指向正確的 GitHub repo 網址；
 
 ---
 
+## v1.14.2
+
+更新日期
+2026-07-13
+
+版本定位
+
+緊急修正 v1.14.0 上線後、實際到正式站更新到 v1.14.1 時才觸發的
+問題：後台「外掛」頁點擊「檢查更新」（或背景排程自動檢查更新時）
+會出現「網站錯誤」。使用者提供的錯誤紀錄顯示：
+
+```
+PHP Fatal error: Uncaught Error: Class "Parsedown" not found
+in .../vendor/plugin-update-checker/Puc/v5p7/Vcs/GitHubApi.php:140
+```
+
+原因與修正
+
+vendor 進來的 Plugin Update Checker 函式庫，其內部用來把 GitHub
+Release 說明文字（Markdown）轉成 HTML 顯示在「查看版本詳情」彈窗
+用的 Parsedown 函式庫，是放在函式庫自己的 vendor/ 子目錄底下
+（vendor/plugin-update-checker/vendor/Parsedown.php、
+ParsedownModern.php、PucReadmeParser.php）。v1.14.0 vendor 進來時
+只複製了 Puc/、css/、js/、languages/ 等目錄與少數幾支主要檔案，
+遺漏了這個巢狀的 vendor/ 子目錄，導致只要程式碼路徑走到需要顯示
+Release 說明文字（例如檢查更新、或背景排程檢查）就會因為找不到
+Parsedown 這個類別而整個網站噴出 PHP Fatal error。
+
+已補齊遺漏的三支檔案，並用外掛實際引用的 Autoloader 類別重新比對
+完整原始函式庫（fetch 自官方來源）的執行期檔案清單，確認目前 vendor
+進來的內容與官方版本完全一致，沒有其他遺漏。
+
+測試方式
+
+撰寫 PHP 驗證腳本，直接重現原始錯誤發生的確切呼叫路徑：載入實際
+vendor 進來的 Autoloader，確認 Parsedown／PucReadmeParser 類別現在
+都能正常自動載入，並實際呼叫
+`Parsedown::instance()->text(...)`（即 GitHubApi.php 第 140 行、
+使用者回報錯誤紀錄裡崩潰的那一行）確認能正常把 Markdown 轉成 HTML
+而不再噴錯。另外重新執行 v1.14.0 既有的 UR_AI_Updater::init() 驗證
+腳本，確認這次修正沒有影響原本已驗證過的初始化邏輯。全部情境通過。
+
+是否建議上正式站
+
+緊急建議立即更新，修正會讓後台「外掛」頁噴出網站錯誤的問題。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡
