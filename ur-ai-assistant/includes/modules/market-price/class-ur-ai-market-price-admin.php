@@ -118,6 +118,7 @@ class UR_AI_Market_Price_Admin {
                 'imp_skipped'   => absint($result['skipped']),
                 'imp_total'     => absint($result['total']),
                 'imp_warning'   => !empty($result['warnings']) ? 1 : 0,
+                'imp_city'      => isset($result['detected_city']) ? sanitize_key($result['detected_city']) : '',
             )
         );
     }

@@ -83,10 +83,12 @@ $stale_days = $service->get_stale_days();
 
     <?php if ('imported' === $message) : ?>
         <?php
-        $created   = isset($_GET['imp_created']) ? absint($_GET['imp_created']) : 0;
-        $duplicate = isset($_GET['imp_duplicate']) ? absint($_GET['imp_duplicate']) : 0;
-        $skipped   = isset($_GET['imp_skipped']) ? absint($_GET['imp_skipped']) : 0;
-        $total     = isset($_GET['imp_total']) ? absint($_GET['imp_total']) : 0;
+        $created    = isset($_GET['imp_created']) ? absint($_GET['imp_created']) : 0;
+        $duplicate  = isset($_GET['imp_duplicate']) ? absint($_GET['imp_duplicate']) : 0;
+        $skipped    = isset($_GET['imp_skipped']) ? absint($_GET['imp_skipped']) : 0;
+        $total      = isset($_GET['imp_total']) ? absint($_GET['imp_total']) : 0;
+        $imp_city   = isset($_GET['imp_city']) ? sanitize_key(wp_unslash($_GET['imp_city'])) : '';
+        $imp_city_label = isset($cities[$imp_city]) ? $cities[$imp_city] : '';
         ?>
         <div class="notice notice-success is-dismissible">
             <p>
@@ -100,6 +102,15 @@ $stale_days = $service->get_stale_days();
                     $skipped
                 );
                 ?>
+                <?php if ('' !== $imp_city_label) : ?>
+                    <?php
+                    printf(
+                        /* translators: %s: 自動偵測或選擇的縣市名稱 */
+                        esc_html__('（已匯入為「%s」）', 'ur-ai-assistant'),
+                        esc_html($imp_city_label)
+                    );
+                    ?>
+                <?php endif; ?>
             </p>
         </div>
     <?php elseif ('import_city_mismatch' === $message) : ?>
@@ -174,10 +185,14 @@ $stale_days = $service->get_stale_days();
                 <div class="ur-ai-form-row">
                     <label for="mp_city"><?php echo esc_html__('檔案所屬縣市', 'ur-ai-assistant'); ?></label>
                     <select name="city" id="mp_city">
+                        <option value=""><?php echo esc_html__('自動偵測（依資料內容判斷）', 'ur-ai-assistant'); ?></option>
                         <?php foreach ($cities as $city_key => $city_label) : ?>
                             <option value="<?php echo esc_attr($city_key); ?>"><?php echo esc_html($city_label); ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <p class="ur-ai-form-help">
+                        <?php echo esc_html__('留空（自動偵測）時，系統會依資料內容的鄉鎮市區欄位自動判斷所屬縣市；若手動選擇縣市，會用來與自動偵測結果交叉驗證，不符時取消匯入以避免資料錯置。', 'ur-ai-assistant'); ?>
+                    </p>
                 </div>
 
                 <div class="ur-ai-form-row">

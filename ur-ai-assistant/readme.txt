@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.14.2
+Stable tag: 1.15.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -173,6 +173,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 == Changelog ==
 
+= 1.15.0 =
+* 行情參考 CSV 匯入不再強制要求先手動選擇縣市：新增「自動偵測」預設選項，留空時直接依資料內容自動判斷所屬縣市並匯入；若仍手動選擇縣市，會維持與自動偵測結果交叉驗證、不符則取消匯入的既有保護機制。匯入成功訊息新增顯示實際匯入的縣市。
+
 = 1.14.2 =
 * 緊急修正：v1.14.0 加入的更新檢查函式庫遺漏了內部用來顯示 Release 說明文字的 Parsedown 相依檔案，導致點擊「檢查更新」（或背景排程自動檢查）時整個後台外掛頁噴出 PHP Fatal error。已補齊遺漏的檔案並重新驗證。
 
@@ -316,6 +319,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.15.0 =
+建議更新。行情參考 CSV 匯入改成可自動偵測縣市，不需再強制先手動選擇；手動選擇縣市的既有安全機制不變，風險低。
 
 = 1.14.2 =
 緊急建議立即更新。修正 v1.14.0 造成的「檢查更新」網站錯誤（PHP Fatal error: Class Parsedown not found）。
