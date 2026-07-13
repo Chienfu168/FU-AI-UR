@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.14.1
+Stable tag: 1.14.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -173,6 +173,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 
 == Changelog ==
 
+= 1.14.2 =
+* 緊急修正：v1.14.0 加入的更新檢查函式庫遺漏了內部用來顯示 Release 說明文字的 Parsedown 相依檔案，導致點擊「檢查更新」（或背景排程自動檢查）時整個後台外掛頁噴出 PHP Fatal error。已補齊遺漏的檔案並重新驗證。
+
 = 1.14.1 =
 * 知識大考驗後台「題庫」清單新增跨頁全選：全選後套用批次操作（核准上線／退回／刪除），若符合篩選條件的題目多於本頁筆數，可選擇套用到全部符合條件的題目，不再只作用於目前頁面看到的項目，與 FAQ 知識庫、熱門問題、相關頁面推薦的跨頁全選體驗一致。
 
@@ -313,6 +316,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 新增解除安裝清理檔。
 
 == Upgrade Notice ==
+
+= 1.14.2 =
+緊急建議立即更新。修正 v1.14.0 造成的「檢查更新」網站錯誤（PHP Fatal error: Class Parsedown not found）。
 
 = 1.14.1 =
 建議更新。知識大考驗題庫清單新增跨頁全選功能，為選擇性功能，不改變既有批次操作預設行為，風險低。
