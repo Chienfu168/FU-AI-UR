@@ -56,6 +56,7 @@
 			resultScore: root.querySelector('.ur-ai-quiz-result-score'),
 			resultDetail: root.querySelector('.ur-ai-quiz-result-detail'),
 			resultStatus: root.querySelector('.ur-ai-quiz-result-status'),
+			resultReview: root.querySelector('.ur-ai-quiz-review'),
 			retryButton: root.querySelector('.ur-ai-quiz-retry-button')
 		};
 
@@ -236,7 +237,59 @@
 			els.resultDetail.textContent = format(CFG.i18n.result_detail, data.correct_count, data.total_questions);
 			els.resultStatus.textContent = data.is_new_best ? CFG.i18n.new_best : CFG.i18n.not_best;
 
+			renderReview(data.review || []);
+
 			setState('result');
+		}
+
+		function renderReview(review) {
+			if (!els.resultReview) {
+				return;
+			}
+
+			els.resultReview.innerHTML = '';
+
+			if (!review.length) {
+				return;
+			}
+
+			var title = document.createElement('h3');
+			title.className = 'ur-ai-quiz-review-title';
+			title.textContent = CFG.i18n.review_title;
+			els.resultReview.appendChild(title);
+
+			review.forEach(function (item, index) {
+				var wrap = document.createElement('div');
+				wrap.className = 'ur-ai-quiz-review-item ' + (item.is_correct ? 'is-correct' : 'is-incorrect');
+
+				var question = document.createElement('p');
+				question.className = 'ur-ai-quiz-review-question';
+				question.textContent = format(CFG.i18n.review_question, index + 1, item.question || '');
+				wrap.appendChild(question);
+
+				var answer = document.createElement('p');
+				answer.className = 'ur-ai-quiz-review-answer';
+				answer.textContent = item.is_correct
+					? CFG.i18n.review_correct
+					: format(CFG.i18n.review_incorrect, item.correct_text || '');
+				wrap.appendChild(answer);
+
+				if (item.explanation) {
+					var explanation = document.createElement('p');
+					explanation.className = 'ur-ai-quiz-explanation';
+					explanation.textContent = item.explanation;
+					wrap.appendChild(explanation);
+				}
+
+				if (!item.is_correct && item.faq_question) {
+					var faqHint = document.createElement('p');
+					faqHint.className = 'ur-ai-quiz-review-faq';
+					faqHint.textContent = format(CFG.i18n.review_faq, item.faq_category || '', item.faq_question);
+					wrap.appendChild(faqHint);
+				}
+
+				els.resultReview.appendChild(wrap);
+			});
 		}
 
 		function handleRetry() {
