@@ -2853,6 +2853,71 @@ import_from_csv()，新增部分是下載／解壓／後台 UI，屬於外掛內
 
 ---
 
+## v1.18.0
+
+更新日期
+2026-07-13
+
+版本定位
+
+這是多產業擴充架構規劃（見 docs/industry-expansion-architecture.md）的
+Phase 1：把現有寫死在程式碼裡的「都更危老」預設文案與模組預設狀態，
+抽成可依產業別切換的設定資料。**本版本純屬結構重構，不改變任何現有
+安裝的可見行為**——目前仍然只有都更危老一個產業別，也是所有現有網站
+唯一會用到的選項。
+
+一、主要新增
+
+1. 新增 UR_AI_Industry_Profiles（includes/core/class-ur-ai-industry-profiles.php）：
+   - get_all() / get($key) / get_active() / is_valid($key)：產業別登錄檔，
+     目前僅註冊 'urban_renewal' 一筆資料，內容為 AI 系統提示詞、前台
+     標題／副標題、各模組是否為該產業核心工具（供決定模組預設啟用
+     狀態）。
+   - get_active() 刻意直接以 get_option() 讀取原始設定值，不經過
+     UR_AI_Settings::get_all()／defaults()，避免 defaults() 反過來呼叫
+     get_active() 造成無窮遞迴（因為 defaults() 需要用 get_active() 的
+     回傳值決定系統提示詞等預設文案）。
+2. UR_AI_Settings 新增 'industry' 設定（預設值 'urban_renewal'）與
+   get_industry()；default_system_prompt() 與 defaults() 裡的
+   frontend_title／frontend_subtitle 改為讀取目前啟用中產業別的預設值，
+   不再是寫死字串；sanitize_value() 新增 'industry' 案例，無效值會
+   靜默退回預設產業別，不會讓設定卡在壞值。
+3. UR_AI_Calculator_Settings 的 'enabled' 預設值改為依目前產業別的
+   modules.calculator 旗標決定（都更危老產業別預設開啟，與升級前
+   完全一致）。
+
+二、設計原則
+
+- 產業別只提供「預設值」，不是強制值：管理者原本就能在後台自行修改
+  的系統提示詞、模組啟用開關，覆寫優先權完全不變；產業別只影響「第一
+  次安裝、或設定值缺漏時」該補上什麼預設內容。
+- 對已安裝網站零影響的關鍵：既有網站的設定 option 早就已經把
+  system_prompt／frontend_title／frontend_subtitle／enabled 等值存好了
+  （即使當初是空字串，get_system_prompt() 這類方法本來就有「空值時
+  才查預設值」的邏輯），這次改動只動到「預設值從哪裡取得」，不動到
+  任何已儲存設定值本身的讀寫路徑。
+
+三、測試方式
+
+撰寫 PHP 驗證腳本（不需資料庫，純 get_option／update_option 記憶體
+模擬），確認：（1）UR_AI_Settings::get_all() 不會因為新的依賴關係
+造成無窮遞迴；（2）預設產業別為 'urban_renewal'；（3）系統提示詞與
+重構前寫死的文字逐字元相同；（4）frontend_title／frontend_subtitle
+預設值與重構前相同；（5）UR_AI_Industry_Profiles::get_all() 正確
+列出唯一的都更危老產業別；（6）'industry' 設定值輸入無效字串時會
+靜默退回預設值，輸入合法值可正常往返；（7）分回試算預設啟用狀態
+與重構前相同；（8）模擬「舊版設定 option（沒有 industry 欄位）」的
+既有網站情境，取值行為仍正確退回都更危老預設值。全部情境通過。
+
+四、是否建議上正式站
+
+建議更新。純結構性重構，經回歸測試確認所有現有安裝的輸出與升級前
+逐字元相同；新增的登錄檔本身在目前階段只有一筆資料，尚未實際影響
+任何前後台可見畫面。真正的產業內容差異化（FAQ／Quiz 內容包、行情
+參考用語、AI 人設調整）留待 Phase 2 選定試點產業後再進行。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

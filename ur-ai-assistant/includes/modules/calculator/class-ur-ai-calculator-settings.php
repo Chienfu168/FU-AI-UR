@@ -222,7 +222,9 @@ class UR_AI_Calculator_Settings {
      */
     public static function defaults() {
         return array(
-            'enabled'             => 1,
+            // 是否為目前產業別的核心工具，見 UR_AI_Industry_Profiles
+            // （分回試算目前僅都更危老產業別預設開啟）。
+            'enabled'             => self::is_core_tool_for_active_industry() ? 1 : 0,
             'cf7_form_id'         => 1157393,
             'cf7_field_map'       => self::default_cf7_field_map(),
             'cities'              => self::default_cities(),
@@ -268,6 +270,21 @@ class UR_AI_Calculator_Settings {
             'floor_height'  => (float) self::get('massing_floor_height', 3.2),
             'coverage_hint' => (string) self::get('massing_coverage_hint', ''),
         );
+    }
+
+    /**
+     * 判斷分回試算是否為目前啟用中產業別的核心工具（決定預設啟用狀態）。
+     *
+     * @return bool
+     */
+    private static function is_core_tool_for_active_industry() {
+        if (!class_exists('UR_AI_Industry_Profiles')) {
+            return true;
+        }
+
+        $profile = UR_AI_Industry_Profiles::get_active();
+
+        return !isset($profile['modules']['calculator']) || !empty($profile['modules']['calculator']);
     }
 
     /**

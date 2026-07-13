@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.17.0
+Stable tag: 1.18.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.18.0 =
+* 內部架構調整（純結構性，不影響任何現有網站的可見行為）：新增「產業設定檔」機制（UR_AI_Industry_Profiles），把 AI 系統提示詞、前台標題／副標題、分回試算模組的預設啟用狀態，從寫死在程式碼裡的都更文案，抽成可依產業別切換的設定資料。目前僅有「都更危老」一個產業別，做為所有現有安裝的預設值與唯一選項，經回歸測試確認輸出與升級前逐字元相同。詳見 docs/industry-expansion-architecture.md 的多產業擴充規劃。
 
 = 1.17.0 =
 * 行情參考後台新增「自動抓取（內政部開放資料）」：可直接選擇「本期」或指定季別，一鍵向內政部不動產交易實價查詢服務下載 zip、自動解壓雙北主檔並匯入，免除手動下載、另存 CSV、上傳的步驟。下拉選單會標示每個季別上次抓取的時間，供判斷是否已更新過；重複抓取同一季別不會造成重複資料（仍以政府編號防重複），可用來補齊政府資料事後更正、遲繳登記新增的紀錄。後台同時新增抓取紀錄一覽表。
