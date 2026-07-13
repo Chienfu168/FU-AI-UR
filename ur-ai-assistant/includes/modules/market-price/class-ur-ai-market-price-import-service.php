@@ -54,16 +54,17 @@ class UR_AI_Market_Price_Import_Service {
     /**
      * 匯入 CSV 檔案內容。
      *
-     * 匯入前會先自動比對資料內容（鄉鎮市區欄位）判斷實際屬於哪個縣市；
-     * 若判斷結果與管理者選擇的縣市不符（或完全無法判斷），會整批拒絕
-     * 匯入並回傳明確原因，避免資料被錯誤標記縣市後污染資料庫、事後
-     * 難以清理。
+     * 匯入前會先自動比對資料內容（鄉鎮市區欄位）判斷實際屬於哪個縣市：
+     * - 若管理者留空未指定縣市，直接採用自動偵測結果匯入。
+     * - 若管理者有明確指定縣市，則用來與自動偵測結果交叉驗證，兩者不符
+     *   （或完全無法判斷）時會整批拒絕匯入並回傳明確原因，避免資料被
+     *   錯誤標記縣市後污染資料庫、事後難以清理。
      *
      * @param string $file_path 已上傳檔案的暫存路徑。
-     * @param string $city      縣市 key（taipei / new_taipei），由管理者於表單指定。
+     * @param string $city      縣市 key（taipei / new_taipei）；留空則完全依自動偵測結果匯入。
      * @return array{ created: int, duplicate: int, skipped: int, total: int, warnings: array, city_mismatch?: bool, detected_city?: string }
      */
-    public function import_from_csv($file_path, $city) {
+    public function import_from_csv($file_path, $city = '') {
         $result = array(
             'created'   => 0,
             'duplicate' => 0,
@@ -79,8 +80,8 @@ class UR_AI_Market_Price_Import_Service {
 
         $city = sanitize_key($city);
 
-        if (!in_array($city, array_keys($this->get_supported_cities()), true)) {
-            $result['warnings'][] = __('未指定有效的縣市。', 'ur-ai-assistant');
+        if ('' !== $city && !in_array($city, array_keys($this->get_supported_cities()), true)) {
+            $result['warnings'][] = __('選擇的縣市不在目前支援範圍內。', 'ur-ai-assistant');
             return $result;
         }
 
@@ -111,7 +112,7 @@ class UR_AI_Market_Price_Import_Service {
             return $result;
         }
 
-        if ($detected_city !== $city) {
+        if ('' !== $city && $detected_city !== $city) {
             $cities                  = $this->get_supported_cities();
             $result['warnings'][]    = sprintf(
                 /* translators: 1: 偵測到的縣市名稱, 2: 使用者選擇的縣市名稱 */
@@ -124,8 +125,11 @@ class UR_AI_Market_Price_Import_Service {
             return $result;
         }
 
+        // 留空未指定縣市時，直接採用自動偵測結果作為實際匯入的縣市。
+        $import_city = ('' !== $city) ? $city : $detected_city;
+
         $import_batch = gmdate('Ymd\THis');
-        $known_ids    = $this->repository->get_existing_source_record_ids($city);
+        $known_ids    = $this->repository->get_existing_source_record_ids($import_city);
 
         for ($i = 1, $len = count($rows); $i < $len; $i++) {
             $row = $this->extract_row($rows[$i], $header_map);
@@ -137,7 +141,7 @@ class UR_AI_Market_Price_Import_Service {
 
             $result['total']++;
 
-            $prepared = $this->prepare_record($row, $city, $import_batch);
+            $prepared = $this->prepare_record($row, $import_city, $import_batch);
 
             if (null === $prepared) {
                 $result['skipped']++;
@@ -154,6 +158,8 @@ class UR_AI_Market_Price_Import_Service {
                 $result['skipped']++;
             }
         }
+
+        $result['detected_city'] = $import_city;
 
         return $result;
     }
