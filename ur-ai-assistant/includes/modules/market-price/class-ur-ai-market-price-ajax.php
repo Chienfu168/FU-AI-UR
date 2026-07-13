@@ -85,6 +85,7 @@ class UR_AI_Market_Price_Ajax {
         $district      = isset($_POST['district']) ? sanitize_text_field(wp_unslash($_POST['district'])) : '';
         $zone          = isset($_POST['zone']) ? sanitize_text_field(wp_unslash($_POST['zone'])) : '';
         $building_type = isset($_POST['building_type']) ? sanitize_text_field(wp_unslash($_POST['building_type'])) : '';
+        $address       = isset($_POST['address']) ? sanitize_text_field(wp_unslash($_POST['address'])) : '';
 
         if ('' === $district) {
             wp_send_json_error(
@@ -99,6 +100,7 @@ class UR_AI_Market_Price_Ajax {
                 'district'      => $district,
                 'zone'          => $zone,
                 'building_type' => $building_type,
+                'address'       => $address,
             )
         );
 

@@ -58,13 +58,18 @@
     color: #4b5563;
 }
 
-.ur-ai-market-price-field select {
+.ur-ai-market-price-field select,
+.ur-ai-market-price-field input[type="text"] {
     padding: 10px 12px;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     background: #ffffff;
     font-size: 14px;
     min-width: 160px;
+}
+
+.ur-ai-market-price-field input[type="text"] {
+    min-width: 220px;
 }
 
 .ur-ai-market-price-submit {
@@ -323,7 +328,8 @@
         align-items: stretch;
     }
 
-    .ur-ai-market-price-field select {
+    .ur-ai-market-price-field select,
+    .ur-ai-market-price-field input[type="text"] {
         width: 100%;
     }
 }

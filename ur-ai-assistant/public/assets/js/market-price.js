@@ -21,6 +21,7 @@
 	function initMarketPrice(root) {
 		var citySelect = root.querySelector('.ur-ai-market-price-city-select');
 		var districtSelect = root.querySelector('.ur-ai-market-price-district-select');
+		var addressInput = root.querySelector('.ur-ai-market-price-address-input');
 		var form = root.querySelector('.ur-ai-market-price-form');
 		var loadingBox = root.querySelector('.ur-ai-market-price-loading');
 		var resultBox = root.querySelector('.ur-ai-market-price-result');
@@ -87,6 +88,7 @@
 
 			var city = citySelect.value;
 			var district = districtSelect.value;
+			var address = addressInput ? addressInput.value : '';
 
 			if (!district) {
 				showError(getI18n('need_district', '請選擇行政區。'));
@@ -99,7 +101,8 @@
 				action: CFG.action,
 				nonce: CFG.nonce,
 				city: city,
-				district: district
+				district: district,
+				address: address
 			})
 				.then(function (response) {
 					setLoading(false);
