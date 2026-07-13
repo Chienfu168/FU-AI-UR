@@ -58,6 +58,16 @@ if (class_exists('UR_AI_Schema_Market_Prices')) {
                 </select>
             </div>
 
+            <div class="ur-ai-market-price-field">
+                <label for="<?php echo esc_attr($instance_id); ?>-address"><?php echo esc_html__('地址（選填）', 'ur-ai-assistant'); ?></label>
+                <input
+                    type="text"
+                    id="<?php echo esc_attr($instance_id); ?>-address"
+                    class="ur-ai-market-price-address-input"
+                    placeholder="<?php echo esc_attr__('例如：忠孝東路四段，可讓參考案例更貼近您的地址', 'ur-ai-assistant'); ?>"
+                >
+            </div>
+
             <button type="submit" class="ur-ai-market-price-submit">
                 <?php echo esc_html__('查詢行情', 'ur-ai-assistant'); ?>
             </button>

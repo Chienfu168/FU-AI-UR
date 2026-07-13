@@ -143,6 +143,9 @@ class UR_AI_Market_Price_Service {
      *     @type string $district      行政區（必填）。
      *     @type string $zone          正規化分區（選填，留空＝不限）。
      *     @type string $building_type 建物型態（選填，留空＝不限）。
+     *     @type string $address       使用者輸入地址（選填）。留空則不影響
+     *                                 統計結果本身，僅在有輸入時，讓「參考
+     *                                 案例」優先顯示同路段的紀錄。
      * }
      * @return array{
      *     old: array{ count: int, median: float|null, average: float|null, min: float|null, max: float|null, range_low: float|null, range_high: float|null, avg_age: float, examples: array, recent: array|null, sufficient: bool },
@@ -159,11 +162,17 @@ class UR_AI_Market_Price_Service {
         $new_threshold   = $this->get_new_age_threshold();
         $min_sample_size = $this->get_min_sample_size();
 
+        $district = isset($args['district']) ? sanitize_text_field($args['district']) : '';
+        $address  = isset($args['address']) ? sanitize_text_field($args['address']) : '';
+
         $base_args = array(
             'city'          => isset($args['city']) ? sanitize_key($args['city']) : '',
-            'district'      => isset($args['district']) ? sanitize_text_field($args['district']) : '',
+            'district'      => $district,
             'zone'          => isset($args['zone']) ? sanitize_text_field($args['zone']) : '',
             'building_type' => isset($args['building_type']) ? sanitize_text_field($args['building_type']) : '',
+            'road_hint'     => ('' !== $address && class_exists('UR_AI_Market_Price_Repository'))
+                ? UR_AI_Market_Price_Repository::extract_road_hint($address, $district)
+                : '',
         );
 
         // 「老屋」與「新成屋」共用相同的縣市／行政區／分區／建物型態基本

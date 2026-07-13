@@ -188,7 +188,9 @@ class UR_AI_Market_Price_Repository {
             ? $wpdb->get_results($sql)
             : $wpdb->get_results($wpdb->prepare($sql, $values));
 
-        return $this->summarize_rows($rows);
+        $road_hint = isset($args['road_hint']) ? (string) $args['road_hint'] : '';
+
+        return $this->summarize_rows($rows, $road_hint);
     }
 
     /**
@@ -236,19 +238,23 @@ class UR_AI_Market_Price_Repository {
             }
         }
 
+        $road_hint = isset($args['road_hint']) ? (string) $args['road_hint'] : '';
+
         return array(
-            'old' => $this->summarize_rows($old_rows),
-            'new' => $this->summarize_rows($new_rows),
+            'old' => $this->summarize_rows($old_rows, $road_hint),
+            'new' => $this->summarize_rows($new_rows, $road_hint),
         );
     }
 
     /**
      * 從一組紀錄計算統計摘要。
      *
-     * @param array $rows $wpdb->get_results() 回傳的紀錄陣列。
+     * @param array  $rows $wpdb->get_results() 回傳的紀錄陣列。
+     * @param string $road_hint 選填，使用者輸入地址解析出的路段查詢提示，
+     *                          用來讓「參考案例」優先挑選同路段的紀錄。
      * @return array
      */
-    private function summarize_rows($rows) {
+    private function summarize_rows($rows, $road_hint = '') {
         if (!is_array($rows) || empty($rows)) {
             return array(
                 'count'      => 0,
@@ -291,7 +297,7 @@ class UR_AI_Market_Price_Repository {
             'range_low'  => $this->percentile($prices, 0.25),
             'range_high' => $this->percentile($prices, 0.75),
             'avg_age'    => $count > 0 ? round(array_sum($ages) / $count, 1) : 0.0,
-            'examples'   => $this->pick_examples($rows),
+            'examples'   => $this->pick_examples($rows, $road_hint),
             'recent'     => $this->compute_recent_window($rows),
         );
     }
@@ -370,11 +376,33 @@ class UR_AI_Market_Price_Repository {
      * 只揭露屋齡／坪數／建物型態／路段＋單價，不含門牌號、樓層、
      * 確切交易日期，避免反查回政府公開資料裡的特定一筆交易。
      *
-     * @param array $rows $wpdb->get_results() 回傳的紀錄陣列。
+     * 若帶有 $road_hint（使用者輸入地址解析出的路段），會優先只在
+     * 同路段的紀錄中挑選代表案例；同路段完全沒有符合資料時，才退回
+     * 原本「整批依單價分佈挑例」的邏輯，確保有輸入地址時仍能看到
+     * 統計結果，不會因為地址找不到路段比對就整組沒有案例可看。
+     *
+     * @param array  $rows $wpdb->get_results() 回傳的紀錄陣列。
+     * @param string $road_hint 選填，路段查詢提示。
      * @return array
      */
-    private function pick_examples($rows) {
+    private function pick_examples($rows, $road_hint = '') {
         $rows = array_values($rows);
+
+        if ('' !== $road_hint) {
+            $matched = array_values(
+                array_filter(
+                    $rows,
+                    function ($row) use ($road_hint) {
+                        return false !== mb_stripos((string) $row->address_raw, $road_hint, 0, 'UTF-8');
+                    }
+                )
+            );
+
+            if (!empty($matched)) {
+                $rows = $matched;
+            }
+        }
+
         $count = count($rows);
 
         if (0 === $count) {
@@ -439,15 +467,40 @@ class UR_AI_Market_Price_Repository {
      * @return string 解析失敗時回傳空字串。
      */
     private function extract_road_section($address_raw, $district) {
+        return self::extract_road_hint($address_raw, $district);
+    }
+
+    /**
+     * 從一段地址文字擷取「路／街／大道＋段」層級的描述，捨棄門牌號、
+     * 巷弄、樓層等會指向特定一戶的細節。
+     *
+     * 同時供兩種情境使用：
+     * - 匯入資料時，把完整原始地址（含縣市／行政區／門牌／樓層）轉成
+     *   去識別化的參考案例地點描述（見 format_example()）。
+     * - 前台使用者輸入地址查詢時，把輸入文字解析成路段查詢提示（見
+     *   UR_AI_Market_Price_Service::get_comparison()），用來讓「參考
+     *   案例」優先挑選同路段的紀錄。
+     *
+     * @param string $address 地址文字（完整原始地址，或使用者輸入的地址）。
+     * @param string $district 行政區（若已知，用來定位路名的起始位置）。
+     * @return string 解析失敗時回傳空字串。
+     */
+    public static function extract_road_hint($address, $district = '') {
+        $address = trim((string) $address);
+
+        if ('' === $address) {
+            return '';
+        }
+
         if ('' !== $district) {
-            $pos = mb_strpos($address_raw, $district);
+            $pos = mb_strpos($address, $district);
 
             if (false !== $pos) {
-                $address_raw = mb_substr($address_raw, $pos + mb_strlen($district));
+                $address = mb_substr($address, $pos + mb_strlen($district));
             }
         }
 
-        if (preg_match('/^(.*?(?:路|街|大道)(?:[一二三四五六七八九十]+段)?)/u', $address_raw, $matches)) {
+        if (preg_match('/^(.*?(?:路|街|大道)(?:[一二三四五六七八九十]+段)?)/u', $address, $matches)) {
             return trim($matches[1]);
         }
 
