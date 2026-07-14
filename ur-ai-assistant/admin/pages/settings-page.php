@@ -62,6 +62,7 @@ if (
         'model'               => isset($_POST['model']) ? wp_unslash($_POST['model']) : '',
         'temperature'         => isset($_POST['temperature']) ? wp_unslash($_POST['temperature']) : '',
         'max_answer_tokens'   => isset($_POST['max_answer_tokens']) ? wp_unslash($_POST['max_answer_tokens']) : '',
+        'industry'            => isset($_POST['industry']) ? wp_unslash($_POST['industry']) : '',
         'system_prompt'       => isset($_POST['system_prompt']) ? wp_unslash($_POST['system_prompt']) : '',
         'frontend_enabled'    => !empty($_POST['frontend_enabled']) ? 1 : 0,
         'frontend_title'      => isset($_POST['frontend_title']) ? wp_unslash($_POST['frontend_title']) : '',
@@ -92,6 +93,8 @@ $api_key             = UR_AI_Settings::get_api_key();
 $model               = UR_AI_Settings::get_model();
 $temperature         = UR_AI_Settings::get_temperature();
 $max_answer_tokens   = UR_AI_Settings::get_max_answer_tokens();
+$current_industry    = UR_AI_Settings::get_industry();
+$industry_options    = class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_all() : array();
 $system_prompt       = UR_AI_Settings::get_system_prompt();
 $frontend_enabled    = UR_AI_Settings::is_frontend_enabled();
 $frontend_title      = UR_AI_Settings::get('frontend_title', '都更危老 AI 助理');
@@ -206,6 +209,25 @@ $cost_per_million_tokens = UR_AI_Settings::get_cost_per_million_tokens();
                     >
                 </div>
             </div>
+
+            <?php if (!empty($industry_options)) : ?>
+                <div class="ur-ai-form-row">
+                    <label for="industry"><?php echo esc_html__('產業別', 'ur-ai-assistant'); ?></label>
+                    <select id="industry" name="industry">
+                        <?php foreach ($industry_options as $industry_key => $industry_label) : ?>
+                            <option value="<?php echo esc_attr($industry_key); ?>" <?php selected($current_industry, $industry_key); ?>>
+                                <?php echo esc_html($industry_label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="button" class="button ur-ai-apply-industry-button" data-target-prompt="#system_prompt" data-target-title="#frontend_title" data-target-subtitle="#frontend_subtitle">
+                        <?php echo esc_html__('套用此產業別的預設文案', 'ur-ai-assistant'); ?>
+                    </button>
+                    <p class="ur-ai-form-help">
+                        <?php echo esc_html__('切換產業別本身不會自動覆蓋下方已填寫的系統提示詞／前台標題／副標題；按下「套用此產業別的預設文案」會把三個欄位替換成所選產業別的建議內容，供您預覽、修改後再按「儲存設定」，不會直接送出。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <div class="ur-ai-form-row">
                 <label for="system_prompt"><?php echo esc_html__('系統提示詞', 'ur-ai-assistant'); ?></label>

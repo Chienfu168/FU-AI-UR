@@ -77,8 +77,9 @@ class UR_AI_Admin_Assets {
             self::SCRIPT_HANDLE,
             'UR_AI_ADMIN',
             array(
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce'    => wp_create_nonce('ur_ai_assistant_admin_nonce'),
+                'ajax_url'          => admin_url('admin-ajax.php'),
+                'nonce'             => wp_create_nonce('ur_ai_assistant_admin_nonce'),
+                'industry_profiles' => $this->get_industry_profiles_for_js(),
                 'i18n'     => array(
                     'confirm_delete'       => __('確定要刪除這筆資料嗎？此操作無法復原。', 'ur-ai-assistant'),
                     'confirm_bulk_delete'  => __('確定要批次刪除所選資料嗎？此操作無法復原。', 'ur-ai-assistant'),
@@ -94,9 +95,34 @@ class UR_AI_Admin_Assets {
                     'select_all_confirmed' => __('已選取全部 %1$s 筆，套用批次操作時會套用到全部符合條件的資料。', 'ur-ai-assistant'),
                     'select_all_confirm_button' => __('選取全部', 'ur-ai-assistant'),
                     'select_all_cancel_button'  => __('僅本頁', 'ur-ai-assistant'),
+                    'confirm_apply_industry'    => __('確定要套用所選產業別的預設文案嗎？這會覆蓋下方系統提示詞／前台標題／副標題目前填寫的內容（尚未按「儲存設定」前都可以再修改）。', 'ur-ai-assistant'),
                 ),
             )
         );
+    }
+
+    /**
+     * 取得各產業別的 AI 助理預設文案，供設定頁「套用此產業別的預設文案」
+     * 按鈕使用（純前端預覽填入，不會自動儲存）。
+     *
+     * @return array
+     */
+    private function get_industry_profiles_for_js() {
+        if (!class_exists('UR_AI_Industry_Profiles')) {
+            return array();
+        }
+
+        $map = array();
+
+        foreach (UR_AI_Industry_Profiles::get_all() as $key => $label) {
+            $profile = UR_AI_Industry_Profiles::get($key);
+
+            if (is_array($profile) && !empty($profile['assistant'])) {
+                $map[$key] = $profile['assistant'];
+            }
+        }
+
+        return $map;
     }
 
     /**

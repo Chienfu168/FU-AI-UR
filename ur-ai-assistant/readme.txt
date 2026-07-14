@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.18.0
+Stable tag: 1.19.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.19.0 =
+* 多產業擴充 Phase 2 試點：新增「地政士」產業設定檔（AI 系統提示詞聚焦所有權移轉登記、繼承登記、抵押權、土地增值稅／契稅／印花稅、地籍測量等地政業務知識，並特別強調不可替個案核算稅額或作法律判斷；分回試算模組預設關閉；行情參考排行榜文案改為「區域行情漲幅」）。後台「功能設定」頁新增「產業別」下拉選單與「套用此產業別的預設文案」按鈕，可預覽並套用所選產業別的建議系統提示詞／前台標題／副標題，套用前不會自動儲存。同時新增地政士 FAQ 起始包（16 篇）與知識大考驗起始包（12 題），存放於外掛的 data/industry-packs/land_agent/，可透過既有的「上傳 CSV」表單匯入。都更危老產業別（含前台預設文案、分回試算、行情參考文案）維持完全不變。
 
 = 1.18.0 =
 * 內部架構調整（純結構性，不影響任何現有網站的可見行為）：新增「產業設定檔」機制（UR_AI_Industry_Profiles），把 AI 系統提示詞、前台標題／副標題、分回試算模組的預設啟用狀態，從寫死在程式碼裡的都更文案，抽成可依產業別切換的設定資料。目前僅有「都更危老」一個產業別，做為所有現有安裝的預設值與唯一選項，經回歸測試確認輸出與升級前逐字元相同。詳見 docs/industry-expansion-architecture.md 的多產業擴充規劃。
