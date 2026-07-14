@@ -236,5 +236,9 @@ $instance_id = 'ur-ai-assistant-' . wp_rand(1000, 999999);
             </div>
 
         </div>
+
+        <?php if (class_exists('UR_AI_Industry_Profiles')) : ?>
+            <?php echo UR_AI_Industry_Profiles::render_promotion_attribution(); // phpcs:ignore -- pre-escaped HTML from render_promotion_attribution(). ?>
+        <?php endif; ?>
     </div>
 </div>

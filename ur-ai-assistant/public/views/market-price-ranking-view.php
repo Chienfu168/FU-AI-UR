@@ -108,5 +108,9 @@ if (!function_exists('ur_ai_market_price_ranking_format_wan')) {
             <p class="ur-ai-market-price-ranking-disclaimer"><?php echo esc_html($disclaimer); ?></p>
         <?php endif; ?>
 
+        <?php if (class_exists('UR_AI_Industry_Profiles')) : ?>
+            <?php echo UR_AI_Industry_Profiles::render_promotion_attribution(); // phpcs:ignore -- pre-escaped HTML from render_promotion_attribution(). ?>
+        <?php endif; ?>
+
     </div>
 </div>
