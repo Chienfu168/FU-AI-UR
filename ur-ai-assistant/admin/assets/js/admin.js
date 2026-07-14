@@ -10,6 +10,7 @@
         convertFaqButton: '.ur-ai-convert-faq-button',
         importButton: '.ur-ai-import-button',
         copyButton: '.ur-ai-copy-button',
+        applyIndustryButton: '.ur-ai-apply-industry-button',
         toggleButton: '.ur-ai-toggle-button',
         toggleTarget: '.ur-ai-toggle-target',
         selectAllBanner: '.ur-ai-select-all-banner',
@@ -316,6 +317,44 @@
         copyText(text, $button);
     }
 
+    function handleApplyIndustryClick(event) {
+        event.preventDefault();
+
+        const $button = $(this);
+        const config = getConfig();
+        const profiles = config.industry_profiles || {};
+
+        const $industrySelect = $button.closest('.ur-ai-form-row').find('#industry');
+        const industryKey = $industrySelect.length ? $industrySelect.val() : '';
+        const profile = profiles[industryKey];
+
+        if (!profile) {
+            return;
+        }
+
+        const confirmMessage = getI18n('confirm_apply_industry', '確定要套用所選產業別的預設文案嗎？');
+
+        if (!window.confirm(confirmMessage)) {
+            return;
+        }
+
+        const $prompt = $($button.data('target-prompt'));
+        const $title = $($button.data('target-title'));
+        const $subtitle = $($button.data('target-subtitle'));
+
+        if ($prompt.length && profile.system_prompt) {
+            $prompt.val(profile.system_prompt).trigger('input');
+        }
+
+        if ($title.length && profile.frontend_title) {
+            $title.val(profile.frontend_title).trigger('input');
+        }
+
+        if ($subtitle.length && profile.frontend_subtitle) {
+            $subtitle.val(profile.frontend_subtitle).trigger('input');
+        }
+    }
+
     function handleToggleClick(event) {
         event.preventDefault();
 
@@ -405,6 +444,7 @@
         $(document).on('click', selectors.convertFaqButton, handleConvertFaqClick);
         $(document).on('click', selectors.importButton, handleImportClick);
         $(document).on('click', selectors.copyButton, handleCopyClick);
+        $(document).on('click', selectors.applyIndustryButton, handleApplyIndustryClick);
         $(document).on('click', selectors.toggleButton, handleToggleClick);
 
         $(document).on('click', selectors.selectAllConfirm, function (event) {

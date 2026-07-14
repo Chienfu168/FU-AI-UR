@@ -77,10 +77,14 @@ class UR_AI_Market_Price_Ranking_Shortcode {
      * @return array
      */
     private function build_view_args($atts) {
+        $market_price_profile = $this->get_market_price_profile();
+
         $title = isset($atts['title']) ? sanitize_text_field($atts['title']) : '';
 
         if ('' === trim($title)) {
-            $title = __('雙北都更效益排行榜', 'ur-ai-assistant');
+            $title = !empty($market_price_profile['ranking_title'])
+                ? $market_price_profile['ranking_title']
+                : __('雙北都更效益排行榜', 'ur-ai-assistant');
         }
 
         $cities   = $this->service->get_supported_cities();
@@ -95,10 +99,27 @@ class UR_AI_Market_Price_Ranking_Shortcode {
 
         return array(
             'title'             => $title,
+            'column_label'      => !empty($market_price_profile['ranking_column']) ? $market_price_profile['ranking_column'] : __('都更效益', 'ur-ai-assistant'),
+            'intro'             => !empty($market_price_profile['ranking_intro']) ? $market_price_profile['ranking_intro'] : '',
             'rankings'          => $rankings,
             'last_imported_at'  => $this->service->get_last_imported_at(),
             'disclaimer'        => class_exists('UR_AI_Market_Price_Settings') ? UR_AI_Market_Price_Settings::get_disclaimer() : '',
         );
+    }
+
+    /**
+     * 取得目前啟用中產業別的行情排行榜文案設定。
+     *
+     * @return array
+     */
+    private function get_market_price_profile() {
+        if (!class_exists('UR_AI_Industry_Profiles')) {
+            return array();
+        }
+
+        $profile = UR_AI_Industry_Profiles::get_active();
+
+        return (is_array($profile) && !empty($profile['market_price'])) ? $profile['market_price'] : array();
     }
 
     /**

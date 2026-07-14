@@ -12,6 +12,10 @@ if (!defined('ABSPATH')) {
 }
 
 $title            = isset($args['title']) ? (string) $args['title'] : __('雙北都更效益排行榜', 'ur-ai-assistant');
+$column_label     = isset($args['column_label']) && '' !== $args['column_label'] ? (string) $args['column_label'] : __('都更效益', 'ur-ai-assistant');
+$intro            = isset($args['intro']) && '' !== $args['intro']
+    ? (string) $args['intro']
+    : __('依「新成屋相對老屋現況的中位數單價漲幅」由高到低排序，只列出老屋與新成屋樣本數皆充足的行政區，讓您快速掌握雙北各行政區的都更／危老改建效益參考。', 'ur-ai-assistant');
 $rankings         = isset($args['rankings']) && is_array($args['rankings']) ? $args['rankings'] : array();
 $last_imported_at = isset($args['last_imported_at']) ? $args['last_imported_at'] : null;
 $disclaimer       = isset($args['disclaimer']) ? (string) $args['disclaimer'] : '';
@@ -35,7 +39,7 @@ if (!function_exists('ur_ai_market_price_ranking_format_wan')) {
         <h2 class="ur-ai-market-price-ranking-title"><?php echo esc_html($title); ?></h2>
 
         <p class="ur-ai-market-price-ranking-intro">
-            <?php echo esc_html__('依「新成屋相對老屋現況的中位數單價漲幅」由高到低排序，只列出老屋與新成屋樣本數皆充足的行政區，讓您快速掌握雙北各行政區的都更／危老改建效益參考。', 'ur-ai-assistant'); ?>
+            <?php echo esc_html($intro); ?>
         </p>
 
         <?php if (empty($rankings)) : ?>
@@ -65,7 +69,7 @@ if (!function_exists('ur_ai_market_price_ranking_format_wan')) {
                                 <th><?php echo esc_html__('行政區', 'ur-ai-assistant'); ?></th>
                                 <th><?php echo esc_html__('老屋現況（元/坪）', 'ur-ai-assistant'); ?></th>
                                 <th><?php echo esc_html__('新成屋（元/坪）', 'ur-ai-assistant'); ?></th>
-                                <th><?php echo esc_html__('都更效益', 'ur-ai-assistant'); ?></th>
+                                <th><?php echo esc_html($column_label); ?></th>
                                 <th><?php echo esc_html__('樣本數（老屋／新成屋）', 'ur-ai-assistant'); ?></th>
                             </tr>
                         </thead>

@@ -29,6 +29,7 @@ class UR_AI_Market_Price_Module {
     const ADMIN_MENU_SLUG      = 'ur-ai-assistant-market-price';
     const PARENT_SLUG          = 'ur-ai-assistant';
     const IMPORT_ACTION        = 'ur_ai_market_price_import';
+    const FETCH_ACTION         = 'ur_ai_market_price_fetch';
     const SETTINGS_SAVE_ACTION = 'ur_ai_market_price_settings_save';
 
     /**
@@ -89,6 +90,7 @@ class UR_AI_Market_Price_Module {
         // 後台（priority 20 確保父選單已建立）。
         add_action('admin_menu', array($this, 'register_admin_page'), 20);
         add_action('admin_post_' . self::IMPORT_ACTION, array($this, 'handle_import'));
+        add_action('admin_post_' . self::FETCH_ACTION, array($this, 'handle_fetch'));
         add_action('admin_post_' . self::SETTINGS_SAVE_ACTION, array($this, 'handle_settings_save'));
     }
 
@@ -318,6 +320,20 @@ class UR_AI_Market_Price_Module {
     public function handle_import() {
         if ($this->admin instanceof UR_AI_Market_Price_Admin) {
             $this->admin->handle_import();
+            return;
+        }
+
+        wp_die(esc_html__('行情參考管理服務尚未正確載入。', 'ur-ai-assistant'));
+    }
+
+    /**
+     * 處理自內政部開放資料端點下載並匯入（admin-post）。
+     *
+     * @return void
+     */
+    public function handle_fetch() {
+        if ($this->admin instanceof UR_AI_Market_Price_Admin) {
+            $this->admin->handle_fetch();
             return;
         }
 

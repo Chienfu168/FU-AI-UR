@@ -193,6 +193,21 @@ class UR_AI_Settings {
     }
 
     /**
+     * 取得目前啟用中的產業別 key。
+     *
+     * @return string
+     */
+    public static function get_industry() {
+        $industry = sanitize_key((string) self::get('industry', UR_AI_Industry_Profiles::DEFAULT_INDUSTRY));
+
+        if (class_exists('UR_AI_Industry_Profiles') && !UR_AI_Industry_Profiles::is_valid($industry)) {
+            return UR_AI_Industry_Profiles::DEFAULT_INDUSTRY;
+        }
+
+        return $industry;
+    }
+
+    /**
      * 取得最大問題字數。
      *
      * @return int
@@ -342,9 +357,13 @@ class UR_AI_Settings {
             'max_answer_tokens'   => 1200,
             'system_prompt'       => self::default_system_prompt(),
 
+            // 目前唯一支援的產業別；詳見 UR_AI_Industry_Profiles 與
+            // docs/industry-expansion-architecture.md。
+            'industry'            => class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::DEFAULT_INDUSTRY : 'urban_renewal',
+
             'frontend_enabled'    => 1,
-            'frontend_title'      => '都更危老 AI 助理',
-            'frontend_subtitle'   => '用白話方式，快速了解都市更新、危老重建、更新會、自主更新、權利變換與協議合建等基礎問題。',
+            'frontend_title'      => self::get_profile_assistant_default('frontend_title', '都更危老 AI 助理'),
+            'frontend_subtitle'   => self::get_profile_assistant_default('frontend_subtitle', ''),
             'disclaimer'          => '本工具提供一般資訊參考，不構成法律、估價、建築、稅務或個案決策建議。若涉及個案權利、契約、訴訟、登記或稅務問題，建議洽詢相關專業人士。',
 
             'max_question_length' => 500,
@@ -366,21 +385,41 @@ class UR_AI_Settings {
     /**
      * 預設 system prompt.
      *
+     * 內容實際來源為目前啟用中的產業別設定檔（見 UR_AI_Industry_Profiles），
+     * 這裡只留一段極簡的最後防線文字，供 Industry Profiles 類別本身
+     * 意外無法載入時使用（不應發生於正常運作情境）。
+     *
      * @return string
      */
     public static function default_system_prompt() {
-        return implode(
-            "\n",
-            array(
-                '你是「都更危老 AI 助理」，專門協助台灣民眾理解台灣都市更新、危老重建、更新會、自主更新、權利變換、協議合建、都市更新程序與相關基礎知識。',
-                '請使用繁體中文回答，語氣應客觀、中立、清楚、白話，適合一般民眾閱讀。',
-                '回答應以一般性說明、概念整理、流程介紹與風險提醒為主。',
-                '不可假裝已審閱使用者的個案文件、契約、權利變換計畫、估價報告、建築圖說、土地建物謄本或會議紀錄。',
-                '不可直接替使用者作成法律、估價、建築、稅務、登記、權利分配、訴訟勝敗或個案是否合理之判斷。',
-                '若問題涉及個案權益、契約內容、財產分配、訴訟或專業判斷，請提醒使用者應洽詢律師、建築師、估價師、地政士或都市更新專業人士。',
-                '若問題明顯超出都市更新、危老重建與不動產重建基礎知識範圍，請禮貌說明本工具主要回答都更危老相關問題。',
-            )
-        );
+        $prompt = self::get_profile_assistant_default('system_prompt', '');
+
+        if ('' !== $prompt) {
+            return $prompt;
+        }
+
+        return '你是 AI 助理，請以客觀、中立、清楚的態度提供一般性資訊參考，不做個案專業判斷。';
+    }
+
+    /**
+     * 從目前啟用中的產業別設定檔取得 assistant 相關預設值。
+     *
+     * @param string $field assistant 設定欄位名稱（system_prompt／frontend_title／frontend_subtitle）。
+     * @param string $fallback 取不到時的備援值。
+     * @return string
+     */
+    private static function get_profile_assistant_default($field, $fallback = '') {
+        if (!class_exists('UR_AI_Industry_Profiles')) {
+            return $fallback;
+        }
+
+        $profile = UR_AI_Industry_Profiles::get_active();
+
+        if (is_array($profile) && !empty($profile['assistant'][$field])) {
+            return (string) $profile['assistant'][$field];
+        }
+
+        return $fallback;
     }
 
     /**
@@ -433,6 +472,15 @@ class UR_AI_Settings {
 
             case 'frontend_title':
                 return sanitize_text_field((string) $value);
+
+            case 'industry':
+                $industry = sanitize_key((string) $value);
+
+                if (class_exists('UR_AI_Industry_Profiles') && UR_AI_Industry_Profiles::is_valid($industry)) {
+                    return $industry;
+                }
+
+                return class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::DEFAULT_INDUSTRY : 'urban_renewal';
 
             case 'frontend_enabled':
             case 'faq_enabled':
