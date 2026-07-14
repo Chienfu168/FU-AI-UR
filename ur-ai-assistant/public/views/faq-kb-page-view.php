@@ -153,4 +153,8 @@ $next_url = add_query_arg(array('kb_page' => $paged + 1), $current_url);
 
     <?php endif; ?>
 
+    <?php if (class_exists('UR_AI_Industry_Profiles')) : ?>
+        <?php echo UR_AI_Industry_Profiles::render_promotion_attribution(); // phpcs:ignore -- pre-escaped HTML from render_promotion_attribution(). ?>
+    <?php endif; ?>
+
 </div>

@@ -65,5 +65,9 @@ $medals = array(1 => '🥇', 2 => '🥈', 3 => '🥉');
             </ol>
         <?php endif; ?>
 
+        <?php if (class_exists('UR_AI_Industry_Profiles')) : ?>
+            <?php echo UR_AI_Industry_Profiles::render_promotion_attribution(); // phpcs:ignore -- pre-escaped HTML from render_promotion_attribution(). ?>
+        <?php endif; ?>
+
     </div>
 </div>

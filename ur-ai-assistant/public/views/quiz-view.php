@@ -92,5 +92,9 @@ $instance_id = 'ur-ai-quiz-' . wp_rand(1000, 999999);
         <div class="ur-ai-quiz-loading" aria-live="polite" hidden></div>
         <div class="ur-ai-quiz-error" aria-live="polite" hidden></div>
 
+        <?php if (class_exists('UR_AI_Industry_Profiles')) : ?>
+            <?php echo UR_AI_Industry_Profiles::render_promotion_attribution(); // phpcs:ignore -- pre-escaped HTML from render_promotion_attribution(). ?>
+        <?php endif; ?>
+
     </div>
 </div>

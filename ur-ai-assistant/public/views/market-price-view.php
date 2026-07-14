@@ -76,5 +76,9 @@ if (class_exists('UR_AI_Schema_Market_Prices')) {
         <div class="ur-ai-market-price-loading" aria-live="polite"></div>
         <div class="ur-ai-market-price-result" aria-live="polite"></div>
 
+        <?php if (class_exists('UR_AI_Industry_Profiles')) : ?>
+            <?php echo UR_AI_Industry_Profiles::render_promotion_attribution(); // phpcs:ignore -- pre-escaped HTML from render_promotion_attribution(). ?>
+        <?php endif; ?>
+
     </div>
 </div>
