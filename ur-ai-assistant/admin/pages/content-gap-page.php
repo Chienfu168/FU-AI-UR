@@ -48,7 +48,15 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
 
 <div class="wrap ur-ai-admin-page">
 
-    <h1><?php echo esc_html__('都更 AI 助理｜內容缺口總覽', 'ur-ai-assistant'); ?></h1>
+    <h1>
+        <?php
+        printf(
+            /* translators: %s: 目前產業別的品牌名稱 */
+            esc_html__('%s｜內容缺口總覽', 'ur-ai-assistant'),
+            esc_html(UR_AI_Admin_Menu::brand_name())
+        );
+        ?>
+    </h1>
 
     <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
         <?php UR_AI_Admin_Menu::render_group_tabs('knowledge'); ?>
@@ -116,7 +124,7 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
                     </table>
                 </div>
                 <p class="ur-ai-muted ur-ai-mt-12">
-                    <?php echo esc_html__('點擊「轉 FAQ 草稿」可直接建立草稿，完成後會導向熱門問題頁；草稿仍需人工審閱後才會啟用。', 'ur-ai-assistant'); ?>
+                    <?php echo esc_html__('點擊「轉 FAQ 草稿」會建立草稿；若已設定 OpenAI API Key，系統會先嘗試用 AI 草擬一版回答內容（未設定或呼叫失敗時則建立空白佔位草稿）。無論哪種情況，草稿一律以「停用／待審核」狀態建立，AI 草擬的內容尤其需要核對事實正確性後才能啟用。', 'ur-ai-assistant'); ?>
                 </p>
             <?php endif; ?>
         </div>

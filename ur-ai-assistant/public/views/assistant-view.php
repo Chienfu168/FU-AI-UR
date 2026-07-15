@@ -17,18 +17,20 @@ $disclaimer         = isset($args['disclaimer']) ? (string) $args['disclaimer'] 
 $popular_questions  = isset($args['popular_questions']) && is_array($args['popular_questions']) ? $args['popular_questions'] : array();
 $popular_groups     = isset($args['popular_groups']) && is_array($args['popular_groups']) ? $args['popular_groups'] : array();
 $max_question_length = isset($args['max_question_length']) ? absint($args['max_question_length']) : 500;
-$placeholder        = isset($args['placeholder']) ? (string) $args['placeholder'] : __('請輸入您想了解的都市更新、危老重建、更新會、權利變換或協議合建問題。', 'ur-ai-assistant');
+$placeholder        = isset($args['placeholder']) && '' !== trim((string) $args['placeholder'])
+    ? (string) $args['placeholder']
+    : (class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_placeholder() : __('請輸入您想了解的都市更新、危老重建、更新會、權利變換或協議合建問題。', 'ur-ai-assistant'));
 
 $kb_browse_enabled    = !empty($args['kb_browse_enabled']);
 $kb_browse_categories = isset($args['kb_browse_categories']) && is_array($args['kb_browse_categories']) ? $args['kb_browse_categories'] : array();
 $kb_browse_per_page   = isset($args['kb_browse_per_page']) ? absint($args['kb_browse_per_page']) : 10;
 
 if ('' === trim($title)) {
-    $title = __('都更危老 AI 助理', 'ur-ai-assistant');
+    $title = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_frontend_title() : __('都更 AI 助理', 'ur-ai-assistant');
 }
 
 if ('' === trim($subtitle)) {
-    $subtitle = __('用白話方式，快速了解都市更新、危老重建、更新會、自主更新、權利變換與協議合建等基礎問題。', 'ur-ai-assistant');
+    $subtitle = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_frontend_subtitle() : '';
 }
 
 if ($max_question_length <= 0) {

@@ -193,6 +193,36 @@ class UR_AI_Settings {
     }
 
     /**
+     * 取得前台標題（留空時退回目前啟用中產業別的預設值）。
+     *
+     * @return string
+     */
+    public static function get_frontend_title() {
+        $title = (string) self::get('frontend_title', '');
+
+        if ('' === trim($title)) {
+            return self::get_profile_assistant_default('frontend_title', '都更 AI 助理');
+        }
+
+        return $title;
+    }
+
+    /**
+     * 取得前台副標題（留空時退回目前啟用中產業別的預設值）。
+     *
+     * @return string
+     */
+    public static function get_frontend_subtitle() {
+        $subtitle = (string) self::get('frontend_subtitle', '');
+
+        if ('' === trim($subtitle)) {
+            return self::get_profile_assistant_default('frontend_subtitle', '');
+        }
+
+        return $subtitle;
+    }
+
+    /**
      * 取得目前啟用中的產業別 key。
      *
      * @return string

@@ -167,6 +167,7 @@ class UR_AI_Market_Price_Module {
         $args = array(
             'title'   => $title,
             'cities'  => $this->service->get_supported_cities(),
+            'intro'   => class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_market_price_query_intro() : '',
         );
 
         $view = UR_AI_ASSISTANT_PLUGIN_DIR . 'public/views/market-price-view.php';
@@ -229,7 +230,7 @@ class UR_AI_Market_Price_Module {
                     /* translators: 1: 屋齡 2: 坪數 3: 建物型態 */
                     'example_feature'  => __('屋齡 %1$s 年、%2$s 坪、%3$s', 'ur-ai-assistant'),
                     'example_price'    => __('單價約 %s/坪', 'ur-ai-assistant'),
-                    'uplift_label'     => __('都更後行情變化約 %s', 'ur-ai-assistant'),
+                    'uplift_label'     => class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_uplift_label() : __('都更後行情變化約 %s', 'ur-ai-assistant'),
                     'trend_label'      => __('近一年成長 %s', 'ur-ai-assistant'),
                     'recent_label'     => __('近一年行情', 'ur-ai-assistant'),
                     'total_records_label' => __('資料庫累計 %s 筆歷史成交紀錄', 'ur-ai-assistant'),

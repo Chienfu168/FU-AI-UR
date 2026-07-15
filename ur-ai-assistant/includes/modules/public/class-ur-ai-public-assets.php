@@ -198,7 +198,11 @@ class UR_AI_Public_Assets {
 
             'print_button'                => __('列印', 'ur-ai-assistant'),
             'print_button_aria'           => __('列印這則問答', 'ur-ai-assistant'),
-            'print_document_title'        => __('都更 AI 助理問答', 'ur-ai-assistant'),
+            'print_document_title'        => sprintf(
+                /* translators: %s: 目前產業別的品牌名稱 */
+                __('%s問答', 'ur-ai-assistant'),
+                class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_brand_name() : __('都更 AI 助理', 'ur-ai-assistant')
+            ),
             'print_question_label'        => __('問題', 'ur-ai-assistant'),
             'print_answer_label'          => __('回答', 'ur-ai-assistant'),
             'print_date_label'            => __('列印日期', 'ur-ai-assistant'),

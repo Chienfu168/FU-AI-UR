@@ -38,6 +38,13 @@ class UR_AI_FAQ_Draft_Service {
     private $category_helper = null;
 
     /**
+     * OpenAI Client（用於熱門問題轉 FAQ 草稿時，嘗試先產生 AI 草擬回答）。
+     *
+     * @var UR_AI_OpenAI_Client|null
+     */
+    private $openai_client = null;
+
+    /**
      * 建構子。
      */
     public function __construct() {
@@ -51,6 +58,10 @@ class UR_AI_FAQ_Draft_Service {
 
         $this->category_helper = class_exists('UR_AI_FAQ_Category_Helper')
             ? new UR_AI_FAQ_Category_Helper()
+            : null;
+
+        $this->openai_client = class_exists('UR_AI_OpenAI_Client')
+            ? new UR_AI_OpenAI_Client()
             : null;
     }
 
@@ -174,15 +185,33 @@ class UR_AI_FAQ_Draft_Service {
         }
 
         $description = (string) $this->get_value($popular, 'description', '');
-        $category    = (string) $this->get_value($popular, 'category', '');
+
+        $ai_draft = $this->draft_answer_via_ai($question);
+        $answer   = null !== $ai_draft ? $ai_draft : $this->build_placeholder_answer($question, $description);
+
+        // 分類／關鍵字建議：AI 已產生草擬回答時，用回答內容判斷會比只有
+        // 熱門問題的簡短說明（可能為空）準確，優先採用。
+        $category_source = null !== $ai_draft ? $ai_draft : $description;
+
+        $category = (string) $this->get_value($popular, 'category', '');
 
         if ('' === trim($category)) {
-            $category = $this->suggest_category($question, $description);
+            $category = $this->suggest_category($question, $category_source);
         }
 
-        $keywords = $this->suggest_keywords($question, $description);
+        $keywords = $this->suggest_keywords($question, $category_source);
 
-        $answer = $this->build_placeholder_answer($question, $description);
+        $admin_note = null !== $ai_draft
+            ? sprintf(
+                /* translators: %d: popular question id */
+                __('由熱門問題 #%d 轉入 FAQ 草稿，回答內容為 AI 草擬。上線前請務必核對事實正確性（AI 可能產生看似合理但不準確的內容），確認無誤後再啟用。', 'ur-ai-assistant'),
+                $popular_question_id
+            )
+            : sprintf(
+                /* translators: %d: popular question id */
+                __('由熱門問題 #%d 轉入 FAQ 草稿。請補上完整回答並人工審核後再啟用。', 'ur-ai-assistant'),
+                $popular_question_id
+            );
 
         $faq_id = $this->faq_service->create(
             array(
@@ -195,11 +224,7 @@ class UR_AI_FAQ_Draft_Service {
                 'source_log_id' => 0,
                 'review_status' => 'draft',
                 'sort_order'    => 100,
-                'admin_note'    => sprintf(
-                    /* translators: %d: popular question id */
-                    __('由熱門問題 #%d 轉入 FAQ 草稿。請補上完整回答並人工審核後再啟用。', 'ur-ai-assistant'),
-                    $popular_question_id
-                ),
+                'admin_note'    => $admin_note,
             )
         );
 
@@ -208,6 +233,32 @@ class UR_AI_FAQ_Draft_Service {
         }
 
         return absint($faq_id);
+    }
+
+    /**
+     * 嘗試呼叫 OpenAI 產生草擬回答。
+     *
+     * 沿用既有的 UR_AI_OpenAI_Client::chat()——跟前台 FAQ 未命中時的補位
+     * 回答完全相同的 system prompt（目前啟用中產業別的人設）與費率／字數
+     * 控管設定，不另外寫一套 prompt。失敗（未設定 API Key、API 呼叫錯誤、
+     * 回傳格式錯誤等）時一律回傳 null，由呼叫端退回原本的純文字佔位草稿，
+     * 確保沒有設定 AI 功能的站台行為與這個功能上線前完全一致。
+     *
+     * @param string $question 問題文字。
+     * @return string|null 成功時為 AI 產生的回答文字；失敗時為 null。
+     */
+    private function draft_answer_via_ai($question) {
+        if (!$this->openai_client instanceof UR_AI_OpenAI_Client) {
+            return null;
+        }
+
+        $result = $this->openai_client->chat($question);
+
+        if (empty($result['success']) || '' === trim((string) ($result['answer'] ?? ''))) {
+            return null;
+        }
+
+        return sanitize_textarea_field((string) $result['answer']);
     }
 
     /**

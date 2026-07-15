@@ -124,6 +124,7 @@ class UR_AI_Market_Price_Admin {
             'updated',
             array(
                 'imp_created'   => absint($result['created']),
+                'imp_updated'   => absint($result['updated']),
                 'imp_duplicate' => absint($result['duplicate']),
                 'imp_skipped'   => absint($result['skipped']),
                 'imp_total'     => absint($result['total']),
@@ -182,6 +183,7 @@ class UR_AI_Market_Price_Admin {
             array(
                 'fetch_season'    => $season,
                 'fetch_created'   => absint($result['created']),
+                'fetch_updated'   => absint($result['updated']),
                 'fetch_duplicate' => absint($result['duplicate']),
                 'fetch_skipped'   => absint($result['skipped']),
                 'fetch_total'     => absint($result['total']),

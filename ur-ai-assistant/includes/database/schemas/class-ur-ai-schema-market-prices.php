@@ -63,6 +63,7 @@ class UR_AI_Schema_Market_Prices {
             import_batch VARCHAR(60) DEFAULT '',
 
             created_at DATETIME NOT NULL,
+            updated_at DATETIME NULL,
 
             PRIMARY KEY  (id),
             UNIQUE KEY source_record_id (source_record_id),
@@ -97,6 +98,7 @@ class UR_AI_Schema_Market_Prices {
             'source_record_id'         => "VARCHAR(64) DEFAULT ''",
             'import_batch'             => "VARCHAR(60) DEFAULT ''",
             'created_at'               => 'DATETIME NOT NULL',
+            'updated_at'               => 'DATETIME NULL',
         );
     }
 

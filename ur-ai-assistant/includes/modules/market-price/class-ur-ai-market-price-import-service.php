@@ -13,8 +13,10 @@
  * - 車位價格會從總價中扣除，避免「單價」被車位價格污染。
  * - 特殊關係交易（親友、員工、共有人等）仍會存入資料庫（供健檢與稽核），
  *   但會標記 is_special_relationship，統計查詢時一律排除。
- * - 以政府資料原有的「編號」欄位（source_record_id）防止重複匯入，
- *   可放心重複上傳同一批或有重疊的檔案。
+ * - 以政府資料原有的「編號」欄位（source_record_id）判斷是否為同一筆
+ *   交易，可放心重複上傳同一批或有重疊的檔案：內容完全相同時視為重複
+ *   略過，內容有異動（政府事後訂正資料）時則覆蓋更新既有紀錄，讓資料庫
+ *   內容跟著政府最新公告的資料走。
  *
  * @package UR_AI_Assistant
  */
@@ -62,11 +64,12 @@ class UR_AI_Market_Price_Import_Service {
      *
      * @param string $file_path 已上傳檔案的暫存路徑。
      * @param string $city      縣市 key（taipei / new_taipei）；留空則完全依自動偵測結果匯入。
-     * @return array{ created: int, duplicate: int, skipped: int, total: int, warnings: array, city_mismatch?: bool, detected_city?: string }
+     * @return array{ created: int, updated: int, duplicate: int, skipped: int, total: int, warnings: array, city_mismatch?: bool, detected_city?: string }
      */
     public function import_from_csv($file_path, $city = '') {
         $result = array(
             'created'   => 0,
+            'updated'   => 0,
             'duplicate' => 0,
             'skipped'   => 0,
             'total'     => 0,
@@ -152,6 +155,8 @@ class UR_AI_Market_Price_Import_Service {
 
             if ('inserted' === $status) {
                 $result['created']++;
+            } elseif ('updated' === $status) {
+                $result['updated']++;
             } elseif ('duplicate' === $status) {
                 $result['duplicate']++;
             } else {
