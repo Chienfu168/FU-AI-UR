@@ -97,8 +97,8 @@ $current_industry    = UR_AI_Settings::get_industry();
 $industry_options    = class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_all() : array();
 $system_prompt       = UR_AI_Settings::get_system_prompt();
 $frontend_enabled    = UR_AI_Settings::is_frontend_enabled();
-$frontend_title      = UR_AI_Settings::get('frontend_title', '都更危老 AI 助理');
-$frontend_subtitle   = UR_AI_Settings::get('frontend_subtitle', '用白話方式，快速了解都市更新、危老重建、更新會、自主更新、權利變換與協議合建等基礎問題。');
+$frontend_title      = UR_AI_Settings::get_frontend_title();
+$frontend_subtitle   = UR_AI_Settings::get_frontend_subtitle();
 $disclaimer          = UR_AI_Settings::get('disclaimer', '本工具提供一般資訊參考，不構成法律、估價、建築、稅務或個案決策建議。若涉及個案權利、契約、訴訟、登記或稅務問題，建議洽詢相關專業人士。');
 $max_question_length = UR_AI_Settings::get_max_question_length();
 
@@ -120,7 +120,15 @@ $cost_per_million_tokens = UR_AI_Settings::get_cost_per_million_tokens();
 
 <div class="wrap ur-ai-admin-page">
 
-    <h1><?php echo esc_html__('都更 AI 助理｜功能設定', 'ur-ai-assistant'); ?></h1>
+    <h1>
+        <?php
+        printf(
+            /* translators: %s: 目前產業別的品牌名稱 */
+            esc_html__('%s｜功能設定', 'ur-ai-assistant'),
+            esc_html(UR_AI_Admin_Menu::brand_name())
+        );
+        ?>
+    </h1>
 
     <?php if ('settings_saved' === $message) : ?>
         <div class="notice notice-<?php echo 'error' === $msg_type ? 'error' : 'success'; ?> is-dismissible">

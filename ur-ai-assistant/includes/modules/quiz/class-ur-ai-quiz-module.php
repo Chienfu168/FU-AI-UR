@@ -218,8 +218,13 @@ class UR_AI_Quiz_Module {
                     'review_incorrect'  => __('✕ 答錯了，正確答案：%1$s', 'ur-ai-assistant'),
                     /* translators: 1: 題號 2: 題目文字 */
                     'review_question'   => __('第 %1$s 題．%2$s', 'ur-ai-assistant'),
-                    /* translators: 1: FAQ 分類 2: FAQ 問題 */
-                    'review_faq'        => __('相關 FAQ（%1$s）：%2$s，可至「都更AI助理」搜尋此問題看完整說明。', 'ur-ai-assistant'),
+                    /* translators: 1: FAQ 分類（前台以 JS 帶入） 2: FAQ 問題（前台以 JS 帶入） 3: 目前產業別的品牌名稱 */
+                    'review_faq'        => sprintf(
+                        __('相關 FAQ（%1$s）：%2$s，可至「%3$s」搜尋此問題看完整說明。', 'ur-ai-assistant'),
+                        '%1$s',
+                        '%2$s',
+                        class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_brand_name() : __('都更AI助理', 'ur-ai-assistant')
+                    ),
                 ),
             )
         );

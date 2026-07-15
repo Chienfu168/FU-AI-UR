@@ -41,7 +41,13 @@ if (class_exists('UR_AI_Schema_Manager') && method_exists('UR_AI_Schema_Manager'
 
     if (!$ur_ai_mp_table_exists) {
         echo '<div class="wrap ur-ai-admin-page">';
-        echo '<h1>' . esc_html__('都更 AI 助理｜行情參考', 'ur-ai-assistant') . '</h1>';
+        echo '<h1>' . esc_html(
+            sprintf(
+                /* translators: %s: 目前產業別的品牌名稱 */
+                __('%s｜行情參考', 'ur-ai-assistant'),
+                UR_AI_Admin_Menu::brand_name()
+            )
+        ) . '</h1>';
         echo '<div class="notice notice-error"><p>' . esc_html__(
             '行情參考資料表尚未成功建立，因此匯入時所有資料列都會被判定為「略過」（並非 CSV 檔案格式問題）。請先嘗試：至外掛頁面「停用」後再「重新啟用」本外掛以觸發資料表建立；若重新啟用後仍無法解決，請聯絡主機廠商確認資料庫帳號是否具備 CREATE TABLE 權限。',
             'ur-ai-assistant'
@@ -82,7 +88,15 @@ $stale_days = $service->get_stale_days();
 ?>
 <div class="wrap ur-ai-admin-page">
 
-    <h1><?php echo esc_html__('都更 AI 助理｜行情參考', 'ur-ai-assistant'); ?></h1>
+    <h1>
+        <?php
+        printf(
+            /* translators: %s: 目前產業別的品牌名稱 */
+            esc_html__('%s｜行情參考', 'ur-ai-assistant'),
+            esc_html(UR_AI_Admin_Menu::brand_name())
+        );
+        ?>
+    </h1>
 
     <?php if ('imported' === $message) : ?>
         <?php

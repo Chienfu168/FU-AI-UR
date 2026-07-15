@@ -48,7 +48,15 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
 
 <div class="wrap ur-ai-admin-page">
 
-    <h1><?php echo esc_html__('都更 AI 助理｜內容缺口總覽', 'ur-ai-assistant'); ?></h1>
+    <h1>
+        <?php
+        printf(
+            /* translators: %s: 目前產業別的品牌名稱 */
+            esc_html__('%s｜內容缺口總覽', 'ur-ai-assistant'),
+            esc_html(UR_AI_Admin_Menu::brand_name())
+        );
+        ?>
+    </h1>
 
     <?php if (class_exists('UR_AI_Admin_Menu')) : ?>
         <?php UR_AI_Admin_Menu::render_group_tabs('knowledge'); ?>

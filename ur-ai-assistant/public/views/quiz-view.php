@@ -12,7 +12,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$title          = isset($args['title']) ? (string) $args['title'] : __('都更危老知識大考驗', 'ur-ai-assistant');
+$title          = isset($args['title']) && '' !== trim((string) $args['title'])
+    ? (string) $args['title']
+    : (class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_quiz_default_title() : __('都更危老知識大考驗', 'ur-ai-assistant'));
 $question_count = isset($args['question_count']) ? absint($args['question_count']) : 10;
 $question_bank  = isset($args['question_bank']) ? absint($args['question_bank']) : 0;
 
@@ -26,10 +28,15 @@ $instance_id = 'ur-ai-quiz-' . wp_rand(1000, 999999);
             <h2 class="ur-ai-quiz-title"><?php echo esc_html($title); ?></h2>
             <p class="ur-ai-quiz-intro-text">
                 <?php
+                $quiz_topic_label = class_exists('UR_AI_Industry_Profiles')
+                    ? UR_AI_Industry_Profiles::get_active_quiz_topic_label()
+                    : __('都市更新與危老重建', 'ur-ai-assistant');
+
                 printf(
-                    /* translators: %d: 題數 */
-                    esc_html__('隨機抽 %d 題都市更新與危老重建常識，答對愈多分數愈高，看看你能拿下排行榜第幾名！', 'ur-ai-assistant'),
-                    absint($question_count)
+                    /* translators: 1: 題數 2: 主題敘述 */
+                    esc_html__('隨機抽 %1$d 題%2$s常識，答對愈多分數愈高，看看你能拿下排行榜第幾名！', 'ur-ai-assistant'),
+                    absint($question_count),
+                    esc_html($quiz_topic_label)
                 );
                 ?>
             </p>

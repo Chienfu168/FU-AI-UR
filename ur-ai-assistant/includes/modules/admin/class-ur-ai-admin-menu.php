@@ -24,14 +24,27 @@ class UR_AI_Admin_Menu {
     const MENU_SLUG = 'ur-ai-assistant';
 
     /**
+     * 取得目前產業別的品牌簡稱，供後台選單與各頁面標題共用。
+     *
+     * @return string
+     */
+    public static function brand_name() {
+        return class_exists('UR_AI_Industry_Profiles')
+            ? UR_AI_Industry_Profiles::get_active_brand_name()
+            : __('都更 AI 助理', 'ur-ai-assistant');
+    }
+
+    /**
      * 註冊後台選單。
      *
      * @return void
      */
     public function register() {
+        $brand_name = self::brand_name();
+
         add_menu_page(
-            __('都更 AI 助理', 'ur-ai-assistant'),
-            __('都更 AI 助理', 'ur-ai-assistant'),
+            $brand_name,
+            $brand_name,
             $this->get_dashboard_capability(),
             self::MENU_SLUG,
             array($this, 'render_dashboard_page'),

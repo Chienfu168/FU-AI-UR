@@ -55,27 +55,16 @@ class UR_AI_Shortcode {
             ? sanitize_text_field($atts['title'])
             : '';
 
-        if ('' === $title && class_exists('UR_AI_Settings')) {
-            $title = UR_AI_Settings::get('frontend_title', '都更危老 AI 助理');
-        }
-
         if ('' === $title) {
-            $title = __('都更危老 AI 助理', 'ur-ai-assistant');
+            $title = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_frontend_title() : __('都更 AI 助理', 'ur-ai-assistant');
         }
 
         $subtitle = isset($atts['subtitle'])
             ? sanitize_textarea_field($atts['subtitle'])
             : '';
 
-        if ('' === $subtitle && class_exists('UR_AI_Settings')) {
-            $subtitle = UR_AI_Settings::get(
-                'frontend_subtitle',
-                '用白話方式，快速了解都市更新、危老重建、更新會、自主更新、權利變換與協議合建等基礎問題。'
-            );
-        }
-
         if ('' === $subtitle) {
-            $subtitle = __('用白話方式，快速了解都市更新、危老重建、更新會、自主更新、權利變換與協議合建等基礎問題。', 'ur-ai-assistant');
+            $subtitle = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_frontend_subtitle() : '';
         }
 
         $disclaimer = '';
@@ -106,7 +95,9 @@ class UR_AI_Shortcode {
             : '';
 
         if ('' === trim($placeholder)) {
-            $placeholder = __('請輸入您想了解的都市更新、危老重建、更新會、權利變換或協議合建問題。', 'ur-ai-assistant');
+            $placeholder = class_exists('UR_AI_Industry_Profiles')
+                ? UR_AI_Industry_Profiles::get_active_placeholder()
+                : __('請輸入您想了解的都市更新、危老重建、更新會、權利變換或協議合建問題。', 'ur-ai-assistant');
         }
 
         $show_popular = $this->truthy(isset($atts['show_popular']) ? $atts['show_popular'] : '1');

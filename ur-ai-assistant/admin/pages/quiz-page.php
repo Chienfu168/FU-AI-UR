@@ -47,7 +47,13 @@ if (class_exists('UR_AI_Schema_Manager') && method_exists('UR_AI_Schema_Manager'
 
     if (!empty($ur_ai_quiz_missing_tables)) {
         echo '<div class="wrap ur-ai-admin-page">';
-        echo '<h1>' . esc_html__('都更 AI 助理｜知識大考驗', 'ur-ai-assistant') . '</h1>';
+        echo '<h1>' . esc_html(
+            sprintf(
+                /* translators: %s: 目前產業別的品牌名稱 */
+                __('%s｜知識大考驗', 'ur-ai-assistant'),
+                UR_AI_Admin_Menu::brand_name()
+            )
+        ) . '</h1>';
         echo '<div class="notice notice-error"><p>';
         printf(
             /* translators: %s: 缺漏的資料表名稱（例如「題庫、排行榜」） */
@@ -200,7 +206,15 @@ if (class_exists('UR_AI_Settings')) {
 
 <div class="wrap ur-ai-admin-page">
 
-    <h1><?php echo esc_html__('都更 AI 助理｜知識大考驗', 'ur-ai-assistant'); ?></h1>
+    <h1>
+        <?php
+        printf(
+            /* translators: %s: 目前產業別的品牌名稱 */
+            esc_html__('%s｜知識大考驗', 'ur-ai-assistant'),
+            esc_html(UR_AI_Admin_Menu::brand_name())
+        );
+        ?>
+    </h1>
 
     <?php if ('' !== $admin_message) : ?>
         <div class="notice notice-<?php echo 'error' === $msg_type ? 'error' : 'success'; ?> is-dismissible">

@@ -123,7 +123,7 @@ class UR_AI_Quiz_Settings {
     public static function get_title() {
         $title = (string) self::get('title', '');
 
-        return '' !== trim($title) ? $title : __('都更危老知識大考驗', 'ur-ai-assistant');
+        return '' !== trim($title) ? $title : self::default_title();
     }
 
     /**
@@ -136,8 +136,19 @@ class UR_AI_Quiz_Settings {
             'enabled'              => 0,
             'question_count'       => 10,
             'rate_limit_per_hour'  => 3,
-            'title'                => __('都更危老知識大考驗', 'ur-ai-assistant'),
+            'title'                => self::default_title(),
         );
+    }
+
+    /**
+     * 預設標題（依目前啟用中的產業別而異，見 UR_AI_Industry_Profiles）。
+     *
+     * @return string
+     */
+    private static function default_title() {
+        return class_exists('UR_AI_Industry_Profiles')
+            ? UR_AI_Industry_Profiles::get_active_quiz_default_title()
+            : __('都更危老知識大考驗', 'ur-ai-assistant');
     }
 
     /**

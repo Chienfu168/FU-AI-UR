@@ -13,6 +13,9 @@ if (!defined('ABSPATH')) {
 
 $title  = isset($args['title']) ? (string) $args['title'] : __('雙北成屋行情參考', 'ur-ai-assistant');
 $cities = isset($args['cities']) && is_array($args['cities']) ? $args['cities'] : array();
+$intro  = isset($args['intro']) && '' !== trim((string) $args['intro'])
+    ? (string) $args['intro']
+    : (class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_market_price_query_intro() : __('查詢近期「老屋現況」與「新成屋」的成交行情，了解都更／危老重建前後的價值落差參考。目前僅支援台北市、新北市。', 'ur-ai-assistant'));
 
 $instance_id = 'ur-ai-market-price-' . wp_rand(1000, 999999);
 
@@ -31,7 +34,7 @@ if (class_exists('UR_AI_Schema_Market_Prices')) {
         <h2 class="ur-ai-market-price-title"><?php echo esc_html($title); ?></h2>
 
         <p class="ur-ai-market-price-intro">
-            <?php echo esc_html__('查詢近期「老屋現況」與「新成屋」的成交行情，了解都更／危老重建前後的價值落差參考。目前僅支援台北市、新北市。', 'ur-ai-assistant'); ?>
+            <?php echo esc_html($intro); ?>
         </p>
 
         <form class="ur-ai-market-price-form">
