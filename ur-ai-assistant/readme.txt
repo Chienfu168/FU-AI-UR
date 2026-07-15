@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.23.1
+Stable tag: 1.24.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.24.0 =
+* 前台底部的推廣曝光文字改為固定同時曝光兩個網站（www.ur-promoter.com 與 www.fudawang.com），不再依產業別只顯示其中一個：不論安裝時選擇哪個產業別（都更重建／都市更新、自主更新、地政士……皆同），每一份外掛安裝都會顯示相同的「本服務由 都更危老重建資訊平台（ur-promoter.com）、自主更新指南-福大資訊（fudawang.com）提供，歡迎前往了解更多，也歡迎分享給有需要的親友。」文字（先前地政士完全不顯示任何推廣內容）。
 
 = 1.23.1 =
 * 小修正：前台推廣曝光文字「本服務由 OO 提供」過於精簡，改為包含網站名稱＋網址＋邀請前往了解／分享的完整句子（例如「本服務由 都更危老重建資訊平台（ur-promoter.com）提供，歡迎前往了解更多，也歡迎分享給有需要的親友。」）。都更重建／都市更新對應「都更危老重建資訊平台」，自主更新對應「自主更新指南-福大資訊」；地政士（未設定推廣網站）不受影響，仍不顯示任何內容。
