@@ -176,7 +176,7 @@ class UR_AI_Industry_Profiles {
      * 設定推廣連結的產業別（例如目前的地政士）回傳 null，前台不顯示
      * 任何內容。
      *
-     * @return array{ site_label: string, site_url: string }|null
+     * @return array{ site_name: string, site_label: string, site_url: string }|null
      */
     public static function get_active_promotion() {
         $profile = self::get_active();
@@ -189,7 +189,8 @@ class UR_AI_Industry_Profiles {
     }
 
     /**
-     * 產生前台「本服務由 OO 提供」的低調曝光連結 HTML。
+     * 產生前台「本服務由 OO 提供」的曝光連結 HTML（含網站名稱、網址，
+     * 並附上邀請前往了解／分享的文字）。
      *
      * 供各前台 View（AI 助理、FAQ 知識庫頁、行情參考、分回試算、知識
      * 大考驗等）在畫面底部呼叫；目前啟用中的產業別若沒有設定推廣連結，
@@ -204,14 +205,23 @@ class UR_AI_Industry_Profiles {
             return '';
         }
 
-        $label = !empty($promotion['site_label']) ? (string) $promotion['site_label'] : (string) $promotion['site_url'];
+        $site_label = !empty($promotion['site_label']) ? (string) $promotion['site_label'] : (string) $promotion['site_url'];
+        $site_name  = !empty($promotion['site_name']) ? (string) $promotion['site_name'] : $site_label;
 
-        return sprintf(
-            '<p class="ur-ai-promotion-attribution">%1$s <a href="%2$s" target="_blank" rel="noopener noreferrer">%3$s</a></p>',
-            esc_html__('本服務由', 'ur-ai-assistant'),
+        $link = sprintf(
+            '<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s（%3$s）</a>',
             esc_url($promotion['site_url']),
-            esc_html($label)
+            esc_html($site_name),
+            esc_html($site_label)
         );
+
+        $sentence = sprintf(
+            /* translators: %s: 推廣網站連結（含網站名稱與網址） */
+            esc_html__('本服務由 %s 提供，歡迎前往了解更多，也歡迎分享給有需要的親友。', 'ur-ai-assistant'),
+            $link
+        );
+
+        return '<p class="ur-ai-promotion-attribution">' . $sentence . '</p>';
     }
 
     /**
@@ -295,6 +305,7 @@ class UR_AI_Industry_Profiles {
                     'query_intro'    => __('查詢近期「老屋現況」與「新成屋」的成交行情，了解都更／危老重建前後的價值落差參考。目前僅支援台北市、新北市。', 'ur-ai-assistant'),
                 ),
                 'promotion' => array(
+                    'site_name'  => __('都更危老重建資訊平台', 'ur-ai-assistant'),
                     'site_label' => 'ur-promoter.com',
                     'site_url'   => 'https://www.ur-promoter.com/',
                 ),
@@ -327,6 +338,7 @@ class UR_AI_Industry_Profiles {
                     'quiz'         => true,
                 ),
                 'promotion' => array(
+                    'site_name'  => __('自主更新指南-福大資訊', 'ur-ai-assistant'),
                     'site_label' => 'fudawang.com',
                     'site_url'   => 'https://www.fudawang.com/',
                 ),
