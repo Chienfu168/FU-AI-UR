@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.21.0
+Stable tag: 1.22.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.22.0 =
+* 內容缺口頁「熱門但尚未建立 FAQ」清單的「轉 FAQ 草稿」新增 AI 草擬回答：已設定 OpenAI API Key 時，系統會沿用前台 FAQ 未命中補位回答的同一套系統提示詞與費率設定，先請 AI 針對該熱門問題產生一版草擬回答，取代原本只有一段制式佔位文字的草稿；未設定 API Key 或呼叫失敗時，行為與升級前完全相同（產生空白佔位草稿）。草稿一律維持「停用／待審核」狀態，AI 草擬的內容會在管理備註特別提醒需先核對事實正確性再啟用，不會略過既有的人工審核機制。
 
 = 1.21.0 =
 * 自主更新產業別調整為廣義解釋：只要是地主主動發起（而非建商先找上地主推銷合建）都算自主更新，系統提示詞不再預先限定後續一定要地主自己包辦到底，改為強調「發起後先凝聚多數地主共識」是第一階段重點，執行方式留待共識形成後再決定。

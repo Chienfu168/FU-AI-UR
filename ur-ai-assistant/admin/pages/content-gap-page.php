@@ -124,7 +124,7 @@ $logs_admin_url    = admin_url('admin.php?page=ur-ai-assistant-logs');
                     </table>
                 </div>
                 <p class="ur-ai-muted ur-ai-mt-12">
-                    <?php echo esc_html__('點擊「轉 FAQ 草稿」可直接建立草稿，完成後會導向熱門問題頁；草稿仍需人工審閱後才會啟用。', 'ur-ai-assistant'); ?>
+                    <?php echo esc_html__('點擊「轉 FAQ 草稿」會建立草稿；若已設定 OpenAI API Key，系統會先嘗試用 AI 草擬一版回答內容（未設定或呼叫失敗時則建立空白佔位草稿）。無論哪種情況，草稿一律以「停用／待審核」狀態建立，AI 草擬的內容尤其需要核對事實正確性後才能啟用。', 'ur-ai-assistant'); ?>
                 </p>
             <?php endif; ?>
         </div>
