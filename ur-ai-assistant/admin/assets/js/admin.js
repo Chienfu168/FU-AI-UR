@@ -47,12 +47,31 @@
         return fallback;
     }
 
+    /**
+     * 取得歸屬於某個批次表單的項目勾選框。
+     *
+     * 部分頁面的勾選框是透過 HTML5 form="..." 屬性歸屬表單（避免每列的
+     * 單筆審核／刪除小表單巢狀包在批次表單裡面造成瀏覽器解析錯誤），
+     * 不一定是表單在 DOM 上的子節點，因此不能用 $form.find() 找。改用
+     * 表單原生的 .elements（會正確包含透過 form="..." 歸屬的欄位，也
+     * 相容於仍是 DOM 子節點的舊頁面寫法）。
+     */
+    function getItemCheckboxes($form) {
+        const formEl = $form.get(0);
+
+        if (!formEl || !formEl.elements) {
+            return $form.find(selectors.itemCheckbox);
+        }
+
+        return $(formEl.elements).filter(selectors.itemCheckbox);
+    }
+
     function hasCheckedItems($form) {
         if (isSelectAllMatchingActive($form)) {
             return true;
         }
 
-        return $form.find(selectors.itemCheckbox + ':checked').length > 0;
+        return getItemCheckboxes($form).filter(':checked').length > 0;
     }
 
     function isSelectAllMatchingActive($form) {
@@ -138,6 +157,23 @@
         return true;
     }
 
+    /**
+     * 取得某個勾選框實際歸屬的批次表單。
+     *
+     * 優先使用瀏覽器原生的 .form（同時支援 DOM 巢狀與 form="..." 屬性
+     * 歸屬兩種寫法），找不到時才退回舊的 .closest() 寫法相容尚未套用
+     * form="..." 屬性的頁面。
+     */
+    function getOwningBulkForm($el) {
+        const nativeEl = $el.get(0);
+
+        if (nativeEl && nativeEl.form) {
+            return $(nativeEl.form);
+        }
+
+        return $el.closest(selectors.bulkForm);
+    }
+
     function handleCheckAll() {
         const $checkAll = $(this);
         const checked = $checkAll.prop('checked');
@@ -149,7 +185,7 @@
             $(selectors.itemCheckbox).prop('checked', checked);
         }
 
-        const $form = $checkAll.closest(selectors.bulkForm);
+        const $form = getOwningBulkForm($checkAll);
 
         if (!$form.length) {
             return;
@@ -178,7 +214,7 @@
 
         // 手動取消勾選單一項目，代表使用者不再是「全部符合條件」的意圖，
         // 跨頁全選狀態應一併取消，避免批次操作套用到超出畫面所見的資料。
-        const $form = $checkbox.closest(selectors.bulkForm);
+        const $form = getOwningBulkForm($checkbox);
 
         if ($form.length && isSelectAllMatchingActive($form) && checked < total) {
             hideSelectAllBanner($form);

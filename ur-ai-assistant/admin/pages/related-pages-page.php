@@ -592,6 +592,7 @@ $import_posts   = '' !== $import_keyword ? $admin->search_importable_posts($impo
 
     <form
         method="post"
+        id="ur-ai-related-pages-bulk-form"
         class="ur-ai-bulk-form"
         data-total-matching="<?php echo esc_attr($total); ?>"
         data-page-count="<?php echo esc_attr(count($items)); ?>"
@@ -644,13 +645,25 @@ $import_posts   = '' !== $import_keyword ? $admin->search_importable_posts($impo
                 ?>
             </div>
         </div>
+    </form>
 
-        <div class="ur-ai-table-wrap">
+    <?php
+    /*
+     * 表格與每一列的「刪除」小表單刻意放在批次表單標籤之外：若放在裡面
+     * 會形成瀏覽器不允許的巢狀 <form>，導致送出「套用」批次操作時，
+     * 實際送到後台的 ur_ai_action 被某一列小表單的欄位覆蓋，批次操作
+     * 因此完全失效卻沒有任何錯誤訊息。勾選框改用 HTML5 的 form="" 屬性
+     * 歸屬回批次表單，效果與原本巢狀在表單內完全相同，但不會有巢狀
+     * 表單的解析問題。
+     */
+    ?>
+
+    <div class="ur-ai-table-wrap">
             <table class="ur-ai-table">
                 <thead>
                     <tr>
                         <th class="check-column">
-                            <input type="checkbox" class="ur-ai-check-all">
+                            <input type="checkbox" class="ur-ai-check-all" form="ur-ai-related-pages-bulk-form">
                         </th>
                         <th><?php echo esc_html__('推薦頁面', 'ur-ai-assistant'); ?></th>
                         <th><?php echo esc_html__('分類 / 關鍵字', 'ur-ai-assistant'); ?></th>
@@ -684,6 +697,7 @@ $import_posts   = '' !== $import_keyword ? $admin->search_importable_posts($impo
                                         class="ur-ai-item-checkbox"
                                         name="related_page_ids[]"
                                         value="<?php echo esc_attr($id); ?>"
+                                        form="ur-ai-related-pages-bulk-form"
                                     >
                                 </td>
 
@@ -805,7 +819,6 @@ $import_posts   = '' !== $import_keyword ? $admin->search_importable_posts($impo
                 </tbody>
             </table>
         </div>
-    </form>
 
     <?php if ($total_pages > 1) : ?>
         <div class="ur-ai-pagination">

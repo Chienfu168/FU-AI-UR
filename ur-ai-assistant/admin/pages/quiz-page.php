@@ -585,6 +585,7 @@ if (class_exists('UR_AI_Settings')) {
 
     <form
         method="post"
+        id="ur-ai-quiz-bulk-form"
         class="ur-ai-bulk-form"
         data-total-matching="<?php echo esc_attr($total); ?>"
         data-page-count="<?php echo esc_attr(count($questions)); ?>"
@@ -634,13 +635,27 @@ if (class_exists('UR_AI_Settings')) {
                 ?>
             </div>
         </div>
+    </form>
 
-        <div class="ur-ai-table-wrap">
+    <?php
+    /*
+     * 表格與每一列的「核准／退回／刪除」小表單刻意放在批次表單標籤之外：
+     * 若放在裡面，會形成瀏覽器不允許的巢狀 <form>。瀏覽器解析巢狀表單時
+     * 行為不一致，常見狀況是某一列小表單的隱藏欄位（尤其是同樣命名為
+     * ur_ai_quiz_action 的欄位）被併入外層批次表單，導致送出「套用」批次
+     * 操作時，實際送到後台的 ur_ai_quiz_action 被覆蓋成該小表單的值
+     * （例如 review_question），批次核准整個失效、卻沒有任何錯誤訊息。
+     * 勾選框改用 HTML5 的 form="" 屬性歸屬回批次表單，效果與原本巢狀在
+     * 表單內完全相同，但不會有巢狀表單的解析問題。
+     */
+    ?>
+
+    <div class="ur-ai-table-wrap">
             <table class="ur-ai-table">
                 <thead>
                     <tr>
                         <th class="check-column">
-                            <input type="checkbox" class="ur-ai-check-all">
+                            <input type="checkbox" class="ur-ai-check-all" form="ur-ai-quiz-bulk-form">
                         </th>
                         <th><?php echo esc_html__('題目', 'ur-ai-assistant'); ?></th>
                         <th><?php echo esc_html__('分類', 'ur-ai-assistant'); ?></th>
@@ -668,6 +683,7 @@ if (class_exists('UR_AI_Settings')) {
                                         class="ur-ai-item-checkbox"
                                         name="question_ids[]"
                                         value="<?php echo esc_attr($question_id); ?>"
+                                        form="ur-ai-quiz-bulk-form"
                                     >
                                 </td>
 
@@ -774,7 +790,6 @@ if (class_exists('UR_AI_Settings')) {
                 </tbody>
             </table>
         </div>
-    </form>
 
     <?php if ($total_pages > 1) : ?>
         <div class="ur-ai-pagination">
