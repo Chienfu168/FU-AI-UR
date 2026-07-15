@@ -474,6 +474,7 @@ $importable_faqs = $admin->get_importable_faqs(30);
 
     <form
         method="post"
+        id="ur-ai-popular-questions-bulk-form"
         class="ur-ai-bulk-form"
         data-total-matching="<?php echo esc_attr($total); ?>"
         data-page-count="<?php echo esc_attr(count($items)); ?>"
@@ -527,13 +528,25 @@ $importable_faqs = $admin->get_importable_faqs(30);
                 ?>
             </div>
         </div>
+    </form>
 
-        <div class="ur-ai-table-wrap">
+    <?php
+    /*
+     * 表格與每一列的「轉 FAQ 草稿／刪除」小表單刻意放在批次表單標籤
+     * 之外：若放在裡面會形成瀏覽器不允許的巢狀 <form>，導致送出「套用」
+     * 批次操作時，實際送到後台的 ur_ai_action 被某一列小表單的欄位
+     * 覆蓋，批次操作因此完全失效卻沒有任何錯誤訊息。勾選框改用 HTML5
+     * 的 form="" 屬性歸屬回批次表單，效果與原本巢狀在表單內完全相同，
+     * 但不會有巢狀表單的解析問題。
+     */
+    ?>
+
+    <div class="ur-ai-table-wrap">
             <table class="ur-ai-table">
                 <thead>
                     <tr>
                         <th class="check-column">
-                            <input type="checkbox" class="ur-ai-check-all">
+                            <input type="checkbox" class="ur-ai-check-all" form="ur-ai-popular-questions-bulk-form">
                         </th>
                         <th><?php echo esc_html__('熱門問題', 'ur-ai-assistant'); ?></th>
                         <th><?php echo esc_html__('分類', 'ur-ai-assistant'); ?></th>
@@ -565,6 +578,7 @@ $importable_faqs = $admin->get_importable_faqs(30);
                                         class="ur-ai-item-checkbox"
                                         name="popular_question_ids[]"
                                         value="<?php echo esc_attr($id); ?>"
+                                        form="ur-ai-popular-questions-bulk-form"
                                     >
                                 </td>
 
@@ -726,7 +740,6 @@ $importable_faqs = $admin->get_importable_faqs(30);
                 </tbody>
             </table>
         </div>
-    </form>
 
     <?php if ($total_pages > 1) : ?>
         <div class="ur-ai-pagination">
