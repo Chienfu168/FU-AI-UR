@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.23.0
+Stable tag: 1.23.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.23.1 =
+* 小修正：前台推廣曝光文字「本服務由 OO 提供」過於精簡，改為包含網站名稱＋網址＋邀請前往了解／分享的完整句子（例如「本服務由 都更危老重建資訊平台（ur-promoter.com）提供，歡迎前往了解更多，也歡迎分享給有需要的親友。」）。都更重建／都市更新對應「都更危老重建資訊平台」，自主更新對應「自主更新指南-福大資訊」；地政士（未設定推廣網站）不受影響，仍不顯示任何內容。
 
 = 1.23.0 =
 * 行情參考資料以政府公告內容為準：CSV 匯入與自動抓取（內政部開放資料）不再只是單純略過已存在的「編號」，而是先比對內容是否有異動——完全相同才視為重複略過，若總價、面積、地址、屋齡等任一欄位不同（政府事後訂正或補件），會直接覆蓋更新既有紀錄，讓資料庫內容跟著政府最新公告走。新增「更新」統計數字（匯入成功訊息、自動抓取成功訊息、抓取紀錄一覽表皆新增顯示），並新增 updated_at 欄位記錄最後更新時間；未變動的紀錄不會被觸碰（沿用原本的 created_at，updated_at 維持空白）。
