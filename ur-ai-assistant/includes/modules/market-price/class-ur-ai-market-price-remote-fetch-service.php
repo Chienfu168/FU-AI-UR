@@ -170,13 +170,14 @@ class UR_AI_Market_Price_Remote_Fetch_Service {
      * 下載＋解壓＋匯入指定季別（或本期）的雙北住宅買賣資料。
      *
      * @param string $season 季別代碼（如 113S4）或 'current'。
-     * @return array{ success: bool, warnings: array, created: int, duplicate: int, skipped: int, total: int, cities: array }
+     * @return array{ success: bool, warnings: array, created: int, updated: int, duplicate: int, skipped: int, total: int, cities: array }
      */
     public function fetch_and_import($season) {
         $result = array(
             'success'   => false,
             'warnings'  => array(),
             'created'   => 0,
+            'updated'   => 0,
             'duplicate' => 0,
             'skipped'   => 0,
             'total'     => 0,
@@ -296,12 +297,14 @@ class UR_AI_Market_Price_Remote_Fetch_Service {
             @unlink($tmp_csv);
 
             $result['created']   += (int) $imported['created'];
+            $result['updated']   += (int) $imported['updated'];
             $result['duplicate'] += (int) $imported['duplicate'];
             $result['skipped']   += (int) $imported['skipped'];
             $result['total']     += (int) $imported['total'];
 
             $result['cities'][$city_key] = array(
                 'created'   => (int) $imported['created'],
+                'updated'   => (int) $imported['updated'],
                 'duplicate' => (int) $imported['duplicate'],
                 'skipped'   => (int) $imported['skipped'],
                 'total'     => (int) $imported['total'],
@@ -368,6 +371,7 @@ class UR_AI_Market_Price_Remote_Fetch_Service {
         $log[$season] = array(
             'fetched_at' => current_time('mysql'),
             'created'    => (int) $result['created'],
+            'updated'    => (int) $result['updated'],
             'duplicate'  => (int) $result['duplicate'],
             'skipped'    => (int) $result['skipped'],
             'total'      => (int) $result['total'],

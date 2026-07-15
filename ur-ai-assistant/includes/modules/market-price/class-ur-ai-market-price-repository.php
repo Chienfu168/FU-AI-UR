@@ -47,18 +47,25 @@ class UR_AI_Market_Price_Repository {
     }
 
     /**
-     * 新增一筆行情紀錄（以 source_record_id 防重複）。
+     * 新增或更新一筆行情紀錄（以 source_record_id 判斷是否為政府資料已知的
+     * 同一筆交易）。
      *
-     * 大量匯入時可傳入 $known_ids（由 get_existing_source_record_ids()
-     * 預先查出的集合，呼叫端逐筆插入時同步更新），避免每一筆都對資料庫
-     * 額外下一次 SELECT 查重複——唯一索引本身仍是最終防線。
+     * 政府資料本身會持續增補與更正（同一筆「編號」的內容可能事後訂正），
+     * 因此重複上傳／重新抓取時，若同一筆 source_record_id 的內容有異動，
+     * 會直接覆蓋更新既有紀錄，讓資料庫內容跟著政府最新資料走；內容完全
+     * 相同時才視為單純重複、略過不動。
+     *
+     * 大量匯入時可傳入 $known_records（由 get_existing_source_record_ids()
+     * 預先查出的集合，呼叫端逐筆處理時同步更新），避免每一筆都對資料庫
+     * 額外下一次 SELECT 查詢——唯一索引本身仍是最終防線。
      *
      * @param array      $data 資料。
-     * @param array|null $known_ids 已知 source_record_id 集合（以值為 key），
-     *                              會在成功新增後就地更新；留空則退回逐筆查詢。
-     * @return string 'inserted' | 'duplicate' | 'failed'
+     * @param array|null $known_records 已知 source_record_id => 既有欄位內容
+     *                                  的集合，會在處理後就地更新；留空則
+     *                                  退回逐筆查詢。
+     * @return string 'inserted' | 'updated' | 'duplicate' | 'failed'
      */
-    public function insert($data, array &$known_ids = null) {
+    public function insert($data, array &$known_records = null) {
         global $wpdb;
 
         $source_record_id = isset($data['source_record_id']) ? (string) $data['source_record_id'] : '';
@@ -67,50 +74,150 @@ class UR_AI_Market_Price_Repository {
             return 'failed';
         }
 
-        $is_duplicate = null !== $known_ids
-            ? isset($known_ids[$source_record_id])
-            : $this->find_by_source_record_id($source_record_id);
+        $existing = null !== $known_records
+            ? (isset($known_records[$source_record_id]) ? $known_records[$source_record_id] : null)
+            : $this->find_existing_record($source_record_id);
 
-        if ($is_duplicate) {
+        $fields = array(
+            'city'                    => isset($data['city']) ? (string) $data['city'] : '',
+            'district'                => isset($data['district']) ? (string) $data['district'] : '',
+            'zone'                    => isset($data['zone']) ? (string) $data['zone'] : '',
+            'zone_raw'                => isset($data['zone_raw']) ? (string) $data['zone_raw'] : '',
+            'building_type'           => isset($data['building_type']) ? (string) $data['building_type'] : '',
+            'address_raw'             => isset($data['address_raw']) ? (string) $data['address_raw'] : '',
+            'transaction_date'        => isset($data['transaction_date']) ? (string) $data['transaction_date'] : null,
+            'built_year'              => isset($data['built_year']) ? absint($data['built_year']) : 0,
+            'building_age_years'      => isset($data['building_age_years']) ? absint($data['building_age_years']) : 0,
+            'building_area_sqm'       => isset($data['building_area_sqm']) ? (float) $data['building_area_sqm'] : 0,
+            'total_price'             => isset($data['total_price']) ? absint($data['total_price']) : 0,
+            'parking_price'           => isset($data['parking_price']) ? absint($data['parking_price']) : 0,
+            'unit_price_per_ping'     => isset($data['unit_price_per_ping']) ? (float) $data['unit_price_per_ping'] : 0,
+            'is_special_relationship' => !empty($data['is_special_relationship']) ? 1 : 0,
+            'import_batch'            => isset($data['import_batch']) ? (string) $data['import_batch'] : '',
+        );
+
+        if (null === $existing) {
+            $result = $wpdb->insert(
+                $this->table_name,
+                array_merge(
+                    $fields,
+                    array(
+                        'source_record_id' => $source_record_id,
+                        'created_at'       => current_time('mysql'),
+                    )
+                ),
+                array(
+                    '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d',
+                    '%f', '%d', '%d', '%f', '%d', '%s', '%s', '%s',
+                )
+            );
+
+            if (false === $result) {
+                return 'failed';
+            }
+
+            if (null !== $known_records) {
+                $known_records[$source_record_id] = $fields;
+            }
+
+            return 'inserted';
+        }
+
+        if (!$this->record_changed($existing, $fields)) {
             return 'duplicate';
         }
 
-        $result = $wpdb->insert(
+        $result = $wpdb->update(
             $this->table_name,
-            array(
-                'city'                    => isset($data['city']) ? (string) $data['city'] : '',
-                'district'                => isset($data['district']) ? (string) $data['district'] : '',
-                'zone'                    => isset($data['zone']) ? (string) $data['zone'] : '',
-                'zone_raw'                => isset($data['zone_raw']) ? (string) $data['zone_raw'] : '',
-                'building_type'           => isset($data['building_type']) ? (string) $data['building_type'] : '',
-                'address_raw'             => isset($data['address_raw']) ? (string) $data['address_raw'] : '',
-                'transaction_date'        => isset($data['transaction_date']) ? (string) $data['transaction_date'] : null,
-                'built_year'              => isset($data['built_year']) ? absint($data['built_year']) : 0,
-                'building_age_years'      => isset($data['building_age_years']) ? absint($data['building_age_years']) : 0,
-                'building_area_sqm'       => isset($data['building_area_sqm']) ? (float) $data['building_area_sqm'] : 0,
-                'total_price'             => isset($data['total_price']) ? absint($data['total_price']) : 0,
-                'parking_price'           => isset($data['parking_price']) ? absint($data['parking_price']) : 0,
-                'unit_price_per_ping'     => isset($data['unit_price_per_ping']) ? (float) $data['unit_price_per_ping'] : 0,
-                'is_special_relationship' => !empty($data['is_special_relationship']) ? 1 : 0,
-                'source_record_id'        => $source_record_id,
-                'import_batch'            => isset($data['import_batch']) ? (string) $data['import_batch'] : '',
-                'created_at'              => current_time('mysql'),
-            ),
-            array(
-                '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d',
-                '%f', '%d', '%d', '%f', '%d', '%s', '%s', '%s',
-            )
+            array_merge($fields, array('updated_at' => current_time('mysql'))),
+            array('source_record_id' => $source_record_id),
+            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%f', '%d', '%d', '%f', '%d', '%s', '%s'),
+            array('%s')
         );
 
         if (false === $result) {
             return 'failed';
         }
 
-        if (null !== $known_ids) {
-            $known_ids[$source_record_id] = true;
+        if (null !== $known_records) {
+            $known_records[$source_record_id] = $fields;
         }
 
-        return 'inserted';
+        return 'updated';
+    }
+
+    /**
+     * 比對既有紀錄與這次解析出的內容是否有實質差異。
+     *
+     * import_batch 刻意不納入比對：它只是「最近一次由哪個匯入批次處理」
+     * 的標記，每次匯入都會重新產生，若把它也納入比對，會導致每次重新
+     * 上傳同一份未變動的資料都被誤判成「已更新」。
+     *
+     * @param array $existing 既有紀錄欄位（資料庫取出的值，皆為字串）。
+     * @param array $fields 這次解析出的欄位（型別已正規化）。
+     * @return bool
+     */
+    private function record_changed($existing, $fields) {
+        $string_columns = array('city', 'district', 'zone', 'zone_raw', 'building_type', 'address_raw');
+
+        foreach ($string_columns as $column) {
+            if ((string) $existing[$column] !== (string) $fields[$column]) {
+                return true;
+            }
+        }
+
+        if ((string) $existing['transaction_date'] !== (string) $fields['transaction_date']) {
+            return true;
+        }
+
+        $int_columns = array('built_year', 'building_age_years', 'total_price', 'parking_price', 'is_special_relationship');
+
+        foreach ($int_columns as $column) {
+            if ((int) $existing[$column] !== (int) $fields[$column]) {
+                return true;
+            }
+        }
+
+        $float_columns = array('building_area_sqm', 'unit_price_per_ping');
+
+        foreach ($float_columns as $column) {
+            if (abs(round((float) $existing[$column], 2) - round((float) $fields[$column], 2)) > 0.001) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 依 source_record_id 查出既有紀錄的完整可比對欄位（供單筆處理，未
+     * 預先載入 $known_records 時使用）。
+     *
+     * @param string $source_record_id 政府資料的唯一編號。
+     * @return array|null 不存在時回傳 null。
+     */
+    private function find_existing_record($source_record_id) {
+        global $wpdb;
+
+        $source_record_id = (string) $source_record_id;
+
+        if ('' === $source_record_id) {
+            return null;
+        }
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT city, district, zone, zone_raw, building_type, address_raw,
+                        transaction_date, built_year, building_age_years, building_area_sqm,
+                        total_price, parking_price, unit_price_per_ping, is_special_relationship,
+                        import_batch
+                 FROM {$this->table_name} WHERE source_record_id = %s LIMIT 1",
+                $source_record_id
+            ),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : null;
     }
 
     /**
@@ -139,23 +246,39 @@ class UR_AI_Market_Price_Repository {
     }
 
     /**
-     * 預先取出指定縣市已存在的 source_record_id 集合（以值為 key），
-     * 供大量匯入時逐筆比對，避免每一列都對資料庫下一次查重複 SELECT。
+     * 預先取出指定縣市已存在紀錄的完整可比對欄位（以 source_record_id 為
+     * key），供大量匯入時逐筆比對是否為政府資料異動後的更新，避免每一列
+     * 都對資料庫下一次查詢。
      *
      * @param string $city 縣市 key。
-     * @return array
+     * @return array source_record_id => 既有欄位內容（皆為字串）
      */
     public function get_existing_source_record_ids($city) {
         global $wpdb;
 
-        $ids = $wpdb->get_col(
+        $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT source_record_id FROM {$this->table_name} WHERE city = %s",
+                "SELECT source_record_id, city, district, zone, zone_raw, building_type,
+                        address_raw, transaction_date, built_year, building_age_years,
+                        building_area_sqm, total_price, parking_price, unit_price_per_ping,
+                        is_special_relationship, import_batch
+                 FROM {$this->table_name} WHERE city = %s",
                 (string) $city
-            )
+            ),
+            ARRAY_A
         );
 
-        return is_array($ids) ? array_fill_keys($ids, true) : array();
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        $existing = array();
+
+        foreach ($rows as $row) {
+            $existing[$row['source_record_id']] = $row;
+        }
+
+        return $existing;
     }
 
     /**

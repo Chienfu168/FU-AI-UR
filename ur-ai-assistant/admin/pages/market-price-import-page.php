@@ -101,6 +101,7 @@ $stale_days = $service->get_stale_days();
     <?php if ('imported' === $message) : ?>
         <?php
         $created    = isset($_GET['imp_created']) ? absint($_GET['imp_created']) : 0;
+        $updated    = isset($_GET['imp_updated']) ? absint($_GET['imp_updated']) : 0;
         $duplicate  = isset($_GET['imp_duplicate']) ? absint($_GET['imp_duplicate']) : 0;
         $skipped    = isset($_GET['imp_skipped']) ? absint($_GET['imp_skipped']) : 0;
         $total      = isset($_GET['imp_total']) ? absint($_GET['imp_total']) : 0;
@@ -111,10 +112,11 @@ $stale_days = $service->get_stale_days();
             <p>
                 <?php
                 printf(
-                    /* translators: 1: total rows, 2: created, 3: duplicate, 4: skipped */
-                    esc_html__('匯入完成。共讀取 %1$d 筆成屋交易，新增 %2$d 筆、略過重複 %3$d 筆、略過格式錯誤 %4$d 筆。', 'ur-ai-assistant'),
+                    /* translators: 1: total rows, 2: created, 3: updated, 4: duplicate, 5: skipped */
+                    esc_html__('匯入完成。共讀取 %1$d 筆成屋交易，新增 %2$d 筆、更新 %3$d 筆（政府資料異動）、略過重複 %4$d 筆、略過格式錯誤 %5$d 筆。', 'ur-ai-assistant'),
                     $total,
                     $created,
+                    $updated,
                     $duplicate,
                     $skipped
                 );
@@ -153,6 +155,7 @@ $stale_days = $service->get_stale_days();
     <?php elseif ('fetched' === $message) : ?>
         <?php
         $fetch_created   = isset($_GET['fetch_created']) ? absint($_GET['fetch_created']) : 0;
+        $fetch_updated   = isset($_GET['fetch_updated']) ? absint($_GET['fetch_updated']) : 0;
         $fetch_duplicate = isset($_GET['fetch_duplicate']) ? absint($_GET['fetch_duplicate']) : 0;
         $fetch_skipped   = isset($_GET['fetch_skipped']) ? absint($_GET['fetch_skipped']) : 0;
         $fetch_total     = isset($_GET['fetch_total']) ? absint($_GET['fetch_total']) : 0;
@@ -162,10 +165,11 @@ $stale_days = $service->get_stale_days();
             <p>
                 <?php
                 printf(
-                    /* translators: 1: total rows, 2: created, 3: duplicate, 4: skipped */
-                    esc_html__('自動抓取匯入完成。共讀取 %1$d 筆成屋交易，新增 %2$d 筆、略過重複 %3$d 筆、略過格式錯誤 %4$d 筆。', 'ur-ai-assistant'),
+                    /* translators: 1: total rows, 2: created, 3: updated, 4: duplicate, 5: skipped */
+                    esc_html__('自動抓取匯入完成。共讀取 %1$d 筆成屋交易，新增 %2$d 筆、更新 %3$d 筆（政府資料異動）、略過重複 %4$d 筆、略過格式錯誤 %5$d 筆。', 'ur-ai-assistant'),
                     $fetch_total,
                     $fetch_created,
+                    $fetch_updated,
                     $fetch_duplicate,
                     $fetch_skipped
                 );
@@ -364,6 +368,7 @@ $stale_days = $service->get_stale_days();
                             <th><?php echo esc_html__('季別', 'ur-ai-assistant'); ?></th>
                             <th><?php echo esc_html__('上次抓取時間', 'ur-ai-assistant'); ?></th>
                             <th><?php echo esc_html__('新增', 'ur-ai-assistant'); ?></th>
+                            <th><?php echo esc_html__('已更新', 'ur-ai-assistant'); ?></th>
                             <th><?php echo esc_html__('略過重複', 'ur-ai-assistant'); ?></th>
                             <th><?php echo esc_html__('略過格式錯誤', 'ur-ai-assistant'); ?></th>
                             <th><?php echo esc_html__('讀取總筆數', 'ur-ai-assistant'); ?></th>
@@ -375,6 +380,7 @@ $stale_days = $service->get_stale_days();
                                 <td><?php echo esc_html(isset($fetch_seasons[$season_tag]) ? $fetch_seasons[$season_tag] : $season_tag); ?></td>
                                 <td><?php echo esc_html(mysql2date('Y-m-d H:i', $log_entry['fetched_at'])); ?></td>
                                 <td><?php echo esc_html(absint($log_entry['created'])); ?></td>
+                                <td><?php echo esc_html(absint(isset($log_entry['updated']) ? $log_entry['updated'] : 0)); ?></td>
                                 <td><?php echo esc_html(absint($log_entry['duplicate'])); ?></td>
                                 <td><?php echo esc_html(absint($log_entry['skipped'])); ?></td>
                                 <td><?php echo esc_html(absint($log_entry['total'])); ?></td>
