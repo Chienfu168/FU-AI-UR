@@ -206,6 +206,8 @@ class UR_AI_Autoloader {
             'UR_AI_FAQ_Admin'           => 'includes/modules/faq/class-ur-ai-faq-admin.php',
             'UR_AI_FAQ_Draft_Service'   => 'includes/modules/faq/class-ur-ai-faq-draft-service.php',
             'UR_AI_FAQ_Category_Helper' => 'includes/modules/faq/class-ur-ai-faq-category-helper.php',
+            'UR_AI_FAQ_Article_Service' => 'includes/modules/faq/class-ur-ai-faq-article-service.php',
+            'UR_AI_FAQ_Ajax'            => 'includes/modules/faq/class-ur-ai-faq-ajax.php',
 
             /*
              * Logs Module

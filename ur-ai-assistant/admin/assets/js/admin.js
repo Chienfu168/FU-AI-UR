@@ -10,6 +10,7 @@
         convertFaqButton: '.ur-ai-convert-faq-button',
         importButton: '.ur-ai-import-button',
         copyButton: '.ur-ai-copy-button',
+        generateArticleButton: '.ur-ai-generate-article-button',
         applyIndustryButton: '.ur-ai-apply-industry-button',
         toggleButton: '.ur-ai-toggle-button',
         toggleTarget: '.ur-ai-toggle-target',
@@ -353,6 +354,56 @@
         copyText(text, $button);
     }
 
+    function handleGenerateArticleClick(event) {
+        event.preventDefault();
+
+        const $button = $(this);
+        const faqId = $button.data('faq-id');
+        const config = getConfig();
+
+        if (!faqId || !config.ajax_url) {
+            return;
+        }
+
+        if ($button.prop('disabled')) {
+            return;
+        }
+
+        const confirmMessage = getI18n('confirm_generate_article', '確定要請 AI 依這則 FAQ 產生一篇文章草稿嗎？');
+
+        if (!window.confirm(confirmMessage)) {
+            return;
+        }
+
+        const originalText = $button.text();
+
+        $button.prop('disabled', true).text(getI18n('generating_article', '產生中…'));
+
+        $.post(config.ajax_url, {
+            action: 'ur_ai_generate_article_from_faq',
+            nonce: config.nonce,
+            faq_id: faqId
+        })
+            .done(function (response) {
+                if (response && response.success) {
+                    window.alert(getI18n('article_generated', '已產生文章草稿。'));
+
+                    if (response.data && response.data.edit_url) {
+                        window.open(response.data.edit_url, '_blank');
+                    }
+                } else {
+                    const message = (response && response.data && response.data.message) || getI18n('generate_article_error', '產生文章草稿失敗，請稍後再試。');
+                    window.alert(message);
+                }
+            })
+            .fail(function () {
+                window.alert(getI18n('generate_article_error', '產生文章草稿失敗，請稍後再試。'));
+            })
+            .always(function () {
+                $button.prop('disabled', false).text(originalText);
+            });
+    }
+
     function handleApplyIndustryClick(event) {
         event.preventDefault();
 
@@ -480,6 +531,7 @@
         $(document).on('click', selectors.convertFaqButton, handleConvertFaqClick);
         $(document).on('click', selectors.importButton, handleImportClick);
         $(document).on('click', selectors.copyButton, handleCopyClick);
+        $(document).on('click', selectors.generateArticleButton, handleGenerateArticleClick);
         $(document).on('click', selectors.applyIndustryButton, handleApplyIndustryClick);
         $(document).on('click', selectors.toggleButton, handleToggleClick);
 

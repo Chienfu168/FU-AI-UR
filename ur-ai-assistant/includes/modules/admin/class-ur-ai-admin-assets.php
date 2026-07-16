@@ -96,6 +96,10 @@ class UR_AI_Admin_Assets {
                     'select_all_confirm_button' => __('選取全部', 'ur-ai-assistant'),
                     'select_all_cancel_button'  => __('僅本頁', 'ur-ai-assistant'),
                     'confirm_apply_industry'    => __('確定要套用所選產業別的預設文案嗎？這會覆蓋下方系統提示詞／前台標題／副標題目前填寫的內容（尚未按「儲存設定」前都可以再修改）。', 'ur-ai-assistant'),
+                    'confirm_generate_article'  => __('確定要請 AI 依這則 FAQ 產生一篇文章草稿嗎？會呼叫 AI API（產生費用需自行負擔），文章將以草稿狀態建立，不會自動發布。', 'ur-ai-assistant'),
+                    'generating_article'        => __('產生中…', 'ur-ai-assistant'),
+                    'article_generated'         => __('已產生文章草稿，將為您開啟編輯畫面，請核對內容後再發布。', 'ur-ai-assistant'),
+                    'generate_article_error'    => __('產生文章草稿失敗，請稍後再試。', 'ur-ai-assistant'),
                 ),
             )
         );
