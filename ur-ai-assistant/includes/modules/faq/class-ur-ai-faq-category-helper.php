@@ -24,10 +24,51 @@ class UR_AI_FAQ_Category_Helper {
     private $category_rules = array();
 
     /**
+     * 關鍵字候選清單。
+     *
+     * @var array
+     */
+    private $keyword_candidates = array();
+
+    /**
      * 建構子。
+     *
+     * 分類規則與關鍵字候選清單會依「目前啟用中的產業別」決定：地政士等
+     * 與都更完全無關的產業別，若沿用都更專用的規則，會導致所有問題都
+     * 判斷不出適當分類（一律落入「待分類」）或誤判成都更相關分類。
+     * 沒有為目前產業別另外定義規則的產業別（都更危老／自主更新），
+     * 退回外掛既有的預設規則，行為與升級前完全相同。
      */
     public function __construct() {
-        $this->category_rules = $this->get_default_category_rules();
+        $custom_rules = class_exists('UR_AI_Industry_Profiles')
+            ? UR_AI_Industry_Profiles::get_active_faq_category_rules()
+            : null;
+
+        $rules = is_array($custom_rules) && !empty($custom_rules)
+            ? $custom_rules
+            : $this->get_default_category_rules();
+
+        /**
+         * Filter FAQ category rules.
+         *
+         * @param array $rules Category rules.
+         */
+        $this->category_rules = apply_filters('ur_ai_faq_category_rules', $rules);
+
+        $custom_keywords = class_exists('UR_AI_Industry_Profiles')
+            ? UR_AI_Industry_Profiles::get_active_faq_keyword_candidates()
+            : null;
+
+        $keywords = is_array($custom_keywords) && !empty($custom_keywords)
+            ? $custom_keywords
+            : $this->get_default_keyword_candidates();
+
+        /**
+         * Filter FAQ keyword candidates.
+         *
+         * @param array $keywords Keyword candidates.
+         */
+        $this->keyword_candidates = apply_filters('ur_ai_faq_keyword_candidates', $keywords);
     }
 
     /**
@@ -91,11 +132,25 @@ class UR_AI_FAQ_Category_Helper {
 
         $matched = array();
 
-        foreach ($this->get_keyword_candidates() as $keyword) {
+        foreach ($this->keyword_candidates as $keyword) {
             if ($this->contains($text, $keyword)) {
                 $matched[] = $keyword;
             }
         }
+
+        /*
+         * 候選清單本身只是宣告順序（依大類分組列出），不代表比對到的
+         * 關鍵字對這篇問答有多重要；改依關鍵字權重（越長、越具體的
+         * 詞給予越高權重，見 keyword_weight()）由高到低排序，讓比對到
+         * 的關鍵字裡最具體、最能代表這篇問答主題的詞排在前面，而不是
+         * 依候選清單裡宣告的先後順序這種無意義的排列。
+         */
+        usort(
+            $matched,
+            function ($a, $b) {
+                return $this->keyword_weight($b) <=> $this->keyword_weight($a);
+            }
+        );
 
         $category = $this->suggest_category($question, $answer);
 
@@ -312,20 +367,15 @@ class UR_AI_FAQ_Category_Helper {
             ),
         );
 
-        /**
-         * Filter FAQ category rules.
-         *
-         * @param array $rules Category rules.
-         */
-        return apply_filters('ur_ai_faq_category_rules', $rules);
+        return $rules;
     }
 
     /**
-     * 取得關鍵字候選清單。
+     * 取得預設關鍵字候選清單（都更危老／自主更新沿用）。
      *
      * @return array
      */
-    private function get_keyword_candidates() {
+    private function get_default_keyword_candidates() {
         $keywords = array(
             '都市更新',
             '都更',
@@ -382,12 +432,7 @@ class UR_AI_FAQ_Category_Helper {
             '謄本',
         );
 
-        /**
-         * Filter FAQ keyword candidates.
-         *
-         * @param array $keywords Keyword candidates.
-         */
-        return apply_filters('ur_ai_faq_keyword_candidates', $keywords);
+        return $keywords;
     }
 
     /**
