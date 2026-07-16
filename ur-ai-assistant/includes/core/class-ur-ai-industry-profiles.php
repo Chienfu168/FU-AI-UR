@@ -108,6 +108,45 @@ class UR_AI_Industry_Profiles {
     }
 
     /**
+     * 取得目前啟用中產業別自訂的 FAQ 分類規則（供 UR_AI_FAQ_Category_Helper
+     * 建議分類使用）。
+     *
+     * 沒有為目前產業別另外定義規則時（例如都更危老／自主更新，沿用
+     * 外掛既有的都更分類規則），回傳 null，由呼叫端退回原本內建的
+     * 預設規則，確保沒有另外定義規則的產業別行為完全不變。
+     *
+     * @return array|null
+     */
+    public static function get_active_faq_category_rules() {
+        $profile = self::get_active();
+
+        if (is_array($profile) && !empty($profile['faq']['category_rules'])) {
+            return $profile['faq']['category_rules'];
+        }
+
+        return null;
+    }
+
+    /**
+     * 取得目前啟用中產業別自訂的 FAQ 關鍵字候選清單（供
+     * UR_AI_FAQ_Category_Helper 建議關鍵字使用）。
+     *
+     * 沒有為目前產業別另外定義候選清單時，回傳 null，由呼叫端退回
+     * 原本內建的預設候選清單。
+     *
+     * @return array|null
+     */
+    public static function get_active_faq_keyword_candidates() {
+        $profile = self::get_active();
+
+        if (is_array($profile) && !empty($profile['faq']['keyword_candidates'])) {
+            return $profile['faq']['keyword_candidates'];
+        }
+
+        return null;
+    }
+
+    /**
      * 取得目前啟用中產業別的知識大考驗預設標題。
      *
      * @return string
@@ -378,7 +417,87 @@ class UR_AI_Industry_Profiles {
                     'default_title' => __('地政知識大考驗', 'ur-ai-assistant'),
                     'topic_label'   => __('地政登記與稅務', 'ur-ai-assistant'),
                 ),
+                'faq' => array(
+                    'category_rules'     => self::land_agent_faq_category_rules(),
+                    'keyword_candidates' => self::land_agent_faq_keyword_candidates(),
+                ),
             ),
+        );
+    }
+
+    /**
+     * 地政士產業別的 FAQ 分類規則（供 UR_AI_FAQ_Category_Helper 建議分類
+     * 使用）。都更危老／自主更新沿用外掛既有的都更分類規則，地政士業務
+     * 內容與都更完全無關，需要獨立一套分類，否則會一律被歸類成「待
+     * 分類」或誤判成都更相關分類。分類順序依「一般民眾最常辦理的登記
+     * 類型」由高到低排列，與 data/industry-packs/land_agent/faq.csv
+     * 起始包使用的分類完全一致。
+     *
+     * @return array
+     */
+    private static function land_agent_faq_category_rules() {
+        return array(
+            '所有權移轉登記' => array(
+                '所有權移轉登記', '過戶', '買賣登記', '買賣移轉登記', '應備文件',
+                '印鑑證明', '公定契紙', '過戶流程', '買賣流程', '送件', '地政事務所',
+            ),
+
+            '繼承登記' => array(
+                '繼承登記', '繼承過戶', '遺產', '除戶謄本', '繼承系統表',
+                '遺產分割協議書', '繼承登記期限', '逾期未辦理', '拋棄繼承', '限定繼承',
+            ),
+
+            '抵押權登記' => array(
+                '抵押權設定', '抵押權塗銷', '房貸登記', '擔保物權', '房貸還清',
+                '清償證明', '最高限額抵押權', '他項權利',
+            ),
+
+            '土地增值稅' => array(
+                '土地增值稅', '公告土地現值', '累進稅率', '自用住宅用地優惠稅率',
+                '一生一次', '一生一屋', '長期持有減徵', '土地漲價總數額',
+            ),
+
+            '契稅與印花稅' => array(
+                '契稅', '房屋契價', '印花稅', '買賣契約', '公定契紙', '契稅申報',
+            ),
+
+            '地籍測量與其他登記' => array(
+                '地籍測量', '土地分割', '界址', '建物測量', '時效取得', '地上權',
+                '占有', '預告登記', '保全登記', '二賣', '合併登記', '地目變更',
+            ),
+
+            '地政士服務' => array(
+                '地政士', '代書', '地政士法', '委任', '簽證', '收費標準',
+            ),
+
+            '其他' => array(
+                '其他', '一般問題', '常見問題', '說明', '介紹',
+            ),
+        );
+    }
+
+    /**
+     * 地政士產業別的 FAQ 關鍵字候選清單（供 UR_AI_FAQ_Category_Helper
+     * 建議關鍵字使用）。
+     *
+     * @return array
+     */
+    private static function land_agent_faq_keyword_candidates() {
+        return array(
+            '所有權移轉登記', '過戶', '買賣登記', '買賣移轉登記', '應備文件',
+            '印鑑證明', '公定契紙', '過戶流程', '買賣流程', '地政事務所',
+            '繼承登記', '繼承過戶', '遺產', '除戶謄本', '繼承系統表',
+            '遺產分割協議書', '拋棄繼承', '限定繼承',
+            '抵押權設定', '抵押權塗銷', '房貸登記', '擔保物權', '清償證明',
+            '最高限額抵押權', '他項權利',
+            '土地增值稅', '公告土地現值', '累進稅率', '自用住宅用地優惠稅率',
+            '一生一次', '一生一屋', '長期持有減徵', '土地漲價總數額',
+            '契稅', '房屋契價', '印花稅', '買賣契約', '契稅申報',
+            '地籍測量', '土地分割', '界址', '建物測量', '時效取得', '地上權',
+            '占有', '預告登記', '保全登記', '二賣', '合併登記', '地目變更',
+            '地政士', '代書', '地政士法', '委任', '簽證',
+            '謄本', '土地建物查詢', '登記', '稅務',
+            '新北市', '台北市',
         );
     }
 
