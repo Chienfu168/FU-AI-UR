@@ -26,6 +26,32 @@ if (!defined('ABSPATH')) {
 class UR_AI_FAQ_Article_Service {
 
     /**
+     * 來源 FAQ 問題＋回答的最低總字數門檻。
+     *
+     * 低於這個字數就直接擋下、不呼叫 AI：內容太薄的話，AI 擴寫時容易
+     * 為了湊出文章長度而自行「加油添醋」，增加內容失真的風險。門檻值
+     * 是依實際 FAQ 內容包（data/industry-packs/land_agent/faq.csv，
+     * 問題＋回答最短一筆 133 字、中位數 159 字）估算，刻意訂在明顯低於
+     * 中位數、但足以濾掉近乎空白／過度簡略內容的水準。
+     *
+     * @var int
+     */
+    const MIN_SOURCE_LENGTH = 120;
+
+    /**
+     * AI 產生的文章內文最低字數門檻。
+     *
+     * 系統提示詞已要求 AI 產生約 500～900 字的內文，但 AI 偶爾仍可能
+     * 回傳明顯不足、近乎沒有展開的內容；與其把這種內容也建立成草稿
+     * 讓管理者事後才發現品質不佳，不如在建立文章前就擋下、要求重新
+     * 產生，門檻訂在明顯低於系統提示詞要求下限（500 字）的水準，只
+     * 用來濾掉明顯不合格的輸出，不是用來要求「剛好達標」。
+     *
+     * @var int
+     */
+    const MIN_ARTICLE_LENGTH = 300;
+
+    /**
      * FAQ Service。
      *
      * @var UR_AI_FAQ_Service|null
@@ -40,11 +66,19 @@ class UR_AI_FAQ_Article_Service {
     private $openai_client;
 
     /**
+     * FAQ 分類／關鍵字建議工具（用來替產生的文章建議分類與標籤）。
+     *
+     * @var UR_AI_FAQ_Category_Helper|null
+     */
+    private $category_helper;
+
+    /**
      * 建構子。
      */
     public function __construct() {
-        $this->faq_service   = class_exists('UR_AI_FAQ_Service') ? new UR_AI_FAQ_Service() : null;
-        $this->openai_client = class_exists('UR_AI_OpenAI_Client') ? new UR_AI_OpenAI_Client() : null;
+        $this->faq_service     = class_exists('UR_AI_FAQ_Service') ? new UR_AI_FAQ_Service() : null;
+        $this->openai_client   = class_exists('UR_AI_OpenAI_Client') ? new UR_AI_OpenAI_Client() : null;
+        $this->category_helper = class_exists('UR_AI_FAQ_Category_Helper') ? new UR_AI_FAQ_Category_Helper() : null;
     }
 
     /**
@@ -81,6 +115,16 @@ class UR_AI_FAQ_Article_Service {
             return $this->error(__('這則 FAQ 的問題或回答內容為空，無法產生文章。', 'ur-ai-assistant'));
         }
 
+        if ($this->source_length($question, $answer) < self::MIN_SOURCE_LENGTH) {
+            return $this->error(
+                sprintf(
+                    /* translators: %d: 最低字數門檻 */
+                    __('這則 FAQ 的問題與回答內容加總不足 %d 字，內容可能過於簡略，AI 擴寫時容易自行添加未經查證的內容。建議先補充這則 FAQ 的回答內容，再嘗試產生文章。', 'ur-ai-assistant'),
+                    self::MIN_SOURCE_LENGTH
+                )
+            );
+        }
+
         $result = $this->openai_client->generate_article_from_faq($question, $answer);
 
         if (empty($result['success'])) {
@@ -89,21 +133,41 @@ class UR_AI_FAQ_Article_Service {
             );
         }
 
+        if ($this->article_length($result['content']) < self::MIN_ARTICLE_LENGTH) {
+            return $this->error(
+                sprintf(
+                    /* translators: %d: 最低字數門檻 */
+                    __('AI 產生的文章內容不足 %d 字，可能沒有確實展開，品質不佳，請重新嘗試產生。', 'ur-ai-assistant'),
+                    self::MIN_ARTICLE_LENGTH
+                )
+            );
+        }
+
+        $category = $this->suggest_category($question, $answer);
+        $keywords = $this->suggest_keywords($question, $answer);
+        $tags     = array_filter(array_map('trim', explode(',', $keywords)));
+
         $content = $result['content'] . $this->disclaimer_paragraph($faq_id);
 
-        $post_id = wp_insert_post(
-            array(
-                'post_title'   => $result['title'],
-                'post_content' => $content,
-                'post_status'  => 'draft',
-                'post_type'    => 'post',
-                'meta_input'   => array(
-                    '_ur_ai_source_faq_id' => $faq_id,
-                    '_ur_ai_ai_generated'  => 1,
-                ),
+        $postarr = array(
+            'post_title'   => $result['title'],
+            'post_content' => $content,
+            'post_status'  => 'draft',
+            'post_type'    => 'post',
+            'tags_input'   => $tags,
+            'meta_input'   => array(
+                '_ur_ai_source_faq_id' => $faq_id,
+                '_ur_ai_ai_generated'  => 1,
             ),
-            true
         );
+
+        $category_id = $this->resolve_category_id($category);
+
+        if ($category_id > 0) {
+            $postarr['post_category'] = array($category_id);
+        }
+
+        $post_id = wp_insert_post($postarr, true);
 
         if (is_wp_error($post_id) || !$post_id) {
             return $this->error(__('建立文章草稿失敗，請確認網站的文章功能是否正常。', 'ur-ai-assistant'));
@@ -115,7 +179,106 @@ class UR_AI_FAQ_Article_Service {
             'success'  => true,
             'post_id'  => $post_id,
             'edit_url' => (string) get_edit_post_link($post_id, 'raw'),
+            'category' => $category,
+            'keywords' => $keywords,
         );
+    }
+
+    /**
+     * 計算問題＋回答的總字數（先去除 HTML 標籤，避免標籤本身灌水字數）。
+     *
+     * @param string $question 問題。
+     * @param string $answer 回答。
+     * @return int
+     */
+    private function source_length($question, $answer) {
+        $text = wp_strip_all_tags($question) . wp_strip_all_tags($answer);
+
+        return function_exists('mb_strlen') ? mb_strlen(trim($text)) : strlen(trim($text));
+    }
+
+    /**
+     * 計算文章內文字數（先去除 HTML 標籤，避免標籤本身灌水字數）。
+     *
+     * @param string $content 文章內文（HTML）。
+     * @return int
+     */
+    private function article_length($content) {
+        $text = wp_strip_all_tags((string) $content);
+
+        return function_exists('mb_strlen') ? mb_strlen(trim($text)) : strlen(trim($text));
+    }
+
+    /**
+     * 依來源 FAQ 問答，建議這篇文章的分類（無法載入分類工具時退回
+     * 「待分類」，不中斷整個流程）。
+     *
+     * @param string $question 問題。
+     * @param string $answer 回答。
+     * @return string
+     */
+    private function suggest_category($question, $answer) {
+        if ($this->category_helper instanceof UR_AI_FAQ_Category_Helper) {
+            return $this->category_helper->suggest_category($question, $answer);
+        }
+
+        return '待分類';
+    }
+
+    /**
+     * 依來源 FAQ 問答，建議這篇文章的標籤（無法載入分類工具時回傳空
+     * 字串，不中斷整個流程）。
+     *
+     * @param string $question 問題。
+     * @param string $answer 回答。
+     * @return string
+     */
+    private function suggest_keywords($question, $answer) {
+        if ($this->category_helper instanceof UR_AI_FAQ_Category_Helper) {
+            return $this->category_helper->suggest_keywords($question, $answer);
+        }
+
+        return '';
+    }
+
+    /**
+     * 依分類名稱找出（或建立）對應的 WordPress 分類 term，回傳 term_id。
+     *
+     * 「待分類」是 FAQ 分類工具找不到適合分類時的預設值，不需要在文章
+     * 分類法裡另外建一個叫「待分類」的分類——直接不指定分類，讓文章
+     * 沿用 WordPress 預設分類（通常是「未分類」）即可。
+     *
+     * @param string $category 分類名稱。
+     * @return int term_id，0 表示不指定分類。
+     */
+    private function resolve_category_id($category) {
+        $category = trim((string) $category);
+
+        if ('' === $category || '待分類' === $category) {
+            return 0;
+        }
+
+        if (!function_exists('term_exists') || !function_exists('wp_insert_term')) {
+            return 0;
+        }
+
+        $existing = term_exists($category, 'category');
+
+        if (is_array($existing) && !empty($existing['term_id'])) {
+            return (int) $existing['term_id'];
+        }
+
+        if (is_numeric($existing) && (int) $existing > 0) {
+            return (int) $existing;
+        }
+
+        $inserted = wp_insert_term($category, 'category');
+
+        if (is_wp_error($inserted) || empty($inserted['term_id'])) {
+            return 0;
+        }
+
+        return (int) $inserted['term_id'];
     }
 
     /**
