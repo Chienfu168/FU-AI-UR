@@ -629,6 +629,14 @@ $base_url = admin_url('admin.php?page=ur-ai-assistant-faqs');
                                         >
                                             <?php echo esc_html__('複製問題', 'ur-ai-assistant'); ?>
                                         </button>
+
+                                        <button
+                                            type="button"
+                                            class="button-link ur-ai-generate-article-button"
+                                            data-faq-id="<?php echo esc_attr($faq_id); ?>"
+                                        >
+                                            <?php echo esc_html__('產生文章草稿', 'ur-ai-assistant'); ?>
+                                        </button>
                                     </div>
                                 </td>
 

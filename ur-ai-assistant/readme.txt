@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.26.0
+Stable tag: 1.27.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.27.0 =
+* 新增「FAQ 知識庫管理」頁的「產生文章草稿」功能：針對任一則已審核的 FAQ 按下按鈕，AI 會把該則問答擴寫成一篇完整文章（僅根據 FAQ 內容延伸說明，不會捏造 FAQ 沒提到的具體法規名稱、稅率、金額或期限），以「草稿」狀態建立一篇 WordPress 文章，不會自動發布，需管理者在文章編輯畫面核對內容後再自行發布。按下按鈕會先跳出確認對話框，提醒此操作會呼叫 AI API（費用需自行負擔）。
 
 = 1.26.0 =
 * 新增後台「AI 對話」功能：管理者可在後台與 AI 助理多輪對話，腦力激盪知識庫（FAQ）需要補充哪些內容；討論完畢後按「產生總結草稿」，AI 會整理出適合收錄的標準問題／固定回答草稿（附自動建議的分類與關鍵字，依目前產業別調整），逐則確認、可編輯後再按「加入知識庫」存成 FAQ 草稿（一律為「停用／待審核」狀態，仍需人工審核後再啟用，與外掛既有的 AI 內容審核原則一致）。對話內容本身不寫入資料庫，僅存在瀏覽器記憶體中，重新整理頁面會清空。

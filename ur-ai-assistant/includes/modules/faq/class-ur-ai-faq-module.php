@@ -38,6 +38,13 @@ class UR_AI_FAQ_Module {
     private $matcher = null;
 
     /**
+     * FAQ AJAX 處理器。
+     *
+     * @var UR_AI_FAQ_Ajax|null
+     */
+    private $ajax = null;
+
+    /**
      * 註冊 WordPress hooks。
      *
      * @return void
@@ -45,6 +52,12 @@ class UR_AI_FAQ_Module {
     public function register() {
         if (is_admin()) {
             add_action('admin_init', array($this, 'handle_admin_actions'));
+
+            $this->ajax = class_exists('UR_AI_FAQ_Ajax') ? new UR_AI_FAQ_Ajax() : null;
+
+            if ($this->ajax instanceof UR_AI_FAQ_Ajax) {
+                $this->ajax->register();
+            }
         }
     }
 

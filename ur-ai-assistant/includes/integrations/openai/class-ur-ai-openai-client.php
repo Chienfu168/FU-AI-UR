@@ -393,6 +393,170 @@ class UR_AI_OpenAI_Client {
     }
 
     /**
+     * 依 FAQ 問答內容，請 OpenAI 把一則問答擴寫成一篇適合放在網站部落格／
+     * 專欄的完整文章草稿（標題＋內文），供後台「FAQ 知識庫」頁的
+     * 「產生文章草稿」功能使用。
+     *
+     * 與 chat()／generate_quiz_question() 相同，使用完全獨立的 system
+     * prompt 與 payload，不受後台「AI 助理系統提示詞」設定影響。
+     *
+     * @param string $question 來源 FAQ 標準問題。
+     * @param string $answer   來源 FAQ 固定回答。
+     * @return array 成功時包含 title／content，失敗時包含 success=false 與 message。
+     */
+    public function generate_article_from_faq($question, $answer) {
+        $question = $this->sanitize_question($question);
+        $answer   = is_scalar($answer) ? trim((string) $answer) : '';
+
+        if ('' === $question || '' === $answer) {
+            return $this->error_result(
+                __('來源 FAQ 內容為空，無法產生文章。', 'ur-ai-assistant'),
+                'empty_source'
+            );
+        }
+
+        $api_key = $this->get_api_key();
+
+        if ('' === $api_key) {
+            return $this->error_result(
+                __('尚未設定 OpenAI API Key。', 'ur-ai-assistant'),
+                'api_key_missing'
+            );
+        }
+
+        $payload = array(
+            'model'       => $this->get_model(),
+            'messages'    => array(
+                array(
+                    'role'    => 'system',
+                    'content' => $this->article_system_prompt(),
+                ),
+                array(
+                    'role'    => 'user',
+                    'content' => "FAQ 標準問題：{$question}\n\nFAQ 固定回答：{$answer}",
+                ),
+            ),
+            'temperature' => 0.4,
+            'max_tokens'  => 2200,
+        );
+
+        /**
+         * Filter 「產生文章草稿」用的 OpenAI payload。
+         *
+         * @param array  $payload  OpenAI payload。
+         * @param string $question 來源 FAQ 問題。
+         * @param string $answer   來源 FAQ 回答。
+         */
+        $payload = apply_filters('ur_ai_article_openai_payload', $payload, $question, $answer);
+
+        $response = wp_remote_post(
+            self::API_ENDPOINT,
+            array(
+                'timeout' => 60,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ),
+                'body' => wp_json_encode($payload),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return $this->error_result($response->get_error_message(), 'wp_remote_error');
+        }
+
+        $status_code = absint(wp_remote_retrieve_response_code($response));
+        $body        = wp_remote_retrieve_body($response);
+
+        if ($status_code < 200 || $status_code >= 300) {
+            return $this->handle_api_error($body, $status_code);
+        }
+
+        $decoded = json_decode($body, true);
+
+        if (!is_array($decoded)) {
+            return $this->error_result(
+                __('OpenAI 回傳格式無法解析。', 'ur-ai-assistant'),
+                'invalid_json'
+            );
+        }
+
+        $content = $this->extract_answer($decoded);
+
+        if ('' === trim($content)) {
+            return $this->error_result(
+                __('OpenAI 回傳內容為空。', 'ur-ai-assistant'),
+                'empty_response'
+            );
+        }
+
+        return $this->parse_article_json($content);
+    }
+
+    /**
+     * 「產生文章草稿」用的 system prompt：要求輸出嚴格 JSON 格式的
+     * 標題＋內文，且明確限制只能依提供的 FAQ 內容擴寫，不可自行捏造。
+     *
+     * @return string
+     */
+    private function article_system_prompt() {
+        $brand_name = class_exists('UR_AI_Industry_Profiles')
+            ? UR_AI_Industry_Profiles::get_active_brand_name()
+            : __('AI 助理', 'ur-ai-assistant');
+
+        return implode(
+            "\n",
+            array(
+                sprintf(
+                    /* translators: %s: 目前產業別的品牌名稱 */
+                    __('你是「%s」網站的內容編輯助手，任務是把提供的一則 FAQ 問答，擴寫成一篇適合放在網站部落格／專欄的完整文章。', 'ur-ai-assistant'),
+                    $brand_name
+                ),
+                '',
+                __('擴寫原則：', 'ur-ai-assistant'),
+                __('1. 文章內容只能根據提供的 FAQ 問答內容擴充說明（例如補充背景、常見情境、實務注意事項），不可以自行捏造 FAQ 沒有提到的具體法規名稱、稅率、金額或期限。', 'ur-ai-assistant'),
+                __('2. 若有需要進一步說明、但 FAQ 沒有提供依據的地方，請用提醒讀者「應洽詢專業人士確認」的方式帶過，不要編造答案。', 'ur-ai-assistant'),
+                __('3. 文章長度約 500～900 字，段落分明，可視內容需要適度使用小標題。', 'ur-ai-assistant'),
+                __('4. 標題不要直接照抄 FAQ 問題文字，應該是更適合文章閱讀的標題寫法。', 'ur-ai-assistant'),
+                __('5. content 欄位請用簡單的 HTML 段落標籤（例如 <p>、<h2>），不要使用 Markdown 語法。', 'ur-ai-assistant'),
+                '',
+                __('請務必只回傳一個 JSON 物件，不要包含任何 JSON 以外的文字、Markdown 標記或程式碼區塊符號，格式如下：', 'ur-ai-assistant'),
+                '{"title":"文章標題","content":"<p>文章內文，使用 HTML 段落標籤</p>"}',
+            )
+        );
+    }
+
+    /**
+     * 解析「產生文章草稿」的 JSON 回應，並做基本結構驗證。
+     *
+     * @param string $content OpenAI 回傳的文字內容。
+     * @return array
+     */
+    private function parse_article_json($content) {
+        $content = trim($content);
+
+        // 部分模型仍會包住 ```json ... ``` 區塊，先行剝除。
+        $content = preg_replace('/^```(?:json)?/i', '', $content);
+        $content = preg_replace('/```$/', '', $content);
+        $content = trim($content);
+
+        $data = json_decode($content, true);
+
+        if (!is_array($data) || empty($data['title']) || empty($data['content']) || !is_string($data['title']) || !is_string($data['content'])) {
+            return $this->error_result(
+                __('AI 回傳內容不是有效的 JSON 格式，無法自動建立文章草稿。', 'ur-ai-assistant'),
+                'invalid_article_json'
+            );
+        }
+
+        return array(
+            'success' => true,
+            'title'   => sanitize_text_field($data['title']),
+            'content' => wp_kses_post($data['content']),
+        );
+    }
+
+    /**
      * 出題用 system prompt：要求輸出嚴格 JSON 格式的單選題。
      *
      * @return string
