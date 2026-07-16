@@ -386,7 +386,8 @@
         })
             .done(function (response) {
                 if (response && response.success) {
-                    window.alert(getI18n('article_generated', '已產生文章草稿。'));
+                    const message = (response.data && response.data.message) || getI18n('article_generated', '已產生文章草稿。');
+                    window.alert(message);
 
                     if (response.data && response.data.edit_url) {
                         window.open(response.data.edit_url, '_blank');

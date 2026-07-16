@@ -72,8 +72,33 @@ class UR_AI_FAQ_Ajax {
             array(
                 'post_id'  => $result['post_id'],
                 'edit_url' => $result['edit_url'],
-                'message'  => __('已產生文章草稿，請於文章編輯畫面核對內容後再發布。', 'ur-ai-assistant'),
+                'category' => isset($result['category']) ? $result['category'] : '',
+                'keywords' => isset($result['keywords']) ? $result['keywords'] : '',
+                'message'  => $this->build_success_message($result),
             )
+        );
+    }
+
+    /**
+     * 組成成功訊息，附上這篇文章實際套用的建議分類與標籤，讓管理者
+     * 一眼就能確認 AI 建議是否合理，而不用另外點進文章編輯畫面才看到。
+     *
+     * @param array $result create_from_faq() 的成功結果。
+     * @return string
+     */
+    private function build_success_message($result) {
+        $category = !empty($result['category']) && '待分類' !== $result['category'] ? $result['category'] : '';
+        $keywords = !empty($result['keywords']) ? $result['keywords'] : '';
+
+        if ('' === $category && '' === $keywords) {
+            return __('已產生文章草稿，請於文章編輯畫面核對內容後再發布。', 'ur-ai-assistant');
+        }
+
+        return sprintf(
+            /* translators: 1: 建議分類 2: 建議標籤 */
+            __('已產生文章草稿（分類：%1$s／標籤：%2$s），請於文章編輯畫面核對內容後再發布。', 'ur-ai-assistant'),
+            '' !== $category ? $category : __('未分類', 'ur-ai-assistant'),
+            '' !== $keywords ? $keywords : __('無', 'ur-ai-assistant')
         );
     }
 
