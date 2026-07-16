@@ -154,6 +154,17 @@ class UR_AI_Module_Manager {
             'UR_AI_Quiz_Module',
             true
         );
+
+        /*
+         * 後台 AI 對話模組（v1.26.0 新增）。
+         * 讓管理者能與 AI 助理多輪對話腦力激盪知識庫內容，並可將對話
+         * 整理成 FAQ 草稿（停用／待審核，需人工審核後再啟用）。
+         */
+        $this->register_module(
+            'admin_chat',
+            'UR_AI_Admin_Chat_Module',
+            true
+        );
     }
 
     /**

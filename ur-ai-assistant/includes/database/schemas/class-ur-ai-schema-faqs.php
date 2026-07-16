@@ -136,6 +136,7 @@ class UR_AI_Schema_FAQs {
             'ai_log'           => __('AI 問答轉出', 'ur-ai-assistant'),
             'popular_question' => __('熱門問題轉出', 'ur-ai-assistant'),
             'import'           => __('匯入建立', 'ur-ai-assistant'),
+            'ai_chat'          => __('AI 對話產生', 'ur-ai-assistant'),
         );
     }
 

@@ -648,7 +648,7 @@ class UR_AI_FAQ_Repository {
 
         $source = isset($data['source']) ? sanitize_key($data['source']) : 'manual';
 
-        if (!in_array($source, array('manual', 'ai_log', 'import'), true)) {
+        if (!in_array($source, array('manual', 'ai_log', 'import', 'ai_chat'), true)) {
             $source = 'manual';
         }
 

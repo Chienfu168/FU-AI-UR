@@ -175,6 +175,12 @@ class UR_AI_Autoloader {
             'UR_AI_Quiz_Leaderboard_Shortcode' => 'includes/modules/quiz/class-ur-ai-quiz-leaderboard-shortcode.php',
 
             /*
+             * Admin Chat Module（後台 AI 對話，v1.26.0 新增）
+             */
+            'UR_AI_Admin_Chat_Module' => 'includes/modules/admin-chat/class-ur-ai-admin-chat-module.php',
+            'UR_AI_Admin_Chat_Ajax'   => 'includes/modules/admin-chat/class-ur-ai-admin-chat-ajax.php',
+
+            /*
              * AJAX Module
              */
             'UR_AI_Ajax_Module' => 'includes/modules/ajax/class-ur-ai-ajax-module.php',

@@ -59,6 +59,13 @@ class UR_AI_Permissions {
     const CAP_MANAGE_POPULAR_QUESTIONS = 'manage_options';
 
     /**
+     * 使用後台「AI 對話」權限。
+     *
+     * @var string
+     */
+    const CAP_MANAGE_ADMIN_CHAT = 'manage_options';
+
+    /**
      * 檢查使用者是否可檢視總覽頁。
      *
      * @return bool
@@ -110,6 +117,15 @@ class UR_AI_Permissions {
      */
     public static function can_manage_popular_questions() {
         return current_user_can(self::CAP_MANAGE_POPULAR_QUESTIONS);
+    }
+
+    /**
+     * 檢查使用者是否可使用後台「AI 對話」。
+     *
+     * @return bool
+     */
+    public static function can_manage_admin_chat() {
+        return current_user_can(self::CAP_MANAGE_ADMIN_CHAT);
     }
 
     /**
@@ -167,6 +183,15 @@ class UR_AI_Permissions {
     }
 
     /**
+     * 要求後台「AI 對話」使用權限。
+     *
+     * @return void
+     */
+    public static function require_manage_admin_chat() {
+        self::require_capability(self::CAP_MANAGE_ADMIN_CHAT);
+    }
+
+    /**
      * 要求指定權限。
      *
      * @param string $capability WordPress capability.
@@ -204,6 +229,7 @@ class UR_AI_Permissions {
             'logs'              => self::CAP_VIEW_LOGS,
             'related_pages'     => self::CAP_MANAGE_RELATED_PAGES,
             'popular_questions' => self::CAP_MANAGE_POPULAR_QUESTIONS,
+            'admin_chat'        => self::CAP_MANAGE_ADMIN_CHAT,
         );
 
         return isset($map[$area]) ? $map[$area] : 'manage_options';

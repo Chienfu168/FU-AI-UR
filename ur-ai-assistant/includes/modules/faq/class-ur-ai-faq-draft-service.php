@@ -236,6 +236,62 @@ class UR_AI_FAQ_Draft_Service {
     }
 
     /**
+     * 從後台「AI 對話」功能整理出的草稿建立 FAQ 草稿。
+     *
+     * 與 create_from_log()／create_from_popular_question() 不同：這裡的
+     * 問題與回答已經是管理者在後台「AI 對話」頁確認（可能已手動編輯）
+     * 過的內容，不是直接沿用某一筆既有紀錄，因此沒有「是否已存在對應
+     * FAQ」的重複檢查。
+     *
+     * @param string $question 標準問題。
+     * @param string $answer 固定回答。
+     * @param string $category 分類（留空則自動建議）。
+     * @param string $keywords 關鍵字（留空則自動建議）。
+     * @return int FAQ ID，建立失敗時為 0。
+     */
+    public function create_from_admin_chat($question, $answer, $category = '', $keywords = '') {
+        if (!$this->faq_service instanceof UR_AI_FAQ_Service) {
+            return 0;
+        }
+
+        $question = is_scalar($question) ? trim((string) $question) : '';
+        $answer   = is_scalar($answer) ? trim((string) $answer) : '';
+
+        if ('' === $question || '' === $answer) {
+            return 0;
+        }
+
+        $category = is_scalar($category) ? trim((string) $category) : '';
+
+        if ('' === $category) {
+            $category = $this->suggest_category($question, $answer);
+        }
+
+        $keywords = is_scalar($keywords) ? trim((string) $keywords) : '';
+
+        if ('' === $keywords) {
+            $keywords = $this->suggest_keywords($question, $answer);
+        }
+
+        $faq_id = $this->faq_service->create(
+            array(
+                'category'      => $category,
+                'question'      => $question,
+                'answer'        => $answer,
+                'keywords'      => $keywords,
+                'status'        => 'inactive',
+                'source'        => 'ai_chat',
+                'source_log_id' => 0,
+                'review_status' => 'draft',
+                'sort_order'    => 100,
+                'admin_note'    => __('由後台「AI 對話」功能整理產生。上線前請務必核對事實正確性（AI 可能產生看似合理但不準確的內容），確認無誤後再啟用。', 'ur-ai-assistant'),
+            )
+        );
+
+        return absint($faq_id);
+    }
+
+    /**
      * 嘗試呼叫 OpenAI 產生草擬回答。
      *
      * 沿用既有的 UR_AI_OpenAI_Client::chat()——跟前台 FAQ 未命中時的補位

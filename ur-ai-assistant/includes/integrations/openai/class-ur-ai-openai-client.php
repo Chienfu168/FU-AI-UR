@@ -104,6 +104,201 @@ class UR_AI_OpenAI_Client {
     }
 
     /**
+     * 後台「AI 對話」：多輪對話，供管理者與 AI 助理腦力激盪知識庫內容
+     * 方向。與 chat() 的差異在於這裡帶入完整對話歷史（多輪），且使用
+     * 專屬的「對管理者說話」系統提示詞，而非對一般訪客的系統提示詞。
+     *
+     * @param array $messages 對話紀錄，格式為
+     *                        [['role'=>'user'|'assistant','content'=>string]]。
+     * @return array
+     */
+    public function chat_conversation($messages) {
+        $messages = $this->sanitize_conversation_messages($messages);
+
+        if (empty($messages)) {
+            return $this->error_result(
+                __('對話內容不可空白。', 'ur-ai-assistant'),
+                'empty_conversation'
+            );
+        }
+
+        $api_key = $this->get_api_key();
+
+        if ('' === $api_key) {
+            return $this->error_result(
+                __('尚未設定 OpenAI API Key。', 'ur-ai-assistant'),
+                'api_key_missing'
+            );
+        }
+
+        $payload = array(
+            'model'       => $this->get_model(),
+            'messages'    => array_merge(
+                array(
+                    array(
+                        'role'    => 'system',
+                        'content' => $this->admin_chat_system_prompt(),
+                    ),
+                ),
+                $messages
+            ),
+            'temperature' => $this->get_temperature(),
+            'max_tokens'  => $this->get_max_answer_tokens(),
+        );
+
+        /**
+         * Filter 後台 AI 對話用的 OpenAI payload。
+         *
+         * @param array $payload  OpenAI payload。
+         * @param array $messages 對話紀錄。
+         */
+        $payload = apply_filters('ur_ai_admin_chat_openai_payload', $payload, $messages);
+
+        $response = wp_remote_post(
+            self::API_ENDPOINT,
+            array(
+                'timeout' => 45,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ),
+                'body' => wp_json_encode($payload),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return $this->error_result($response->get_error_message(), 'wp_remote_error');
+        }
+
+        $status_code = absint(wp_remote_retrieve_response_code($response));
+        $body        = wp_remote_retrieve_body($response);
+
+        if ($status_code < 200 || $status_code >= 300) {
+            return $this->handle_api_error($body, $status_code);
+        }
+
+        $decoded = json_decode($body, true);
+
+        if (!is_array($decoded)) {
+            return $this->error_result(
+                __('OpenAI 回傳格式無法解析。', 'ur-ai-assistant'),
+                'invalid_json'
+            );
+        }
+
+        $answer = $this->extract_answer($decoded);
+
+        if ('' === trim($answer)) {
+            return $this->error_result(
+                __('OpenAI 回傳內容為空。', 'ur-ai-assistant'),
+                'empty_response'
+            );
+        }
+
+        return array(
+            'success'     => true,
+            'answer'      => $answer,
+            'model'       => isset($decoded['model']) ? sanitize_text_field($decoded['model']) : $this->get_model(),
+            'tokens_used' => $this->extract_tokens_used($decoded),
+        );
+    }
+
+    /**
+     * 後台「AI 對話」：把整段對話紀錄整理成適合收錄進 FAQ 知識庫的
+     * 「標準問題」／「固定回答」草稿建議（最多 5 則）。
+     *
+     * @param array $messages 對話紀錄，格式同 chat_conversation()。
+     * @return array 成功時包含 drafts（[['question'=>string,'answer'=>string]]），
+     *               失敗時包含 success=false 與 message。
+     */
+    public function summarize_conversation_to_faq_drafts($messages) {
+        $messages = $this->sanitize_conversation_messages($messages);
+
+        if (empty($messages)) {
+            return $this->error_result(
+                __('對話內容不可空白，無法整理草稿。', 'ur-ai-assistant'),
+                'empty_conversation'
+            );
+        }
+
+        $api_key = $this->get_api_key();
+
+        if ('' === $api_key) {
+            return $this->error_result(
+                __('尚未設定 OpenAI API Key。', 'ur-ai-assistant'),
+                'api_key_missing'
+            );
+        }
+
+        $payload = array(
+            'model'       => $this->get_model(),
+            'messages'    => array(
+                array(
+                    'role'    => 'system',
+                    'content' => $this->admin_chat_summarize_system_prompt(),
+                ),
+                array(
+                    'role'    => 'user',
+                    'content' => $this->format_conversation_transcript($messages),
+                ),
+            ),
+            'temperature' => 0.3,
+            'max_tokens'  => 1800,
+        );
+
+        /**
+         * Filter 後台 AI 對話「產生總結草稿」用的 OpenAI payload。
+         *
+         * @param array $payload  OpenAI payload。
+         * @param array $messages 對話紀錄。
+         */
+        $payload = apply_filters('ur_ai_admin_chat_summarize_openai_payload', $payload, $messages);
+
+        $response = wp_remote_post(
+            self::API_ENDPOINT,
+            array(
+                'timeout' => 45,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ),
+                'body' => wp_json_encode($payload),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return $this->error_result($response->get_error_message(), 'wp_remote_error');
+        }
+
+        $status_code = absint(wp_remote_retrieve_response_code($response));
+        $body        = wp_remote_retrieve_body($response);
+
+        if ($status_code < 200 || $status_code >= 300) {
+            return $this->handle_api_error($body, $status_code);
+        }
+
+        $decoded = json_decode($body, true);
+
+        if (!is_array($decoded)) {
+            return $this->error_result(
+                __('OpenAI 回傳格式無法解析。', 'ur-ai-assistant'),
+                'invalid_json'
+            );
+        }
+
+        $content = $this->extract_answer($decoded);
+
+        if ('' === trim($content)) {
+            return $this->error_result(
+                __('OpenAI 回傳內容為空。', 'ur-ai-assistant'),
+                'empty_response'
+            );
+        }
+
+        return $this->parse_faq_drafts_json($content);
+    }
+
+    /**
      * 依 FAQ 問答內容，請 OpenAI 產生一則選擇題草稿（供知識大考驗題庫使用）。
      *
      * 與 chat() 使用完全獨立的 system prompt 與 payload，不受後台「AI 助理
@@ -282,6 +477,186 @@ class UR_AI_OpenAI_Client {
             'correct_option' => $correct_option,
             'explanation'    => isset($data['explanation']) ? sanitize_textarea_field((string) $data['explanation']) : '',
             'difficulty'     => $difficulty,
+        );
+    }
+
+    /**
+     * 清理後台「AI 對話」的對話紀錄。
+     *
+     * 只保留 role 為 user／assistant、content 非空白的訊息；並限制帶入
+     * 的輪數上限，避免對話越聊越長時，每次呼叫都把完整歷史紀錄送給
+     * OpenAI，造成 token 用量與費用不成比例增加——超過上限時只保留
+     * 最近的訊息，捨棄最舊的內容。
+     *
+     * @param mixed $messages 前端送來的原始對話紀錄。
+     * @return array
+     */
+    private function sanitize_conversation_messages($messages) {
+        if (!is_array($messages)) {
+            return array();
+        }
+
+        $sanitized = array();
+
+        foreach ($messages as $message) {
+            if (!is_array($message)) {
+                continue;
+            }
+
+            $role = isset($message['role']) ? sanitize_key($message['role']) : '';
+
+            if (!in_array($role, array('user', 'assistant'), true)) {
+                continue;
+            }
+
+            $content = isset($message['content']) ? $this->sanitize_question($message['content']) : '';
+
+            if ('' === $content) {
+                continue;
+            }
+
+            $sanitized[] = array(
+                'role'    => $role,
+                'content' => $content,
+            );
+        }
+
+        $max_messages = 20;
+
+        if (count($sanitized) > $max_messages) {
+            $sanitized = array_slice($sanitized, -$max_messages);
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * 後台「AI 對話」的系統提示詞。
+     *
+     * 沿用目前啟用中產業別的人設與知識範圍（get_system_prompt()），
+     * 再疊加「對話對象是管理者、目的是腦力激盪知識庫內容」的補充
+     * 說明，確保不同產業別安裝時，這個後台對話功能討論的範圍會跟著
+     * 目前的產業別走，而不是固定寫死某一種產業的內容。
+     *
+     * @return string
+     */
+    private function admin_chat_system_prompt() {
+        $brand_name = class_exists('UR_AI_Industry_Profiles')
+            ? UR_AI_Industry_Profiles::get_active_brand_name()
+            : __('AI 助理', 'ur-ai-assistant');
+
+        return implode(
+            "\n",
+            array(
+                $this->get_system_prompt(),
+                '',
+                sprintf(
+                    /* translators: %s: 目前產業別的品牌名稱 */
+                    __('現在的對話對象是網站管理者，不是一般訪客，目的是協助管理者腦力激盪、討論「%s」知識庫（FAQ）還需要補充哪些內容。', 'ur-ai-assistant'),
+                    $brand_name
+                ),
+                __('請根據上述知識範圍，與管理者討論可能的常見問題、協助釐清正確的說明方式、或指出目前知識庫可能的缺口，可以主動提出建議的問題方向。', 'ur-ai-assistant'),
+                __('不確定的具體法規名稱、稅率、金額或期限數字，請明確告知管理者需要自行查證，不要為了讓回答看起來完整而自行捏造。', 'ur-ai-assistant'),
+                __('這是內部工作對話，不需要顧慮一般訪客的閱讀體驗，可以更直接、更有條理地列點討論。', 'ur-ai-assistant'),
+            )
+        );
+    }
+
+    /**
+     * 後台「AI 對話」的「產生總結草稿」系統提示詞，要求輸出嚴格 JSON
+     * 格式的 FAQ 草稿清單。
+     *
+     * @return string
+     */
+    private function admin_chat_summarize_system_prompt() {
+        return implode(
+            "\n",
+            array(
+                '你是知識庫內容整理助手。請閱讀提供的完整對話紀錄（管理者與 AI 助理討論知識庫內容方向的對話），',
+                '從中整理出適合直接收錄進 FAQ 知識庫的「標準問題」與「固定回答」草稿。',
+                '',
+                '整理原則：',
+                '1. 每一則草稿的「標準問題」應該是訪客可能會問的自然提問方式，不要直接複製對話裡管理者的口語提問或指示句。',
+                '2. 「固定回答」內容只能根據對話中實際討論過、有共識或有明確依據的內容整理，不可以自行延伸對話中沒有提到的具體數字、法規名稱或期限。',
+                '3. 如果對話中沒有討論出足夠明確的內容可以整理成一則完整的問答，就不要勉強生成，寧可少於預期則數，也不要生成內容空洞的草稿。',
+                '4. 最多整理 5 則，依討論的完整度與重要性排序。',
+                '',
+                '請務必只回傳一個 JSON 物件，不要包含任何 JSON 以外的文字、Markdown 標記或程式碼區塊符號，格式如下：',
+                '{"drafts":[{"question":"標準問題文字","answer":"固定回答文字"}]}',
+                '若對話內容完全不足以整理出任何一則草稿，請回傳 {"drafts":[]}。',
+            )
+        );
+    }
+
+    /**
+     * 把對話紀錄轉成給「產生總結草稿」用的純文字逐字稿。
+     *
+     * @param array $messages 已清理過的對話紀錄。
+     * @return string
+     */
+    private function format_conversation_transcript($messages) {
+        $lines = array();
+
+        foreach ($messages as $message) {
+            $speaker = 'assistant' === $message['role']
+                ? __('AI 助理', 'ur-ai-assistant')
+                : __('管理者', 'ur-ai-assistant');
+
+            $lines[] = $speaker . '：' . $message['content'];
+        }
+
+        return implode("\n\n", $lines);
+    }
+
+    /**
+     * 解析「產生總結草稿」的 JSON 回應，並做基本結構驗證。
+     *
+     * @param string $content OpenAI 回傳的文字內容。
+     * @return array
+     */
+    private function parse_faq_drafts_json($content) {
+        $content = trim($content);
+
+        // 部分模型仍會包住 ```json ... ``` 區塊，先行剝除。
+        $content = preg_replace('/^```(?:json)?/i', '', $content);
+        $content = preg_replace('/```$/', '', $content);
+        $content = trim($content);
+
+        $data = json_decode($content, true);
+
+        if (!is_array($data) || !isset($data['drafts']) || !is_array($data['drafts'])) {
+            return $this->error_result(
+                __('AI 回傳內容不是有效的 JSON 格式，無法自動整理草稿。', 'ur-ai-assistant'),
+                'invalid_summary_json'
+            );
+        }
+
+        $drafts = array();
+
+        foreach ($data['drafts'] as $draft) {
+            if (!is_array($draft)) {
+                continue;
+            }
+
+            $question = isset($draft['question']) && is_string($draft['question']) ? sanitize_textarea_field($draft['question']) : '';
+            $answer   = isset($draft['answer']) && is_string($draft['answer']) ? sanitize_textarea_field($draft['answer']) : '';
+
+            if ('' === trim($question) || '' === trim($answer)) {
+                continue;
+            }
+
+            $drafts[] = array(
+                'question' => $question,
+                'answer'   => $answer,
+            );
+        }
+
+        // 最多保留 5 則，避免單次整理出過多草稿造成後台審核負擔過重。
+        $drafts = array_slice($drafts, 0, 5);
+
+        return array(
+            'success' => true,
+            'drafts'  => $drafts,
         );
     }
 
