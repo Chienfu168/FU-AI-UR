@@ -26,6 +26,19 @@ if (!defined('ABSPATH')) {
 class UR_AI_FAQ_Article_Service {
 
     /**
+     * 來源 FAQ 問題＋回答的最低總字數門檻。
+     *
+     * 低於這個字數就直接擋下、不呼叫 AI：內容太薄的話，AI 擴寫時容易
+     * 為了湊出文章長度而自行「加油添醋」，增加內容失真的風險。門檻值
+     * 是依實際 FAQ 內容包（data/industry-packs/land_agent/faq.csv，
+     * 問題＋回答最短一筆 133 字、中位數 159 字）估算，刻意訂在明顯低於
+     * 中位數、但足以濾掉近乎空白／過度簡略內容的水準。
+     *
+     * @var int
+     */
+    const MIN_SOURCE_LENGTH = 120;
+
+    /**
      * FAQ Service。
      *
      * @var UR_AI_FAQ_Service|null
@@ -81,6 +94,16 @@ class UR_AI_FAQ_Article_Service {
             return $this->error(__('這則 FAQ 的問題或回答內容為空，無法產生文章。', 'ur-ai-assistant'));
         }
 
+        if ($this->source_length($question, $answer) < self::MIN_SOURCE_LENGTH) {
+            return $this->error(
+                sprintf(
+                    /* translators: %d: 最低字數門檻 */
+                    __('這則 FAQ 的問題與回答內容加總不足 %d 字，內容可能過於簡略，AI 擴寫時容易自行添加未經查證的內容。建議先補充這則 FAQ 的回答內容，再嘗試產生文章。', 'ur-ai-assistant'),
+                    self::MIN_SOURCE_LENGTH
+                )
+            );
+        }
+
         $result = $this->openai_client->generate_article_from_faq($question, $answer);
 
         if (empty($result['success'])) {
@@ -116,6 +139,19 @@ class UR_AI_FAQ_Article_Service {
             'post_id'  => $post_id,
             'edit_url' => (string) get_edit_post_link($post_id, 'raw'),
         );
+    }
+
+    /**
+     * 計算問題＋回答的總字數（先去除 HTML 標籤，避免標籤本身灌水字數）。
+     *
+     * @param string $question 問題。
+     * @param string $answer 回答。
+     * @return int
+     */
+    private function source_length($question, $answer) {
+        $text = wp_strip_all_tags($question) . wp_strip_all_tags($answer);
+
+        return function_exists('mb_strlen') ? mb_strlen(trim($text)) : strlen(trim($text));
     }
 
     /**

@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.27.0
+Stable tag: 1.27.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.27.1 =
+* 「產生文章草稿」功能新增最低字數門檻：FAQ 問題＋回答內容加總不足 120 字時，不會呼叫 AI，直接提示「內容可能過於簡略，建議先補充回答內容」，避免來源內容太薄、AI 擴寫時容易自行添加未經查證內容的風險。120 字的門檻依實際 FAQ 內容包的字數分布估算，明顯低於現有內容中位數，不會誤擋正常填寫的 FAQ。
 
 = 1.27.0 =
 * 新增「FAQ 知識庫管理」頁的「產生文章草稿」功能：針對任一則已審核的 FAQ 按下按鈕，AI 會把該則問答擴寫成一篇完整文章（僅根據 FAQ 內容延伸說明，不會捏造 FAQ 沒提到的具體法規名稱、稅率、金額或期限），以「草稿」狀態建立一篇 WordPress 文章，不會自動發布，需管理者在文章編輯畫面核對內容後再自行發布。按下按鈕會先跳出確認對話框，提醒此操作會呼叫 AI API（費用需自行負擔）。
