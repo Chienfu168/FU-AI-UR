@@ -52,6 +52,17 @@ class UR_AI_FAQ_Article_Service {
     const MIN_ARTICLE_LENGTH = 300;
 
     /**
+     * 一篇文章最多可以同時掛幾個分類。
+     *
+     * 使用者反映希望文章分類不要只能有一個，改成依比對分數由高到低
+     * 保留多個分類；設上限是為了避免關鍵字比對太寬鬆時，一次掛上一堆
+     * 關聯度其實不高的分類，讓分類清單失去篩選內容的意義。
+     *
+     * @var int
+     */
+    const MAX_CATEGORIES = 5;
+
+    /**
      * FAQ Service。
      *
      * @var UR_AI_FAQ_Service|null
@@ -143,9 +154,9 @@ class UR_AI_FAQ_Article_Service {
             );
         }
 
-        $category = $this->suggest_category($question, $answer);
-        $keywords = $this->suggest_keywords($question, $answer);
-        $tags     = array_filter(array_map('trim', explode(',', $keywords)));
+        $categories = $this->suggest_categories($question, $answer);
+        $keywords   = $this->suggest_keywords($question, $answer);
+        $tags       = array_filter(array_map('trim', explode(',', $keywords)));
 
         $content = $result['content'] . $this->disclaimer_paragraph($faq_id);
 
@@ -161,10 +172,10 @@ class UR_AI_FAQ_Article_Service {
             ),
         );
 
-        $category_id = $this->resolve_category_id($category);
+        $category_ids = $this->resolve_category_ids($categories);
 
-        if ($category_id > 0) {
-            $postarr['post_category'] = array($category_id);
+        if (!empty($category_ids)) {
+            $postarr['post_category'] = $category_ids;
         }
 
         $post_id = wp_insert_post($postarr, true);
@@ -176,11 +187,11 @@ class UR_AI_FAQ_Article_Service {
         $post_id = absint($post_id);
 
         return array(
-            'success'  => true,
-            'post_id'  => $post_id,
-            'edit_url' => (string) get_edit_post_link($post_id, 'raw'),
-            'category' => $category,
-            'keywords' => $keywords,
+            'success'    => true,
+            'post_id'    => $post_id,
+            'edit_url'   => (string) get_edit_post_link($post_id, 'raw'),
+            'categories' => $categories,
+            'keywords'   => $keywords,
         );
     }
 
@@ -210,19 +221,19 @@ class UR_AI_FAQ_Article_Service {
     }
 
     /**
-     * 依來源 FAQ 問答，建議這篇文章的分類（無法載入分類工具時退回
-     * 「待分類」，不中斷整個流程）。
+     * 依來源 FAQ 問答，建議這篇文章的分類（可能有多個，無法載入分類
+     * 工具時退回單一的「待分類」，不中斷整個流程）。
      *
      * @param string $question 問題。
      * @param string $answer 回答。
-     * @return string
+     * @return array 分類名稱陣列。
      */
-    private function suggest_category($question, $answer) {
+    private function suggest_categories($question, $answer) {
         if ($this->category_helper instanceof UR_AI_FAQ_Category_Helper) {
-            return $this->category_helper->suggest_category($question, $answer);
+            return $this->category_helper->suggest_categories($question, $answer, self::MAX_CATEGORIES);
         }
 
-        return '待分類';
+        return array('待分類');
     }
 
     /**
@@ -239,6 +250,27 @@ class UR_AI_FAQ_Article_Service {
         }
 
         return '';
+    }
+
+    /**
+     * 把多個分類名稱依序轉換成 WordPress 分類 term_id，過濾掉無法解析
+     * （例如「待分類」）的項目。
+     *
+     * @param array $categories 分類名稱陣列。
+     * @return array term_id 陣列（已去除重複與 0）。
+     */
+    private function resolve_category_ids($categories) {
+        $ids = array();
+
+        foreach ((array) $categories as $category) {
+            $id = $this->resolve_category_id($category);
+
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     /**

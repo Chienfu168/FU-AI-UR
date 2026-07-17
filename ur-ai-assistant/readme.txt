@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.31.0
+Stable tag: 1.32.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.32.0 =
+* 「產生文章草稿」的分類建議從只能單一分類，改為可依比對分數由高到低同時建議並套用最多 5 個分類（分數過低、比對不到關鍵字的分類仍不會出現）。判斷依據沿用來源 FAQ 問題與回答的內容，不是分析 AI 產生的文章內文，維持既有的可靠度。成功訊息會列出全部套用的分類。
 
 = 1.31.0 =
 * 為未來的「代管 AI 服務」鋪路：新增「AI 服務來源」設定（「功能設定」頁「AI API 設定」卡片），預設「自行提供 OpenAI API Key」，行為與升級前完全相同；若選擇「使用代管服務」，可填入代管服務提供的端點網址與授權碼，屆時所有 AI 呼叫（問答、AI 對話、知識大考驗出題、文章草稿）都會改呼叫該端點，不再使用 OpenAI 官方端點與自行填寫的 API Key。此版本僅新增這個可切換的設定選項，尚未提供實際的代管服務。
