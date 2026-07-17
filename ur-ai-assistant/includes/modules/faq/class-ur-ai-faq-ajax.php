@@ -70,11 +70,11 @@ class UR_AI_FAQ_Ajax {
 
         wp_send_json_success(
             array(
-                'post_id'  => $result['post_id'],
-                'edit_url' => $result['edit_url'],
-                'category' => isset($result['category']) ? $result['category'] : '',
-                'keywords' => isset($result['keywords']) ? $result['keywords'] : '',
-                'message'  => $this->build_success_message($result),
+                'post_id'    => $result['post_id'],
+                'edit_url'   => $result['edit_url'],
+                'categories' => isset($result['categories']) ? $result['categories'] : array(),
+                'keywords'   => isset($result['keywords']) ? $result['keywords'] : '',
+                'message'    => $this->build_success_message($result),
             )
         );
     }
@@ -87,17 +87,21 @@ class UR_AI_FAQ_Ajax {
      * @return string
      */
     private function build_success_message($result) {
-        $category = !empty($result['category']) && '待分類' !== $result['category'] ? $result['category'] : '';
-        $keywords = !empty($result['keywords']) ? $result['keywords'] : '';
+        $categories = isset($result['categories']) && is_array($result['categories']) ? $result['categories'] : array();
+        $categories = array_filter($categories, function ($category) {
+            return '待分類' !== $category;
+        });
+        $category_text = !empty($categories) ? implode('、', $categories) : '';
+        $keywords      = !empty($result['keywords']) ? $result['keywords'] : '';
 
-        if ('' === $category && '' === $keywords) {
+        if ('' === $category_text && '' === $keywords) {
             return __('已產生文章草稿，請於文章編輯畫面核對內容後再發布。', 'ur-ai-assistant');
         }
 
         return sprintf(
-            /* translators: 1: 建議分類 2: 建議標籤 */
+            /* translators: 1: 建議分類（可能多個，以頓號分隔） 2: 建議標籤 */
             __('已產生文章草稿（分類：%1$s／標籤：%2$s），請於文章編輯畫面核對內容後再發布。', 'ur-ai-assistant'),
-            '' !== $category ? $category : __('未分類', 'ur-ai-assistant'),
+            '' !== $category_text ? $category_text : __('未分類', 'ur-ai-assistant'),
             '' !== $keywords ? $keywords : __('無', 'ur-ai-assistant')
         );
     }

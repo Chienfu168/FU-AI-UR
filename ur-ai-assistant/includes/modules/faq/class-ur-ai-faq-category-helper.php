@@ -117,6 +117,59 @@ class UR_AI_FAQ_Category_Helper {
     }
 
     /**
+     * 建議分類（多選版）。
+     *
+     * 跟 suggest_category() 用同一套比對邏輯，差別是不只留下分數最高
+     * 的單一分類，而是把所有分數 > 0 的分類依分數由高到低排序後回傳
+     * （最多保留 $max 個），供需要「一篇內容可以同時掛多個分類」的
+     * 情境使用（例如 FAQ 擴寫成文章時，文章本身在 WordPress 可以有
+     * 多個分類）。
+     *
+     * @param string $question 問題。
+     * @param string $answer 回答。
+     * @param int    $max 最多保留幾個分類。
+     * @return array 分類名稱陣列；比對不到任何分類時回傳 array('待分類')。
+     */
+    public function suggest_categories($question, $answer = '', $max = 5) {
+        $text = $this->normalize_text($question . ' ' . $answer);
+        $max  = max(1, absint($max));
+
+        if ('' === $text) {
+            return array('待分類');
+        }
+
+        $scores = array();
+
+        foreach ($this->category_rules as $category => $keywords) {
+            $score = 0;
+
+            foreach ($keywords as $keyword) {
+                $keyword = $this->normalize_text($keyword);
+
+                if ('' === $keyword) {
+                    continue;
+                }
+
+                if ($this->contains($text, $keyword)) {
+                    $score += $this->keyword_weight($keyword);
+                }
+            }
+
+            if ($score > 0) {
+                $scores[$category] = $score;
+            }
+        }
+
+        if (empty($scores)) {
+            return array('待分類');
+        }
+
+        arsort($scores);
+
+        return array_slice(array_keys($scores), 0, $max);
+    }
+
+    /**
      * 建議關鍵字。
      *
      * @param string $question 問題。
