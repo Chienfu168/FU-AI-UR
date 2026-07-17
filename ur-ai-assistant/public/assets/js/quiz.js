@@ -281,7 +281,22 @@
 					wrap.appendChild(explanation);
 				}
 
-				if (!item.is_correct && item.faq_question) {
+				if (!item.is_correct && item.article_url && item.faq_question) {
+					var articleHint = document.createElement('p');
+					articleHint.className = 'ur-ai-quiz-review-faq ur-ai-quiz-review-article';
+					articleHint.appendChild(
+						document.createTextNode(format(CFG.i18n.review_article_prefix, item.faq_category || '') + ' ')
+					);
+
+					var articleLink = document.createElement('a');
+					articleLink.href = item.article_url;
+					articleLink.target = '_blank';
+					articleLink.rel = 'noopener noreferrer';
+					articleLink.textContent = item.faq_question;
+					articleHint.appendChild(articleLink);
+
+					wrap.appendChild(articleHint);
+				} else if (!item.is_correct && item.faq_question) {
 					var faqHint = document.createElement('p');
 					faqHint.className = 'ur-ai-quiz-review-faq';
 					faqHint.textContent = format(CFG.i18n.review_faq, item.faq_category || '', item.faq_question);

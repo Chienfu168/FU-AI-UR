@@ -329,6 +329,9 @@ class UR_AI_Ajax_Module {
             'related_pages'       => isset($result['related_pages']) && is_array($result['related_pages'])
                 ? $this->format_related_pages($result['related_pages'])
                 : array(),
+            'related_faqs'        => isset($result['related_faqs']) && is_array($result['related_faqs'])
+                ? $this->format_related_faqs($result['related_faqs'])
+                : array(),
         );
     }
 
@@ -375,6 +378,37 @@ class UR_AI_Ajax_Module {
                 'description' => isset($page['description']) ? sanitize_textarea_field($page['description']) : '',
                 'category'    => isset($page['category']) ? sanitize_text_field($page['category']) : '',
                 'match_score' => isset($page['match_score']) ? absint($page['match_score']) : 0,
+            );
+        }
+
+        return $items;
+    }
+
+    /**
+     * 格式化相關 FAQ 資料。
+     *
+     * @param array $faqs 相關 FAQ。
+     * @return array
+     */
+    private function format_related_faqs($faqs) {
+        $items = array();
+
+        foreach ($faqs as $faq) {
+            if (!is_array($faq)) {
+                continue;
+            }
+
+            $id       = isset($faq['id']) ? absint($faq['id']) : 0;
+            $question = isset($faq['question']) ? sanitize_text_field($faq['question']) : '';
+
+            if ($id <= 0 || '' === $question) {
+                continue;
+            }
+
+            $items[] = array(
+                'id'       => $id,
+                'question' => $question,
+                'category' => isset($faq['category']) ? sanitize_text_field($faq['category']) : '',
             );
         }
 

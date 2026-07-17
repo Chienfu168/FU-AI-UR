@@ -225,6 +225,8 @@ class UR_AI_Quiz_Module {
                         '%2$s',
                         class_exists('UR_AI_Industry_Profiles') ? UR_AI_Industry_Profiles::get_active_brand_name() : __('都更AI助理', 'ur-ai-assistant')
                     ),
+                    /* translators: %1$s: FAQ 分類（前台以 JS 帶入）。連結文字（FAQ 問題）由前台另外附加。 */
+                    'review_article_prefix' => __('這則問題有更完整的文章可以複習（%1$s）：', 'ur-ai-assistant'),
                 ),
             )
         );

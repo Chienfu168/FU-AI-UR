@@ -286,6 +286,55 @@ class UR_AI_FAQ_Service {
     }
 
     /**
+     * 依分類找出相關 FAQ（排除自己），供前台問答助理在回答下方推薦
+     * 「你也許想知道」的其他相關問答。
+     *
+     * @param int    $faq_id 目前這則 FAQ 的 ID（會被排除）。
+     * @param string $category 分類名稱。
+     * @param int    $limit 最多回傳幾筆。
+     * @return array
+     */
+    public function find_related($faq_id, $category, $limit = 3) {
+        if (!$this->repository instanceof UR_AI_FAQ_Repository) {
+            return array();
+        }
+
+        $faq_id   = absint($faq_id);
+        $category = trim((string) $category);
+        $limit    = max(1, absint($limit));
+
+        if ('' === $category) {
+            return array();
+        }
+
+        $rows = $this->repository->query(
+            array(
+                'category' => $category,
+                'status'   => 'active',
+                'orderby'  => 'hit_count',
+                'order'    => 'DESC',
+                'limit'    => $limit + 1,
+            )
+        );
+
+        $related = array();
+
+        foreach ($rows as $row) {
+            if (absint($row->id) === $faq_id) {
+                continue;
+            }
+
+            $related[] = $row;
+
+            if (count($related) >= $limit) {
+                break;
+            }
+        }
+
+        return $related;
+    }
+
+    /**
      * 計算 FAQ 數量。
      *
      * @param array $args 查詢參數。
