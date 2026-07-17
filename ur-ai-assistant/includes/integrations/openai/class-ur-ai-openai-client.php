@@ -24,19 +24,6 @@ class UR_AI_OpenAI_Client {
     const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
     /**
-     * 「AI 對話」產生總結草稿時，每則草稿「固定回答」的最低字數門檻。
-     *
-     * 使用者回報實際使用時，AI 整理出來的草稿「固定回答」內容常常過於
-     * 精簡（例如只有一句話帶過），品質不足以直接收錄進知識庫。低於這個
-     * 字數的草稿會直接捨棄（不整理進最終結果），迫使 AI 要嘛把答案寫得
-     * 完整一點，要嘛乾脆不勉強整理這一則——與既有「寧可少於預期則數，
-     * 也不要生成內容空洞的草稿」的系統提示詞原則一致。
-     *
-     * @var int
-     */
-    const MIN_FAQ_DRAFT_ANSWER_LENGTH = 60;
-
-    /**
      * 呼叫 OpenAI Chat API。
      *
      * @param string $question 使用者問題。
@@ -746,6 +733,8 @@ class UR_AI_OpenAI_Client {
      * @return string
      */
     private function admin_chat_summarize_system_prompt() {
+        $min_length = $this->get_min_faq_draft_answer_length();
+
         return implode(
             "\n",
             array(
@@ -755,7 +744,11 @@ class UR_AI_OpenAI_Client {
                 '整理原則：',
                 '1. 每一則草稿的「標準問題」應該是訪客可能會問的自然提問方式，不要直接複製對話裡管理者的口語提問或指示句。',
                 '2. 「固定回答」內容只能根據對話中實際討論過、有共識或有明確依據的內容整理，不可以自行延伸對話中沒有提到的具體數字、法規名稱或期限。',
-                '3. 「固定回答」必須是完整、具體的一段說明，至少涵蓋 2～3 句完整內容（例如：結論＋原因或條件＋注意事項），讓訪客不需要再追問就能理解重點；不可以只用一句話簡短帶過（例如「需要準備相關文件即可」這種沒有具體內容的空泛回答）。',
+                sprintf(
+                    /* translators: %d: 固定回答最低字數門檻 */
+                    __('3. 「固定回答」必須是完整、具體的一段說明，至少 %d 字以上（建議涵蓋 2～3 句完整內容，例如：結論＋原因或條件＋注意事項），讓訪客不需要再追問就能理解重點；不可以只用一句話簡短帶過（例如「需要準備相關文件即可」這種沒有具體內容的空泛回答）。', 'ur-ai-assistant'),
+                    $min_length
+                ),
                 '4. 如果對話中沒有討論出足夠明確、足夠完整的內容可以整理成一則完整的問答，就不要勉強生成，寧可少於預期則數，也不要生成內容空洞或過於簡略的草稿。',
                 '5. 最多整理 5 則，依討論的完整度與重要性排序。',
                 '',
@@ -823,7 +816,7 @@ class UR_AI_OpenAI_Client {
                 continue;
             }
 
-            if ($this->text_length($answer) < self::MIN_FAQ_DRAFT_ANSWER_LENGTH) {
+            if ($this->text_length($answer) < $this->get_min_faq_draft_answer_length()) {
                 continue;
             }
 
@@ -979,6 +972,24 @@ class UR_AI_OpenAI_Client {
         }
 
         return 'gpt-4o-mini';
+    }
+
+    /**
+     * 「AI 對話」產生總結草稿時，每則草稿「固定回答」的最低字數門檻。
+     *
+     * 開放後台調整（「功能設定」頁，鍵名 admin_chat_min_draft_answer_
+     * length），不同網站經營者對「多短算太精簡」的標準不一定相同。
+     * 預設 60 字沿用這個防護機制剛上線時依實際 FAQ 內容包長度估算的
+     * 水準。
+     *
+     * @return int
+     */
+    private function get_min_faq_draft_answer_length() {
+        if (class_exists('UR_AI_Settings')) {
+            return UR_AI_Settings::get_admin_chat_min_draft_answer_length();
+        }
+
+        return 60;
     }
 
     /**

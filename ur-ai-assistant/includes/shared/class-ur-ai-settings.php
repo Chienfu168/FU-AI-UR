@@ -375,6 +375,29 @@ class UR_AI_Settings {
     }
 
     /**
+     * 「AI 對話」產生總結草稿時，每則草稿「固定回答」的最低字數門檻。
+     *
+     * 不同網站經營者對「怎樣算太精簡」的標準可能不同，因此開放後台
+     * 調整，而不是寫死在程式碼裡；預設值 60 字沿用這個防護機制剛上線
+     * 時依實際 FAQ 內容包長度估算的水準。
+     *
+     * @return int
+     */
+    public static function get_admin_chat_min_draft_answer_length() {
+        $length = absint(self::get('admin_chat_min_draft_answer_length', 60));
+
+        if ($length < 20) {
+            $length = 20;
+        }
+
+        if ($length > 500) {
+            $length = 500;
+        }
+
+        return $length;
+    }
+
+    /**
      * 預設設定。
      *
      * @return array
@@ -409,6 +432,8 @@ class UR_AI_Settings {
             'kb_browse_per_page'  => 10,
 
             'cost_per_million_tokens' => 0.5,
+
+            'admin_chat_min_draft_answer_length' => 60,
         );
     }
 
@@ -569,6 +594,19 @@ class UR_AI_Settings {
                 }
 
                 return $rate;
+
+            case 'admin_chat_min_draft_answer_length':
+                $length = absint($value);
+
+                if ($length < 20) {
+                    $length = 20;
+                }
+
+                if ($length > 500) {
+                    $length = 500;
+                }
+
+                return $length;
 
             default:
                 if (is_scalar($value)) {

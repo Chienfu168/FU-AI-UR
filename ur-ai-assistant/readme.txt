@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.29.0
+Stable tag: 1.30.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.30.0 =
+* 「AI 對話」產生總結草稿的「固定回答最低字數」門檻（v1.29.0 新增，原本寫死 60 字）改為「功能設定」頁可調整的設定：新增「AI 輔助內容品質控管」卡片，可依您對內容品質的要求自行調整字數門檻（20～500 字），系統提示詞也會依設定的字數動態調整用詞。預設值維持 60 字，未調整前行為與 v1.29.0 完全相同。
 
 = 1.29.0 =
 * 修正「AI 對話」產生總結草稿時，固定回答內容常常過於精簡（一句話帶過）的品質問題：加強系統提示詞，明確要求固定回答至少涵蓋 2～3 句完整說明（結論＋原因或條件＋注意事項），不可只用一句話帶過；同時新增 60 字最低字數把關，回答內容不足門檻的草稿會直接捨棄，不會出現在整理結果中，寧可少於 5 則，也不會出現內容空洞的草稿。
