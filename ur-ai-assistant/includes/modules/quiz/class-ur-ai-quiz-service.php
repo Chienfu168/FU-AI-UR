@@ -52,11 +52,19 @@ class UR_AI_Quiz_Service {
     private $faq_service;
 
     /**
+     * FAQ 文章草稿服務，用於反查該 FAQ 是否已有發布的文章可優先連結。
+     *
+     * @var UR_AI_FAQ_Article_Service|null
+     */
+    private $article_service;
+
+    /**
      * 建構子。
      */
     public function __construct() {
-        $this->repository  = class_exists('UR_AI_Quiz_Repository') ? new UR_AI_Quiz_Repository() : null;
-        $this->faq_service = class_exists('UR_AI_FAQ_Service') ? new UR_AI_FAQ_Service() : null;
+        $this->repository      = class_exists('UR_AI_Quiz_Repository') ? new UR_AI_Quiz_Repository() : null;
+        $this->faq_service      = class_exists('UR_AI_FAQ_Service') ? new UR_AI_FAQ_Service() : null;
+        $this->article_service  = class_exists('UR_AI_FAQ_Article_Service') ? new UR_AI_FAQ_Article_Service() : null;
     }
 
     /* =====================================================================
@@ -306,6 +314,19 @@ class UR_AI_Quiz_Service {
                 if ($faq && 'active' === $faq->status) {
                     $review_item['faq_question'] = (string) $faq->question;
                     $review_item['faq_category'] = (string) $faq->category;
+
+                    /*
+                     * 這則 FAQ 若已經被擴寫成一篇文章且已發布，複習時優先
+                     * 連結內容更完整的文章；沒有發布過文章時，前端會退回
+                     * 顯示既有的純文字 FAQ 提示，行為與升級前完全相同。
+                     */
+                    if ($this->article_service instanceof UR_AI_FAQ_Article_Service) {
+                        $article_url = $this->article_service->find_published_article_url($faq_id);
+
+                        if ('' !== $article_url) {
+                            $review_item['article_url'] = $article_url;
+                        }
+                    }
                 }
             }
 

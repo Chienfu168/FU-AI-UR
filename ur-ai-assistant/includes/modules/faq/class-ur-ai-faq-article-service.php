@@ -93,6 +93,46 @@ class UR_AI_FAQ_Article_Service {
     }
 
     /**
+     * 依來源 FAQ ID，反查是否有一篇「已發布」的文章是由這則 FAQ 產生的。
+     *
+     * 只承認已發布（`publish`）的文章：由「產生文章草稿」建立的文章
+     * 一律先是草稿，只有管理者親自審核、編輯並發布後，才代表這篇內容
+     * 已經確認可以公開呈現給訪客——與外掛既有「AI 產生的內容一律需
+     * 人工審核」原則一致，不會讓還沒審過的草稿內容意外被前台其他
+     * 功能（例如知識大考驗答錯複習連結）引用出去。
+     *
+     * @param int $faq_id 來源 FAQ ID。
+     * @return string 已發布文章的網址；找不到時回傳空字串。
+     */
+    public function find_published_article_url($faq_id) {
+        $faq_id = absint($faq_id);
+
+        if ($faq_id <= 0 || !class_exists('WP_Query')) {
+            return '';
+        }
+
+        $query = new WP_Query(
+            array(
+                'post_type'      => 'post',
+                'post_status'    => 'publish',
+                'meta_key'       => '_ur_ai_source_faq_id',
+                'meta_value'     => $faq_id,
+                'posts_per_page' => 1,
+                'no_found_rows'  => true,
+                'fields'         => 'ids',
+            )
+        );
+
+        if (empty($query->posts)) {
+            return '';
+        }
+
+        $url = get_permalink($query->posts[0]);
+
+        return is_string($url) ? $url : '';
+    }
+
+    /**
      * 依指定 FAQ 建立一篇文章草稿。
      *
      * @param int $faq_id FAQ ID。

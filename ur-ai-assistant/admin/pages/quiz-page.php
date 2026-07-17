@@ -179,6 +179,28 @@ if (class_exists('UR_AI_FAQ_Service')) {
     );
 }
 
+/*
+ * 「AI 依文章出題」候選清單：只列出由本外掛「產生文章草稿」建立、
+ * 已發布的文章（透過 `_ur_ai_source_faq_id` meta 判斷），不接受任意
+ * WordPress 文章，維持出題內容一律有經人工審核過的來源可回溯。
+ */
+$article_candidates = array();
+if (class_exists('WP_Query')) {
+    $article_query = new WP_Query(
+        array(
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'meta_key'       => '_ur_ai_source_faq_id',
+            'posts_per_page' => 200,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+            'no_found_rows'  => true,
+        )
+    );
+
+    $article_candidates = $article_query->posts;
+}
+
 $base_url     = admin_url('admin.php?page=ur-ai-assistant-quiz');
 $settings_url = admin_url('admin.php?page=ur-ai-assistant-settings');
 
@@ -353,6 +375,61 @@ if (class_exists('UR_AI_Settings')) {
                                     <span>
                                         <span class="ur-ai-badge ur-ai-badge-info"><?php echo esc_html($faq->category); ?></span>
                                         <?php echo esc_html(wp_trim_words(wp_strip_all_tags($faq->question), 20)); ?>
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="ur-ai-form-help"><?php echo esc_html__('可複選多筆一次產生。', 'ur-ai-assistant'); ?></p>
+                    </div>
+
+                    <div class="ur-ai-form-actions">
+                        <button type="submit" class="button button-primary">
+                            <?php echo esc_html__('產生題目草稿', 'ur-ai-assistant'); ?>
+                        </button>
+                    </div>
+                </form>
+            <?php endif; ?>
+        </div>
+
+        <div class="ur-ai-card">
+            <div class="ur-ai-card-header">
+                <div>
+                    <h2 class="ur-ai-card-title"><?php echo esc_html__('AI 依文章出題', 'ur-ai-assistant'); ?></h2>
+                    <p class="ur-ai-card-description">
+                        <?php echo esc_html__('勾選由「產生文章草稿」建立、且已發布的文章，AI 會依文章的完整內容（通常比原始 FAQ 回答更豐富）產生選擇題草稿。草稿一律為「停用／待審核」狀態，需人工審核通過後才會上線。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <?php if (!$api_key_set) : ?>
+                <div class="notice notice-warning inline">
+                    <p>
+                        <strong><?php echo esc_html__('尚未設定 OpenAI API Key，AI 出題會失敗。', 'ur-ai-assistant'); ?></strong>
+                        <a href="<?php echo esc_url($settings_url); ?>"><?php echo esc_html__('前往「功能設定」填入 API Key', 'ur-ai-assistant'); ?></a>
+                    </p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (empty($article_candidates)) : ?>
+                <p class="ur-ai-muted"><?php echo esc_html__('目前沒有已發布的文章可供出題，請先至「FAQ 知識庫」使用「產生文章草稿」建立文章，並於文章編輯畫面核對後發布。', 'ur-ai-assistant'); ?></p>
+            <?php else : ?>
+                <form method="post" class="ur-ai-admin-form">
+                    <?php
+                    if (class_exists('UR_AI_Security')) {
+                        UR_AI_Security::admin_form_nonce_field();
+                    } else {
+                        wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                    }
+                    ?>
+                    <input type="hidden" name="ur_ai_quiz_action" value="generate_ai_draft_from_article">
+
+                    <div class="ur-ai-form-row">
+                        <div class="ur-ai-quiz-faq-picker">
+                            <?php foreach ($article_candidates as $article) : ?>
+                                <label class="ur-ai-quiz-faq-picker-item">
+                                    <input type="checkbox" name="post_ids[]" value="<?php echo esc_attr(absint($article->ID)); ?>">
+                                    <span>
+                                        <?php echo esc_html(wp_trim_words(wp_strip_all_tags($article->post_title), 20)); ?>
                                     </span>
                                 </label>
                             <?php endforeach; ?>

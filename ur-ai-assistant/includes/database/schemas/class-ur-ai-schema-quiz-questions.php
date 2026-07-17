@@ -152,8 +152,9 @@ class UR_AI_Schema_Quiz_Questions {
      */
     public static function get_sources() {
         return array(
-            'manual' => __('手動建立', 'ur-ai-assistant'),
-            'ai_faq' => __('AI 依 FAQ 產生', 'ur-ai-assistant'),
+            'manual'     => __('手動建立', 'ur-ai-assistant'),
+            'ai_faq'     => __('AI 依 FAQ 產生', 'ur-ai-assistant'),
+            'ai_article' => __('AI 依文章產生', 'ur-ai-assistant'),
         );
     }
 }

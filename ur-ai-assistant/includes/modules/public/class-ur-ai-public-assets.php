@@ -195,6 +195,7 @@ class UR_AI_Public_Assets {
             'your_question'               => __('你的問題', 'ur-ai-assistant'),
             'assistant_answer'            => __('AI 助理回答', 'ur-ai-assistant'),
             'related_title'               => __('你也許想知道', 'ur-ai-assistant'),
+            'related_faqs_title'          => __('你也許還想知道', 'ur-ai-assistant'),
 
             'print_button'                => __('列印', 'ur-ai-assistant'),
             'print_button_aria'           => __('列印這則問答', 'ur-ai-assistant'),

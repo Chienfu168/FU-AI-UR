@@ -45,6 +45,13 @@ class UR_AI_Answer_Service {
     private $related_service = null;
 
     /**
+     * FAQ Service，用於在 FAQ 命中回答下方推薦其他相關 FAQ。
+     *
+     * @var UR_AI_FAQ_Service|null
+     */
+    private $faq_service = null;
+
+    /**
      * 建構子。
      */
     public function __construct() {
@@ -62,6 +69,10 @@ class UR_AI_Answer_Service {
 
         $this->related_service = class_exists('UR_AI_Related_Page_Service')
             ? new UR_AI_Related_Page_Service()
+            : null;
+
+        $this->faq_service = class_exists('UR_AI_FAQ_Service')
+            ? new UR_AI_FAQ_Service()
             : null;
     }
 
@@ -162,10 +173,39 @@ class UR_AI_Answer_Service {
             'faq_id'              => $faq_id,
             'faq_match_score'     => $score,
             'related_pages'       => $related_pages,
+            'related_faqs'        => $this->find_related_faqs($faq_id, (string) $this->get_value($faq, 'category', '')),
             'log_id'              => $log_id,
             'message'             => '',
             'status_code'         => 200,
         );
+    }
+
+    /**
+     * 依目前命中的 FAQ 分類，推薦其他相關 FAQ（供回答下方「你也許
+     * 還想知道」使用），依命中次數由高到低排序。
+     *
+     * @param int    $faq_id 目前命中的 FAQ ID（會被排除）。
+     * @param string $category 分類名稱。
+     * @return array
+     */
+    private function find_related_faqs($faq_id, $category) {
+        if (!$this->faq_service instanceof UR_AI_FAQ_Service) {
+            return array();
+        }
+
+        $rows = $this->faq_service->find_related($faq_id, $category, 3);
+
+        $related_faqs = array();
+
+        foreach ($rows as $row) {
+            $related_faqs[] = array(
+                'id'       => absint($this->get_value($row, 'id', 0)),
+                'question' => (string) $this->get_value($row, 'question', ''),
+                'category' => (string) $this->get_value($row, 'category', ''),
+            );
+        }
+
+        return $related_faqs;
     }
 
     /**

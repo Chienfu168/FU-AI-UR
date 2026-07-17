@@ -94,6 +94,10 @@ class UR_AI_Quiz_Admin {
                 $this->handle_generate_ai_draft();
                 break;
 
+            case 'generate_ai_draft_from_article':
+                $this->handle_generate_ai_draft_from_article();
+                break;
+
             case 'save_settings':
                 $this->handle_save_settings();
                 break;
@@ -373,6 +377,35 @@ class UR_AI_Quiz_Admin {
         }
 
         $result = $this->draft_service->generate_batch($faq_ids);
+
+        $this->redirect_with_message(
+            $result['created'] > 0 ? 'ai_draft_generated' : 'ai_draft_failed',
+            $result['created'] > 0 ? 'updated' : 'error',
+            array(
+                'created' => $result['created'],
+                'failed'  => $result['failed'],
+            )
+        );
+    }
+
+    /**
+     * 依選定的文章批次產生 AI 題目草稿。
+     *
+     * @return void
+     */
+    private function handle_generate_ai_draft_from_article() {
+        if (!$this->draft_service instanceof UR_AI_Quiz_Draft_Service) {
+            $this->redirect_with_message('quiz_draft_service_missing', 'error');
+        }
+
+        $post_ids = isset($_POST['post_ids']) ? (array) wp_unslash($_POST['post_ids']) : array();
+        $post_ids = class_exists('UR_AI_Security') ? UR_AI_Security::sanitize_ids($post_ids) : array_map('absint', $post_ids);
+
+        if (empty($post_ids)) {
+            $this->redirect_with_message('no_articles_selected', 'error');
+        }
+
+        $result = $this->draft_service->generate_batch_from_articles($post_ids);
 
         $this->redirect_with_message(
             $result['created'] > 0 ? 'ai_draft_generated' : 'ai_draft_failed',
@@ -735,6 +768,7 @@ class UR_AI_Quiz_Admin {
             'attempt_deleted'           => __('排行榜紀錄已刪除。', 'ur-ai-assistant'),
             'attempt_delete_failed'     => __('排行榜紀錄刪除失敗。', 'ur-ai-assistant'),
             'no_faqs_selected'          => __('請先選擇要出題的 FAQ。', 'ur-ai-assistant'),
+            'no_articles_selected'      => __('請先選擇要出題的文章。', 'ur-ai-assistant'),
             'ai_draft_generated'        => __('AI 出題完成，請至下方題庫審核。', 'ur-ai-assistant'),
             'ai_draft_failed'           => __('AI 出題失敗，請確認已設定 OpenAI API Key 後再試。', 'ur-ai-assistant'),
             'settings_saved'            => __('設定已儲存。', 'ur-ai-assistant'),

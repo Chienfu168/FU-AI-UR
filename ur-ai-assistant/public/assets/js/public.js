@@ -13,6 +13,7 @@
         error: '.ur-ai-error',
         popularButton: '.ur-ai-popular-button',
         relatedLink: '.ur-ai-related-link',
+        relatedFaqButton: '.ur-ai-related-faq-button',
         feedbackButton: '.ur-ai-feedback-button',
         feedbackReasonWrap: '.ur-ai-feedback-reason',
         feedbackReason: '.ur-ai-feedback-reason-select',
@@ -369,6 +370,40 @@
         return html;
     }
 
+    function renderRelatedFaqs(relatedFaqs) {
+        if (!Array.isArray(relatedFaqs) || relatedFaqs.length === 0) {
+            return '';
+        }
+
+        let html = '';
+
+        html += '<div class="ur-ai-related ur-ai-related-faqs">';
+        html += '<h3 class="ur-ai-related-title">' + escapeHtml(getI18n('related_faqs_title', '你也許還想知道')) + '</h3>';
+        html += '<ul class="ur-ai-related-list">';
+
+        relatedFaqs.forEach(function (faq) {
+            const id = faq.id || 0;
+            const question = faq.question || '';
+            const category = faq.category || '';
+
+            html += '<li class="ur-ai-related-item">';
+            html += '<button type="button" class="ur-ai-related-link ur-ai-related-faq-button" data-faq-id="' + escapeHtml(id) + '" data-question="' + escapeHtml(question) + '">';
+
+            if (category) {
+                html += '<span class="ur-ai-related-category">' + escapeHtml(category) + '</span>';
+            }
+
+            html += '<span class="ur-ai-related-heading">' + escapeHtml(question) + '</span>';
+            html += '</button>';
+            html += '</li>';
+        });
+
+        html += '</ul>';
+        html += '</div>';
+
+        return html;
+    }
+
     function renderFeedback(logId) {
         if (!logId) {
             return '';
@@ -423,6 +458,7 @@
         const mainAnswerLabel = getAnswerMainLabel(answerSource, answerSourceLabel);
         const logId = data.log_id || 0;
         const relatedPages = data.related_pages || [];
+        const relatedFaqs = data.related_faqs || [];
 
         let html = '';
 
@@ -459,6 +495,7 @@
         html += '</div>';
 
         html += renderRelatedPages(relatedPages);
+        html += renderRelatedFaqs(relatedFaqs);
         html += renderFeedback(logId);
 
         html += '</div>';
@@ -539,6 +576,19 @@
 
         if (questionId > 0) {
             trackPopularQuestionClick(questionId);
+        }
+
+        $wrapper.find(selectors.input).val(question).trigger('input');
+        submitQuestion($wrapper, String(question).trim());
+    }
+
+    function handleRelatedFaqClick() {
+        const $button = $(this);
+        const $wrapper = $button.closest(selectors.wrapper);
+        const question = $button.data('question') || '';
+
+        if (!question) {
+            return;
         }
 
         $wrapper.find(selectors.input).val(question).trigger('input');
@@ -971,6 +1021,7 @@
         $(document).on('click', selectors.clear, handleClearClick);
         $(document).on('click', selectors.popularButton, handlePopularClick);
         $(document).on('click', selectors.relatedLink, handleRelatedClick);
+        $(document).on('click', selectors.relatedFaqButton, handleRelatedFaqClick);
         $(document).on('click', selectors.feedbackButton, handleFeedbackButtonClick);
         $(document).on('click', selectors.feedbackSubmit, handleFeedbackSubmit);
         $(document).on('click', selectors.printButton, handlePrintClick);

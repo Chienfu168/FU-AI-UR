@@ -1750,6 +1750,23 @@
     font-weight: 800;
 }
 
+/* 相關 FAQ 推薦按鈕：沿用 .ur-ai-related-link 卡片樣式，重置 <button> 預設外觀 */
+.ur-ai-related-faq-button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.ur-ai-related-faq-button .ur-ai-related-heading {
+    margin-top: 6px;
+}
+
 /* 回饋區：修正目前 JS 使用的 class 名稱 */
 .ur-ai-feedback {
     margin-top: 26px;

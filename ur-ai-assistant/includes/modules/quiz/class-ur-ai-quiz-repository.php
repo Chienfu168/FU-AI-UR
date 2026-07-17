@@ -449,7 +449,7 @@ class UR_AI_Quiz_Repository {
         }
 
         $source = isset($data['source']) ? sanitize_key($data['source']) : 'manual';
-        if (!in_array($source, array('manual', 'ai_faq'), true)) {
+        if (!in_array($source, array('manual', 'ai_faq', 'ai_article'), true)) {
             $source = 'manual';
         }
 
