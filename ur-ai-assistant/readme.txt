@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.30.0
+Stable tag: 1.31.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.31.0 =
+* 為未來的「代管 AI 服務」鋪路：新增「AI 服務來源」設定（「功能設定」頁「AI API 設定」卡片），預設「自行提供 OpenAI API Key」，行為與升級前完全相同；若選擇「使用代管服務」，可填入代管服務提供的端點網址與授權碼，屆時所有 AI 呼叫（問答、AI 對話、知識大考驗出題、文章草稿）都會改呼叫該端點，不再使用 OpenAI 官方端點與自行填寫的 API Key。此版本僅新增這個可切換的設定選項，尚未提供實際的代管服務。
 
 = 1.30.0 =
 * 「AI 對話」產生總結草稿的「固定回答最低字數」門檻（v1.29.0 新增，原本寫死 60 字）改為「功能設定」頁可調整的設定：新增「AI 輔助內容品質控管」卡片，可依您對內容品質的要求自行調整字數門檻（20～500 字），系統提示詞也會依設定的字數動態調整用詞。預設值維持 60 字，未調整前行為與 v1.29.0 完全相同。

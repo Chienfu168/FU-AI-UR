@@ -51,7 +51,7 @@ class UR_AI_OpenAI_Client {
         $payload = $this->build_payload($question);
 
         $response = wp_remote_post(
-            self::API_ENDPOINT,
+            $this->get_api_endpoint(),
             array(
                 'timeout' => 45,
                 'headers' => array(
@@ -155,7 +155,7 @@ class UR_AI_OpenAI_Client {
         $payload = apply_filters('ur_ai_admin_chat_openai_payload', $payload, $messages);
 
         $response = wp_remote_post(
-            self::API_ENDPOINT,
+            $this->get_api_endpoint(),
             array(
                 'timeout' => 45,
                 'headers' => array(
@@ -255,7 +255,7 @@ class UR_AI_OpenAI_Client {
         $payload = apply_filters('ur_ai_admin_chat_summarize_openai_payload', $payload, $messages);
 
         $response = wp_remote_post(
-            self::API_ENDPOINT,
+            $this->get_api_endpoint(),
             array(
                 'timeout' => 45,
                 'headers' => array(
@@ -355,7 +355,7 @@ class UR_AI_OpenAI_Client {
         $payload = apply_filters('ur_ai_quiz_openai_payload', $payload, $faq_question, $faq_answer);
 
         $response = wp_remote_post(
-            self::API_ENDPOINT,
+            $this->get_api_endpoint(),
             array(
                 'timeout' => 45,
                 'headers' => array(
@@ -450,7 +450,7 @@ class UR_AI_OpenAI_Client {
         $payload = apply_filters('ur_ai_article_openai_payload', $payload, $question, $answer);
 
         $response = wp_remote_post(
-            self::API_ENDPOINT,
+            $this->get_api_endpoint(),
             array(
                 'timeout' => 60,
                 'headers' => array(
@@ -945,7 +945,13 @@ class UR_AI_OpenAI_Client {
     }
 
     /**
-     * 取得 API Key。
+     * 取得呼叫 AI 服務用的憑證。
+     *
+     * 預設（未啟用代管服務）沿用既有行為：直接使用管理者自行填寫的
+     * OpenAI API Key。若啟用「使用代管服務」，改回傳代管服務的授權碼
+     * ——外層呼叫端（chat()／chat_conversation() 等）完全不需要知道
+     * 目前是哪一種模式，一律當作「Bearer 憑證」放進 Authorization
+     * header 即可，行為與升級前完全相同。
      *
      * @return string
      */
@@ -954,7 +960,33 @@ class UR_AI_OpenAI_Client {
             return '';
         }
 
+        if (UR_AI_Settings::is_hosted_ai_service_enabled()) {
+            return trim((string) UR_AI_Settings::get_hosted_service_token());
+        }
+
         return trim((string) UR_AI_Settings::get_api_key());
+    }
+
+    /**
+     * 取得呼叫 AI 服務用的 API 端點。
+     *
+     * 預設（未啟用代管服務）沿用既有行為：直接呼叫 OpenAI 官方端點
+     * （self::API_ENDPOINT）。若啟用「使用代管服務」且已填寫代管服務
+     * 端點網址，則改呼叫該端點；端點網址留空時，即使切換到代管模式
+     * 也安全退回 OpenAI 官方端點，不會因為設定不完整而呼叫到空網址。
+     *
+     * @return string
+     */
+    private function get_api_endpoint() {
+        if (class_exists('UR_AI_Settings') && UR_AI_Settings::is_hosted_ai_service_enabled()) {
+            $endpoint = UR_AI_Settings::get_hosted_service_endpoint();
+
+            if ('' !== $endpoint) {
+                return $endpoint;
+            }
+        }
+
+        return self::API_ENDPOINT;
     }
 
     /**

@@ -129,6 +129,53 @@ class UR_AI_Settings {
     }
 
     /**
+     * 取得 AI 服務來源模式。
+     *
+     * - 'self'：自行提供 OpenAI API Key（預設，行為與升級前完全相同）。
+     * - 'hosted'：改呼叫代管服務（例如未來的 AI 代管方案），使用
+     *   `hosted_service_endpoint`／`hosted_service_token` 這兩個設定
+     *   取代 OpenAI 官方端點與 API Key。
+     *
+     * 這是為未來「代管 AI 服務」鋪路的設定欄位，目前預設值不會改變
+     * 任何現有行為——沒有選擇「使用代管服務」的網站，呼叫方式與
+     * 升級前完全相同。
+     *
+     * @return string
+     */
+    public static function get_ai_service_mode() {
+        $mode = sanitize_key((string) self::get('ai_service_mode', 'self'));
+
+        return 'hosted' === $mode ? 'hosted' : 'self';
+    }
+
+    /**
+     * 是否使用代管 AI 服務（而非自行提供的 OpenAI API Key）。
+     *
+     * @return bool
+     */
+    public static function is_hosted_ai_service_enabled() {
+        return 'hosted' === self::get_ai_service_mode();
+    }
+
+    /**
+     * 取得代管服務的 API 端點網址。
+     *
+     * @return string
+     */
+    public static function get_hosted_service_endpoint() {
+        return trim((string) self::get('hosted_service_endpoint', ''));
+    }
+
+    /**
+     * 取得代管服務的授權碼。
+     *
+     * @return string
+     */
+    public static function get_hosted_service_token() {
+        return trim((string) self::get('hosted_service_token', ''));
+    }
+
+    /**
      * 取得模型。
      *
      * @return string
@@ -434,6 +481,10 @@ class UR_AI_Settings {
             'cost_per_million_tokens' => 0.5,
 
             'admin_chat_min_draft_answer_length' => 60,
+
+            'ai_service_mode'          => 'self',
+            'hosted_service_endpoint'  => '',
+            'hosted_service_token'     => '',
         );
     }
 
@@ -607,6 +658,17 @@ class UR_AI_Settings {
                 }
 
                 return $length;
+
+            case 'ai_service_mode':
+                $mode = sanitize_key((string) $value);
+
+                return 'hosted' === $mode ? 'hosted' : 'self';
+
+            case 'hosted_service_endpoint':
+                return esc_url_raw(trim((string) $value));
+
+            case 'hosted_service_token':
+                return sanitize_text_field((string) $value);
 
             default:
                 if (is_scalar($value)) {

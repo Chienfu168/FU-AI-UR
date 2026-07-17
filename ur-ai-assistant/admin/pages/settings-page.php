@@ -59,6 +59,9 @@ if (
 
     $settings_to_save = array(
         'api_key'             => isset($_POST['api_key']) ? wp_unslash($_POST['api_key']) : '',
+        'ai_service_mode'     => isset($_POST['ai_service_mode']) ? wp_unslash($_POST['ai_service_mode']) : '',
+        'hosted_service_endpoint' => isset($_POST['hosted_service_endpoint']) ? wp_unslash($_POST['hosted_service_endpoint']) : '',
+        'hosted_service_token'    => isset($_POST['hosted_service_token']) ? wp_unslash($_POST['hosted_service_token']) : '',
         'model'               => isset($_POST['model']) ? wp_unslash($_POST['model']) : '',
         'temperature'         => isset($_POST['temperature']) ? wp_unslash($_POST['temperature']) : '',
         'max_answer_tokens'   => isset($_POST['max_answer_tokens']) ? wp_unslash($_POST['max_answer_tokens']) : '',
@@ -91,6 +94,9 @@ if (
 $settings = UR_AI_Settings::get_all();
 
 $api_key             = UR_AI_Settings::get_api_key();
+$ai_service_mode         = UR_AI_Settings::get_ai_service_mode();
+$hosted_service_endpoint = UR_AI_Settings::get_hosted_service_endpoint();
+$hosted_service_token    = UR_AI_Settings::get_hosted_service_token();
 $model               = UR_AI_Settings::get_model();
 $temperature         = UR_AI_Settings::get_temperature();
 $max_answer_tokens   = UR_AI_Settings::get_max_answer_tokens();
@@ -180,6 +186,50 @@ $admin_chat_min_draft_answer_length = UR_AI_Settings::get_admin_chat_min_draft_a
                     <?php echo esc_html__('請妥善保管 API Key。若只使用 FAQ 固定回答，可暫不設定，但 FAQ 未命中時就無法呼叫 AI。', 'ur-ai-assistant'); ?>
                 </p>
             </div>
+
+            <div class="ur-ai-form-row">
+                <label for="ai_service_mode"><?php echo esc_html__('AI 服務來源', 'ur-ai-assistant'); ?></label>
+                <select id="ai_service_mode" name="ai_service_mode">
+                    <option value="self" <?php selected($ai_service_mode, 'self'); ?>>
+                        <?php echo esc_html__('自行提供 OpenAI API Key（預設）', 'ur-ai-assistant'); ?>
+                    </option>
+                    <option value="hosted" <?php selected($ai_service_mode, 'hosted'); ?>>
+                        <?php echo esc_html__('使用代管服務', 'ur-ai-assistant'); ?>
+                    </option>
+                </select>
+                <p class="ur-ai-form-help">
+                    <?php echo esc_html__('預設為「自行提供 OpenAI API Key」，行為與升級前完全相同。若您訂閱了代管 AI 服務，可切換為「使用代管服務」，並在下方填入服務提供的端點網址與授權碼，屆時將不再使用上方的 OpenAI API Key。', 'ur-ai-assistant'); ?>
+                </p>
+            </div>
+
+            <div class="ur-ai-grid ur-ai-grid-2">
+                <div class="ur-ai-form-row">
+                    <label for="hosted_service_endpoint"><?php echo esc_html__('代管服務端點網址', 'ur-ai-assistant'); ?></label>
+                    <input
+                        type="text"
+                        id="hosted_service_endpoint"
+                        name="hosted_service_endpoint"
+                        value="<?php echo esc_attr($hosted_service_endpoint); ?>"
+                        placeholder="https://example.com/wp-json/ur-ai-gateway/v1/chat"
+                        class="regular-text"
+                    >
+                </div>
+
+                <div class="ur-ai-form-row">
+                    <label for="hosted_service_token"><?php echo esc_html__('代管服務授權碼', 'ur-ai-assistant'); ?></label>
+                    <input
+                        type="password"
+                        id="hosted_service_token"
+                        name="hosted_service_token"
+                        value="<?php echo esc_attr($hosted_service_token); ?>"
+                        autocomplete="off"
+                        class="regular-text"
+                    >
+                </div>
+            </div>
+            <p class="ur-ai-form-help">
+                <?php echo esc_html__('僅在「AI 服務來源」選擇「使用代管服務」時才會生效；選擇「自行提供 OpenAI API Key」時，這兩個欄位不會被使用。', 'ur-ai-assistant'); ?>
+            </p>
 
             <div class="ur-ai-grid ur-ai-grid-3">
                 <div class="ur-ai-form-row">
