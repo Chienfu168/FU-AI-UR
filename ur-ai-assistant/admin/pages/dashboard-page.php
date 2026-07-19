@@ -87,6 +87,34 @@ if (class_exists('UR_AI_Feedback_Service')) {
     $feedback_summary = wp_parse_args($feedback_service->get_summary(), $feedback_summary);
 }
 
+/*
+ * 資料庫索引健康檢查（見 UR_AI_Schema_Manager::get_index_health_report()）：
+ * 刻意只在管理者主動點擊「檢查」時才查詢（GET 帶 nonce），不在每次
+ * 造訪總覽頁時都自動查詢——避免這個診斷工具本身又變成拖慢頁面的
+ * 額外負擔，跟這次要解決的問題（外掛不該拖累網站效能）互相矛盾。
+ */
+$db_health_report = null;
+
+if (
+    isset($_GET['ur_check_db_health'], $_GET['_wpnonce'])
+    && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'ur_ai_check_db_health')
+    && class_exists('UR_AI_Schema_Manager')
+) {
+    $db_health_report = UR_AI_Schema_Manager::get_index_health_report();
+}
+
+$db_repair_result = null;
+
+if (isset($_GET['ur_db_repaired']) && '1' === $_GET['ur_db_repaired']) {
+    $repair_transient_key = 'ur_ai_db_repair_result_' . get_current_user_id();
+    $db_repair_result      = get_transient($repair_transient_key);
+    delete_transient($repair_transient_key);
+
+    if (class_exists('UR_AI_Schema_Manager')) {
+        $db_health_report = UR_AI_Schema_Manager::get_index_health_report();
+    }
+}
+
 $settings_url          = admin_url('admin.php?page=ur-ai-assistant-settings');
 $faqs_url              = admin_url('admin.php?page=ur-ai-assistant-faqs');
 $logs_url              = admin_url('admin.php?page=ur-ai-assistant-logs');
@@ -409,6 +437,109 @@ if (class_exists('UR_AI_Settings')) {
 
         </div>
     </details>
+
+    <div class="ur-ai-card" style="margin: 1.5em 0;">
+        <h2><?php echo esc_html__('資料庫索引健康檢查', 'ur-ai-assistant'); ?></h2>
+        <p class="ur-ai-muted">
+            <?php echo esc_html__('部分主機環境（WordPress 核心與 PHP 版本組合）可能導致本外掛的資料表在建立時，索引沒有正確建立成功。索引缺漏不會讓功能無法使用，但查詢速度會隨著資料筆數增加而變慢。若您感覺後台操作變慢，建議點下方按鈕檢查一次。', 'ur-ai-assistant'); ?>
+        </p>
+
+        <p>
+            <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=' . UR_AI_Admin_Menu::MENU_SLUG . '&ur_check_db_health=1'), 'ur_ai_check_db_health')); ?>">
+                <?php echo esc_html__('檢查資料庫索引健康', 'ur-ai-assistant'); ?>
+            </a>
+        </p>
+
+        <?php if (!empty($db_repair_result)) : ?>
+            <div class="notice notice-success inline">
+                <p><strong><?php echo esc_html__('修復結果：', 'ur-ai-assistant'); ?></strong></p>
+                <ul style="margin-left: 1.5em; list-style: disc;">
+                    <?php foreach ($db_repair_result as $table_result) : ?>
+                        <li>
+                            <?php echo esc_html($table_result['table_name']); ?>：
+                            <?php if (!empty($table_result['repaired'])) : ?>
+                                <?php
+                                printf(
+                                    /* translators: %d: 成功修復的索引數量 */
+                                    esc_html__('成功修復 %d 個索引', 'ur-ai-assistant'),
+                                    count($table_result['repaired'])
+                                );
+                                ?>
+                            <?php endif; ?>
+                            <?php if (!empty($table_result['failed'])) : ?>
+                                <?php
+                                printf(
+                                    /* translators: %d: 修復失敗的索引數量 */
+                                    esc_html__('，%d 個修復失敗', 'ur-ai-assistant'),
+                                    count($table_result['failed'])
+                                );
+                                ?>
+                                <?php foreach ($table_result['failed'] as $failed_index) : ?>
+                                    <br><small><?php echo esc_html($failed_index['name'] . '：' . $failed_index['error']); ?></small>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <?php if (null !== $db_health_report) : ?>
+            <?php $db_unhealthy = array_filter($db_health_report, function ($r) { return empty($r['healthy']); }); ?>
+            <?php if (empty($db_unhealthy)) : ?>
+                <div class="notice notice-success inline">
+                    <p>✅ <?php echo esc_html__('全部資料表與索引皆正常，沒有發現缺漏。', 'ur-ai-assistant'); ?></p>
+                </div>
+            <?php else : ?>
+                <div class="notice notice-warning inline">
+                    <p>
+                        ⚠️
+                        <?php
+                        printf(
+                            /* translators: %d: 有問題的資料表數量 */
+                            esc_html__('發現 %d 個資料表缺少索引，可能是造成網站變慢的原因：', 'ur-ai-assistant'),
+                            count($db_unhealthy)
+                        );
+                        ?>
+                    </p>
+                    <ul style="margin-left: 1.5em; list-style: disc;">
+                        <?php foreach ($db_unhealthy as $unhealthy_table) : ?>
+                            <li>
+                                <?php echo esc_html($unhealthy_table['table_name']); ?>：
+                                <?php if (empty($unhealthy_table['table_exists'])) : ?>
+                                    <?php echo esc_html__('資料表不存在（建議停用後重新啟用外掛，讓資料表重新建立）', 'ur-ai-assistant'); ?>
+                                <?php else : ?>
+                                    <?php
+                                    printf(
+                                        /* translators: %d: 缺少的索引數量 */
+                                        esc_html__('缺少 %d 個索引', 'ur-ai-assistant'),
+                                        count($unhealthy_table['missing'])
+                                    );
+                                    ?>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <input type="hidden" name="action" value="ur_ai_repair_db_indexes">
+                        <?php
+                        if (class_exists('UR_AI_Security')) {
+                            UR_AI_Security::admin_form_nonce_field();
+                        } else {
+                            wp_nonce_field('ur_ai_assistant_admin_action', 'ur_ai_nonce');
+                        }
+                        ?>
+                        <button type="submit" class="button button-primary">
+                            <?php echo esc_html__('立即修復缺少的索引', 'ur-ai-assistant'); ?>
+                        </button>
+                    </form>
+                    <p class="ur-ai-muted">
+                        <?php echo esc_html__('修復只會補上缺少的索引，不會刪除或修改任何既有資料，可安全重複執行。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
 
     <div class="ur-ai-summary-grid">
         <div class="ur-ai-summary-card">
