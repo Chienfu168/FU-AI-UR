@@ -70,7 +70,35 @@ class UR_AI_Schema_Manager {
     }
 
     /**
+     * 升級重試節流間隔（秒）。
+     *
+     * @var int
+     */
+    const RETRY_THROTTLE = 3600;
+
+    /**
+     * 升級重試節流鎖的 transient 名稱。
+     *
+     * @var string
+     */
+    const RETRY_LOCK_TRANSIENT = 'ur_ai_assistant_db_upgrade_retry_lock';
+
+    /**
      * 檢查是否需要升級。
+     *
+     * 這個方法掛在 plugins_loaded（見 UR_AI_Bootstrap::register_core_hooks()），
+     * 等於「每一次」網站請求（前台與後台皆然）都會被呼叫一次。
+     *
+     * 若 install() 因故一直無法讓 all_tables_exist() 成立（例如主機的
+     * WordPress 核心版本與 PHP 版本組合觸發 dbDelta() 本身解析 KEY／INDEX
+     * 子句失敗的相容性問題——這是 WordPress 核心 wp-admin/includes/
+     * upgrade.php 的已知舊版本相容性瑕疵，非本外掛 SQL 語法問題），
+     * DB_VERSION_OPTION 就永遠不會被標記為已完成升級，若沒有節流，
+     * install()／dbDelta() 就會在「每一個」後台頁面（包含與本外掛完全
+     * 無關的「新增頁面」）被重新呼叫一次，dbDelta() 本身有一定開銷，
+     * 會讓整個後台明顯變慢、甚至像是卡住轉圈圈。
+     *
+     * 因此改為節流：升級失敗時，最多每小時重試一次，而不是每次請求都重試。
      *
      * @return void
      */
@@ -80,6 +108,12 @@ class UR_AI_Schema_Manager {
         if ($installed_version === self::DB_VERSION) {
             return;
         }
+
+        if (get_transient(self::RETRY_LOCK_TRANSIENT)) {
+            return;
+        }
+
+        set_transient(self::RETRY_LOCK_TRANSIENT, 1, self::RETRY_THROTTLE);
 
         self::install();
     }

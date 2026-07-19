@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.36.1
+Stable tag: 1.36.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.36.2 =
+* 修正效能問題：若主機環境導致資料庫升級持續無法完成（例如較舊 WordPress 核心與 PHP 版本組合觸發 dbDelta 相容性問題），先前會在「每一個」網站頁面請求都重新嘗試一次完整升級流程，拖慢整個後台（包含與本外掛無關的頁面，例如「新增頁面」）。現在改為最多每小時重試一次，大幅降低這種情況下的效能影響。仍建議將 WordPress 核心更新到最新版本以徹底解決相容性問題。
 
 = 1.36.1 =
 * 「稅賦試算」新增「友善列印」功能，做法比照既有「都更分回試算」：試算結果可獨立列印（含公式拆解、都更減免說明、免責聲明與網站品牌頁尾），不會把分頁按鈕、輸入表單一起印出來。
