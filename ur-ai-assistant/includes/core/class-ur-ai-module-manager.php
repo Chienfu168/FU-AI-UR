@@ -156,6 +156,18 @@ class UR_AI_Module_Manager {
         );
 
         /*
+         * 稅賦試算模組（v1.36.0 新增）。
+         * 提供土地增值稅／契稅一般稅額試算 shortcode，並可選擇套用
+         * 都市更新條例第67條的減免情境（明確排除危老條例，見
+         * UR_AI_Tax_Calculator_Service 內的法源說明）。
+         */
+        $this->register_module(
+            'tax_calculator',
+            'UR_AI_Tax_Calculator_Module',
+            true
+        );
+
+        /*
          * 後台 AI 對話模組（v1.26.0 新增）。
          * 讓管理者能與 AI 助理多輪對話腦力激盪知識庫內容，並可將對話
          * 整理成 FAQ 草稿（停用／待審核，需人工審核後再啟用）。
