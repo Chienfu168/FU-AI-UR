@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.36.3
+Stable tag: 1.36.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.36.4 =
+* 修正「新增頁面第一次顯示空白、重新整理才正常」的殘留問題：外掛模組啟動流程原本在 WordPress `init` 之前（`plugins_loaded`）就會觸發翻譯字串載入，導致 WordPress 6.7+ 記錄「翻譯載入時機過早」的提示訊息；當主機環境會把這類提示直接輸出到頁面時，恰好夾雜在區塊編輯器內部 REST API 請求的回應中，會讓原本應為純 JSON 的內容解析失敗、畫面顯示空白。改為延到 `init` 才啟動模組，從根本解決這個時機問題。
 
 = 1.36.3 =
 * 後台「總覽」頁新增「資料庫索引健康檢查」：一鍵檢查本外掛資料表的索引是否有缺漏（部分主機環境的 dbDelta 相容性問題可能導致索引沒有正確建立，索引缺漏會讓查詢隨資料量增加而變慢），發現缺漏時可一鍵修復（直接補上缺少的索引，不重新呼叫 dbDelta，也不會刪除或修改任何既有資料），全程不需要 SQL 或資料庫知識。檢查動作只在主動點擊時才執行，不會增加平常瀏覽後台的負擔。
