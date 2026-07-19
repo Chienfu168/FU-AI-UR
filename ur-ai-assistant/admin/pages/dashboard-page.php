@@ -101,6 +101,7 @@ $market_price_shortcode         = '[ur_ai_market_price]';
 $market_price_ranking_shortcode = '[ur_ai_market_price_ranking]';
 $quiz_shortcode                 = '[ur_ai_quiz]';
 $quiz_leaderboard_shortcode     = '[ur_ai_quiz_leaderboard]';
+$tax_calculator_shortcode       = '[ur_ai_tax_calculator]';
 
 $market_price_stale_days = null;
 
@@ -263,7 +264,7 @@ if (class_exists('UR_AI_Settings')) {
     <details class="ur-ai-card ur-ai-setup-guide" id="ur-ai-shortcode-guide">
         <summary class="ur-ai-setup-guide-summary">
             <span class="ur-ai-setup-guide-title"><?php echo esc_html__('Shortcode 使用說明', 'ur-ai-assistant'); ?></span>
-            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 7 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
+            <span class="ur-ai-setup-guide-hint"><?php echo esc_html__('（本外掛全部 8 組前台 Shortcode 與參數一覽；搬到新網站安裝時可直接照這裡設定）', 'ur-ai-assistant'); ?></span>
         </summary>
 
         <div class="ur-ai-setup-guide-body">
@@ -394,6 +395,17 @@ if (class_exists('UR_AI_Settings')) {
                 </button>
             </p>
             <p class="ur-ai-muted"><?php echo esc_html__('伺服器端直接輸出目前分數最高的挑戰者排行榜（前三名附獎牌標示）。有留暱稱者，同一暱稱只保留最高分；匿名作答則每次都是獨立參與者。建議另外建立一個獨立頁面放置，與上面的作答挑戰短碼分開。', 'ur-ai-assistant'); ?></p>
+
+            <hr>
+
+            <h3><?php echo esc_html__('8. 稅賦試算（土地增值稅／契稅）', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-tax-calculator"><?php echo esc_html($tax_calculator_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-tax-calculator">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('依土地稅法、契稅條例公開公式試算土地增值稅與契稅一般稅額，並可選擇套用都市更新條例第67條的減免情境（權利變換首次移轉、現金補償、協議合建等）。刻意列出「危老重建」選項並說明其僅有房屋稅／地價稅減半、無土地增值稅或契稅減免，避免與都市更新混淆；現金補償、協議合建兩項減免的實施期限由系統自動判斷是否仍適用。不提供額外 shortcode 參數，可於「稅賦試算」頁調整啟用狀態與免責聲明文字。', 'ur-ai-assistant'); ?></p>
 
         </div>
     </details>
@@ -536,7 +548,7 @@ if (class_exists('UR_AI_Settings')) {
             </div>
 
             <p class="ur-ai-muted">
-                <?php echo esc_html__('本外掛共有 7 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜、知識大考驗、知識大考驗排行榜），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
+                <?php echo esc_html__('本外掛共有 8 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜、知識大考驗、知識大考驗排行榜、稅賦試算），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
                 <a href="#ur-ai-shortcode-guide"><?php echo esc_html__('前往完整說明', 'ur-ai-assistant'); ?></a>
             </p>
         </div>
