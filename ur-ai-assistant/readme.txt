@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.34.0
+Stable tag: 1.35.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.35.0 =
+* 【FAQ 知識庫】「產生文章草稿」的最低字數門檻開放到「功能設定」頁自訂（預設 300 字，可調整為 1500、2000 等數值）；調高門檻時，AI 也會同步被要求嘗試寫出對應長度的內容與提高回應 token 上限，而不是只提高門檻卻沒讓 AI 真的寫更長。維持預設值時行為與升級前完全相同。
 
 = 1.34.0 =
 * 【FAQ 知識庫】「產生文章草稿」新增重複產生防護：同一則 FAQ 若已有一篇尚未發布的文章草稿（草稿／待審／預約發布），會直接擋下並提示先處理現有草稿，避免手滑連點浪費 AI 呼叫費用、堆出重複文章；已發布或已丟進回收桶的文章不受影響，仍可再次產生新的文章草稿。

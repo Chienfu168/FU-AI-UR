@@ -39,13 +39,12 @@ class UR_AI_FAQ_Article_Service {
     const MIN_SOURCE_LENGTH = 120;
 
     /**
-     * AI 產生的文章內文最低字數門檻。
-     *
-     * 系統提示詞已要求 AI 產生約 500～900 字的內文，但 AI 偶爾仍可能
-     * 回傳明顯不足、近乎沒有展開的內容；與其把這種內容也建立成草稿
-     * 讓管理者事後才發現品質不佳，不如在建立文章前就擋下、要求重新
-     * 產生，門檻訂在明顯低於系統提示詞要求下限（500 字）的水準，只
-     * 用來濾掉明顯不合格的輸出，不是用來要求「剛好達標」。
+     * AI 產生的文章內文最低字數門檻的預設值（僅在 UR_AI_Settings 尚未
+     * 載入時作為退回值使用，正常情況下一律以 UR_AI_Settings::
+     * get_article_min_length() 為準——這個門檻已開放後台「功能設定」
+     * 頁調整，讓網站經營者可以依需求要求更長的文章（例如 1500、2000
+     * 字），呼叫 AI 時也會依同一個門檻同步調整系統提示詞要求的目標
+     * 字數與 max_tokens。
      *
      * @var int
      */
@@ -230,12 +229,14 @@ class UR_AI_FAQ_Article_Service {
             );
         }
 
-        if ($this->article_length($result['content']) < self::MIN_ARTICLE_LENGTH) {
+        $min_article_length = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_article_min_length() : self::MIN_ARTICLE_LENGTH;
+
+        if ($this->article_length($result['content']) < $min_article_length) {
             return $this->error(
                 sprintf(
                     /* translators: %d: 最低字數門檻 */
                     __('AI 產生的文章內容不足 %d 字，可能沒有確實展開，品質不佳，請重新嘗試產生。', 'ur-ai-assistant'),
-                    self::MIN_ARTICLE_LENGTH
+                    $min_article_length
                 )
             );
         }

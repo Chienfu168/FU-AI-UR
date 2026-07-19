@@ -83,6 +83,7 @@ if (
         'kb_browse_per_page'  => isset($_POST['kb_browse_per_page']) ? wp_unslash($_POST['kb_browse_per_page']) : '',
         'cost_per_million_tokens' => isset($_POST['cost_per_million_tokens']) ? wp_unslash($_POST['cost_per_million_tokens']) : '',
         'admin_chat_min_draft_answer_length' => isset($_POST['admin_chat_min_draft_answer_length']) ? wp_unslash($_POST['admin_chat_min_draft_answer_length']) : '',
+        'article_min_length'  => isset($_POST['article_min_length']) ? wp_unslash($_POST['article_min_length']) : '',
     );
 
     $updated = UR_AI_Settings::update_many($settings_to_save);
@@ -124,6 +125,7 @@ $kb_browse_per_page = UR_AI_Settings::get_kb_browse_per_page();
 $cost_per_million_tokens = UR_AI_Settings::get_cost_per_million_tokens();
 
 $admin_chat_min_draft_answer_length = UR_AI_Settings::get_admin_chat_min_draft_answer_length();
+$article_min_length = UR_AI_Settings::get_article_min_length();
 
 ?>
 
@@ -457,6 +459,23 @@ $admin_chat_min_draft_answer_length = UR_AI_Settings::get_admin_chat_min_draft_a
                 >
                 <p class="ur-ai-form-help">
                     <?php echo esc_html__('「AI 對話」頁按下「產生總結草稿」時，每則草稿「固定回答」的最低字數門檻；不足這個字數的草稿會直接捨棄，不會出現在整理結果中（寧可少於預期則數，也不會出現內容過於簡略的草稿）。可依您對內容品質的要求自行調整。', 'ur-ai-assistant'); ?>
+                </p>
+            </div>
+
+            <div class="ur-ai-form-row">
+                <label for="article_min_length"><?php echo esc_html__('產生文章草稿最低字數', 'ur-ai-assistant'); ?></label>
+                <input
+                    type="number"
+                    id="article_min_length"
+                    name="article_min_length"
+                    value="<?php echo esc_attr($article_min_length); ?>"
+                    min="100"
+                    max="3000"
+                    step="100"
+                    class="small-text"
+                >
+                <p class="ur-ai-form-help">
+                    <?php echo esc_html__('「FAQ 知識庫」頁按下「產生文章草稿」時，AI 產生的文章內文最低字數門檻；不足這個字數會直接視為品質不佳並擋下，不會建立成文章草稿。調高這個數字時，AI 也會同步被要求嘗試寫出對應長度的內容（例如調到 1500 或 2000 字），而不是只提高門檻卻沒有讓 AI 真的寫更長。', 'ur-ai-assistant'); ?>
                 </p>
             </div>
         </div>

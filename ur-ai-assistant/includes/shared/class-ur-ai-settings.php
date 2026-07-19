@@ -445,6 +445,34 @@ class UR_AI_Settings {
     }
 
     /**
+     * 「FAQ 知識庫」按下「產生文章草稿」時，AI 產生的文章內文最低字數
+     * 門檻。
+     *
+     * 不同網站經營者對「一篇文章要多長才算完整」的標準不同，因此開放
+     * 後台調整，而不是寫死在程式碼裡；預設值 300 字沿用這個防護機制
+     * 剛上線時的水準（明顯低於系統提示詞原本要求的 500～900 字目標，
+     * 只用來濾掉明顯不合格的輸出）。呼叫 AI 時也會依這個門檻同步調整
+     * 系統提示詞要求的目標字數與 max_tokens，門檻調高後 AI 才會真的
+     * 嘗試寫出對應長度的內容，而不是門檻調高後反而讓大部分產生結果
+     * 都被擋下。
+     *
+     * @return int
+     */
+    public static function get_article_min_length() {
+        $length = absint(self::get('article_min_length', 300));
+
+        if ($length < 100) {
+            $length = 100;
+        }
+
+        if ($length > 3000) {
+            $length = 3000;
+        }
+
+        return $length;
+    }
+
+    /**
      * 預設設定。
      *
      * @return array
@@ -481,6 +509,7 @@ class UR_AI_Settings {
             'cost_per_million_tokens' => 0.5,
 
             'admin_chat_min_draft_answer_length' => 60,
+            'article_min_length'                 => 300,
 
             'ai_service_mode'          => 'self',
             'hosted_service_endpoint'  => '',
@@ -655,6 +684,19 @@ class UR_AI_Settings {
 
                 if ($length > 500) {
                     $length = 500;
+                }
+
+                return $length;
+
+            case 'article_min_length':
+                $length = absint($value);
+
+                if ($length < 100) {
+                    $length = 100;
+                }
+
+                if ($length > 3000) {
+                    $length = 3000;
                 }
 
                 return $length;
