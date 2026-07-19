@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.36.2
+Stable tag: 1.36.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.36.3 =
+* 後台「總覽」頁新增「資料庫索引健康檢查」：一鍵檢查本外掛資料表的索引是否有缺漏（部分主機環境的 dbDelta 相容性問題可能導致索引沒有正確建立，索引缺漏會讓查詢隨資料量增加而變慢），發現缺漏時可一鍵修復（直接補上缺少的索引，不重新呼叫 dbDelta，也不會刪除或修改任何既有資料），全程不需要 SQL 或資料庫知識。檢查動作只在主動點擊時才執行，不會增加平常瀏覽後台的負擔。
 
 = 1.36.2 =
 * 修正效能問題：若主機環境導致資料庫升級持續無法完成（例如較舊 WordPress 核心與 PHP 版本組合觸發 dbDelta 相容性問題），先前會在「每一個」網站頁面請求都重新嘗試一次完整升級流程，拖慢整個後台（包含與本外掛無關的頁面，例如「新增頁面」）。現在改為最多每小時重試一次，大幅降低這種情況下的效能影響。仍建議將 WordPress 核心更新到最新版本以徹底解決相容性問題。

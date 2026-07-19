@@ -356,4 +356,186 @@ class UR_AI_Schema_Manager {
 
         return true;
     }
+
+    /**
+     * 資料庫索引健康檢查。
+     *
+     * 背景：dbDelta() 在部分主機環境（WordPress 核心版本與 PHP 版本
+     * 組合的相容性問題）可能沒辦法正確把 KEY／INDEX 子句加到資料表上
+     * ——即使資料表本身已經建立成功（all_tables_exist() 為 true），
+     * 缺少索引仍會讓依這些欄位查詢／排序的功能隨資料量增加而越來越慢，
+     * 且不會有任何明確的錯誤訊息提醒管理者。這個方法直接用
+     * `SHOW INDEX FROM` 讀出資料庫「實際」的索引清單，與各 schema
+     * class 的 get_sql() 裡「應該要有」的索引清單比對，找出缺漏。
+     *
+     * @return array 每個 schema class 一筆：
+     *               array{ schema_class, table_name, table_exists,
+     *               expected: array, missing: array, healthy: bool }
+     */
+    public static function get_index_health_report() {
+        global $wpdb;
+
+        $report  = array();
+        $schemas = self::get_schema_classes();
+
+        foreach ($schemas as $schema_class) {
+            if (!class_exists($schema_class) || !method_exists($schema_class, 'get_table_name') || !method_exists($schema_class, 'get_sql')) {
+                continue;
+            }
+
+            $table_name    = call_user_func(array($schema_class, 'get_table_name'));
+            $table_exists  = self::table_exists($table_name);
+            $expected_sql  = (string) call_user_func(array($schema_class, 'get_sql'));
+            $expected      = self::parse_expected_indexes($expected_sql);
+            $actual_names  = $table_exists ? self::get_actual_index_names($table_name) : array();
+
+            $missing = array();
+            foreach ($expected as $index) {
+                if (!in_array($index['name'], $actual_names, true)) {
+                    $missing[] = $index;
+                }
+            }
+
+            $report[] = array(
+                'schema_class'  => $schema_class,
+                'table_name'    => $table_name,
+                'table_exists'  => $table_exists,
+                'expected'      => $expected,
+                'missing'       => $missing,
+                'healthy'       => $table_exists && empty($missing),
+            );
+        }
+
+        return $report;
+    }
+
+    /**
+     * 修復缺少的索引。
+     *
+     * 刻意不重新呼叫 dbDelta()（那正是導致索引沒有正確建立的來源），
+     * 改為針對缺少的索引直接下 `ALTER TABLE ... ADD INDEX`，語法單純、
+     * 不經過 dbDelta 那段容易在特定主機環境解析失敗的正規表達式。
+     *
+     * @param array|null $report 若已經呼叫過 get_index_health_report()，
+     *                           可直接傳入其結果避免重複查詢；留空則自行查詢。
+     * @return array 每個資料表一筆：array{ table_name, repaired: array, failed: array }
+     */
+    public static function repair_missing_indexes($report = null) {
+        global $wpdb;
+
+        if (!is_array($report)) {
+            $report = self::get_index_health_report();
+        }
+
+        $results = array();
+
+        foreach ($report as $table_report) {
+            if (empty($table_report['table_exists']) || empty($table_report['missing'])) {
+                continue;
+            }
+
+            $table_name = $table_report['table_name'];
+            $repaired   = array();
+            $failed     = array();
+
+            foreach ($table_report['missing'] as $index) {
+                $index_type = !empty($index['unique']) ? 'UNIQUE INDEX' : 'INDEX';
+                $columns    = implode(
+                    ', ',
+                    array_map(
+                        function ($col) {
+                            return '`' . str_replace('`', '', $col) . '`';
+                        },
+                        $index['columns']
+                    )
+                );
+                $index_name = '`' . str_replace('`', '', $index['name']) . '`';
+
+                $sql = "ALTER TABLE `{$table_name}` ADD {$index_type} {$index_name} ({$columns})";
+
+                $ok = $wpdb->query($sql);
+
+                if (false === $ok) {
+                    $failed[] = array('name' => $index['name'], 'error' => $wpdb->last_error);
+                } else {
+                    $repaired[] = $index['name'];
+                }
+            }
+
+            $results[] = array(
+                'table_name' => $table_name,
+                'repaired'   => $repaired,
+                'failed'     => $failed,
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * 從 CREATE TABLE SQL 字串解析出「應該要有」的索引清單（不含 PRIMARY KEY）。
+     *
+     * 只解析本外掛自己 schema 檔案一貫使用的標準寫法：
+     * `KEY name (col)`、`UNIQUE KEY name (col)`、`KEY name (col1, col2)`。
+     *
+     * @param string $sql CREATE TABLE SQL。
+     * @return array 每筆 array{ name: string, unique: bool, columns: array }
+     */
+    private static function parse_expected_indexes($sql) {
+        $indexes = array();
+
+        if ('' === trim((string) $sql)) {
+            return $indexes;
+        }
+
+        if (preg_match_all('/^\s*(UNIQUE\s+)?KEY\s+(\w+)\s*\(([^)]+)\)/im', $sql, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $columns = array_map(
+                    function ($col) {
+                        return trim($col, " `\t\n\r");
+                    },
+                    explode(',', $match[3])
+                );
+
+                $indexes[] = array(
+                    'name'    => $match[2],
+                    'unique'  => '' !== trim($match[1]),
+                    'columns' => array_filter($columns, 'strlen'),
+                );
+            }
+        }
+
+        return $indexes;
+    }
+
+    /**
+     * 讀出資料表「實際」存在的索引名稱清單（不含 PRIMARY）。
+     *
+     * @param string $table_name 資料表名稱。
+     * @return array
+     */
+    private static function get_actual_index_names($table_name) {
+        global $wpdb;
+
+        $table_name = sanitize_text_field((string) $table_name);
+
+        if ('' === $table_name) {
+            return array();
+        }
+
+        $rows = $wpdb->get_results("SHOW INDEX FROM `{$table_name}`");
+
+        if (!is_array($rows)) {
+            return array();
+        }
+
+        $names = array();
+        foreach ($rows as $row) {
+            if (isset($row->Key_name) && 'PRIMARY' !== $row->Key_name) {
+                $names[] = $row->Key_name;
+            }
+        }
+
+        return array_values(array_unique($names));
+    }
 }
