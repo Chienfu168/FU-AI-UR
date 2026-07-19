@@ -105,31 +105,65 @@ class UR_AI_FAQ_Article_Service {
      * @return string 已發布文章的網址；找不到時回傳空字串。
      */
     public function find_published_article_url($faq_id) {
+        $ids = $this->find_article_ids_by_faq_id($faq_id, array('publish'));
+
+        if (empty($ids)) {
+            return '';
+        }
+
+        $url = get_permalink($ids[0]);
+
+        return is_string($url) ? $url : '';
+    }
+
+    /**
+     * 依來源 FAQ ID，反查是否已有一篇「尚未發布」的文章草稿（狀態為
+     * draft／pending／future，不含已經刪除到回收桶的文章）。
+     *
+     * 用來擋下「同一則 FAQ 被重複按『產生文章草稿』」的情況：每按一次
+     * 都會實際呼叫一次 AI、多建一篇新文章，沒有這層檢查的話，手滑
+     * 連點兩下就會浪費 AI 呼叫費用，也會在文章列表堆出好幾篇內容
+     * 幾乎相同的重複草稿。已經發布的文章不算在內——那代表先前那篇
+     * 已經審核通過確認可以用，管理者之後仍可能想針對同一則 FAQ 再
+     * 另外產生一篇新文章（例如 FAQ 內容後來更新過），不應該被永久
+     * 擋住。
+     *
+     * @param int $faq_id 來源 FAQ ID。
+     * @return int 尚未發布的文章 ID；沒有的話回傳 0。
+     */
+    public function find_pending_draft_article_id($faq_id) {
+        $ids = $this->find_article_ids_by_faq_id($faq_id, array('draft', 'pending', 'future'));
+
+        return !empty($ids) ? absint($ids[0]) : 0;
+    }
+
+    /**
+     * 依來源 FAQ ID 與指定的文章狀態，查出對應的文章 ID 陣列。
+     *
+     * @param int   $faq_id 來源 FAQ ID。
+     * @param array $post_statuses 要查詢的文章狀態。
+     * @return array 文章 ID 陣列。
+     */
+    private function find_article_ids_by_faq_id($faq_id, $post_statuses) {
         $faq_id = absint($faq_id);
 
         if ($faq_id <= 0 || !class_exists('WP_Query')) {
-            return '';
+            return array();
         }
 
         $query = new WP_Query(
             array(
                 'post_type'      => 'post',
-                'post_status'    => 'publish',
+                'post_status'    => $post_statuses,
                 'meta_key'       => '_ur_ai_source_faq_id',
                 'meta_value'     => $faq_id,
-                'posts_per_page' => 1,
+                'posts_per_page' => -1,
                 'no_found_rows'  => true,
                 'fields'         => 'ids',
             )
         );
 
-        if (empty($query->posts)) {
-            return '';
-        }
-
-        $url = get_permalink($query->posts[0]);
-
-        return is_string($url) ? $url : '';
+        return $query->posts;
     }
 
     /**
@@ -157,6 +191,18 @@ class UR_AI_FAQ_Article_Service {
 
         if (!$faq) {
             return $this->error(__('找不到指定的 FAQ，可能已被刪除。', 'ur-ai-assistant'));
+        }
+
+        $pending_draft_id = $this->find_pending_draft_article_id($faq_id);
+
+        if ($pending_draft_id > 0) {
+            return $this->error(
+                sprintf(
+                    /* translators: %d: 既有文章草稿 ID */
+                    __('這則 FAQ 已經有一篇尚未發布的文章草稿（文章 #%d），請先審核、發布或刪除現有草稿，再重新產生新的文章草稿，避免重複產生浪費 AI 呼叫費用。', 'ur-ai-assistant'),
+                    $pending_draft_id
+                )
+            );
         }
 
         $question = (string) $this->get_value($faq, 'question', '');

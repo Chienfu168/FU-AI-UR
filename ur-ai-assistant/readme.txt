@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.33.0
+Stable tag: 1.34.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -172,6 +172,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.34.0 =
+* 【FAQ 知識庫】「產生文章草稿」新增重複產生防護：同一則 FAQ 若已有一篇尚未發布的文章草稿（草稿／待審／預約發布），會直接擋下並提示先處理現有草稿，避免手滑連點浪費 AI 呼叫費用、堆出重複文章；已發布或已丟進回收桶的文章不受影響，仍可再次產生新的文章草稿。
 
 = 1.33.0 =
 * 【知識大考驗】新增「AI 依文章出題」：可勾選已發布、由「產生文章草稿」建立的文章，依文章更完整的內容產生選擇題草稿（比原始 FAQ 回答更豐富），出題後仍歸屬到原始來源 FAQ，既有的答錯複習連結邏輯不受影響。
