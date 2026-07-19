@@ -424,12 +424,15 @@ class UR_AI_OpenAI_Client {
             );
         }
 
+        $min_length = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_article_min_length() : 300;
+        list(, $target_max) = $this->article_length_target($min_length);
+
         $payload = array(
             'model'       => $this->get_model(),
             'messages'    => array(
                 array(
                     'role'    => 'system',
-                    'content' => $this->article_system_prompt(),
+                    'content' => $this->article_system_prompt($min_length),
                 ),
                 array(
                     'role'    => 'user',
@@ -437,7 +440,7 @@ class UR_AI_OpenAI_Client {
                 ),
             ),
             'temperature' => 0.4,
-            'max_tokens'  => 2200,
+            'max_tokens'  => min(8000, max(2200, $target_max * 2 + 300)),
         );
 
         /**
@@ -494,15 +497,39 @@ class UR_AI_OpenAI_Client {
     }
 
     /**
+     * 依後台設定的「文章最低字數」門檻，計算要求 AI 瞄準的字數區間
+     * （下限／上限）。
+     *
+     * 下限維持不低於 500 字（即使門檻調得比 500 低，也不縮小 AI 原本
+     * 就被要求寫出的份量）；上限則是下限再加 400 字的緩衝，避免 AI
+     * 剛好卡在門檻邊緣、稍有落差就被品質檢查擋下。門檻維持預設值
+     * 300 時，區間即為原本的 500～900 字，行為完全不變。
+     *
+     * @param int $min_length 後台設定的文章最低字數門檻。
+     * @return array{0:int,1:int} array($target_min, $target_max)。
+     */
+    private function article_length_target($min_length) {
+        $min_length = absint($min_length);
+        $target_min = max(500, $min_length);
+        $target_max = max(900, $min_length + 400);
+
+        return array($target_min, $target_max);
+    }
+
+    /**
      * 「產生文章草稿」用的 system prompt：要求輸出嚴格 JSON 格式的
      * 標題＋內文，且明確限制只能依提供的 FAQ 內容擴寫，不可自行捏造。
      *
+     * @param int $min_length 後台設定的文章最低字數門檻，用來動態調整
+     *                        要求 AI 瞄準的字數區間。
      * @return string
      */
-    private function article_system_prompt() {
+    private function article_system_prompt($min_length = 300) {
         $brand_name = class_exists('UR_AI_Industry_Profiles')
             ? UR_AI_Industry_Profiles::get_active_brand_name()
             : __('AI 助理', 'ur-ai-assistant');
+
+        list($target_min, $target_max) = $this->article_length_target($min_length);
 
         return implode(
             "\n",
@@ -516,7 +543,12 @@ class UR_AI_OpenAI_Client {
                 __('擴寫原則：', 'ur-ai-assistant'),
                 __('1. 文章內容只能根據提供的 FAQ 問答內容擴充說明（例如補充背景、常見情境、實務注意事項），不可以自行捏造 FAQ 沒有提到的具體法規名稱、稅率、金額或期限。', 'ur-ai-assistant'),
                 __('2. 若有需要進一步說明、但 FAQ 沒有提供依據的地方，請用提醒讀者「應洽詢專業人士確認」的方式帶過，不要編造答案。', 'ur-ai-assistant'),
-                __('3. 文章長度約 500～900 字，段落分明，可視內容需要適度使用小標題。', 'ur-ai-assistant'),
+                sprintf(
+                    /* translators: 1: 目標字數下限 2: 目標字數上限 */
+                    __('3. 文章長度約 %1$d～%2$d 字，段落分明，可視內容需要適度使用小標題。', 'ur-ai-assistant'),
+                    $target_min,
+                    $target_max
+                ),
                 __('4. 標題不要直接照抄 FAQ 問題文字，應該是更適合文章閱讀的標題寫法。', 'ur-ai-assistant'),
                 __('5. content 欄位請用簡單的 HTML 段落標籤（例如 <p>、<h2>），不要使用 Markdown 語法。', 'ur-ai-assistant'),
                 '',
