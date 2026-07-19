@@ -122,6 +122,41 @@
 	border-top: 1px solid #e5e7eb;
 }
 
+/* 結果頂部列（日期 + 友善列印） */
+.ur-ai-tax-calc__result-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5em;
+	margin-bottom: 1em;
+	flex-wrap: wrap;
+}
+
+.ur-ai-tax-calc__result-date {
+	font-size: 0.85em;
+	color: #6b7280;
+}
+
+.ur-ai-tax-calc__print-btn {
+	padding: 0.5em 1em;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	background: #f8fafc;
+	color: #334155;
+	font-size: 0.88em;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.ur-ai-tax-calc__print-btn:hover {
+	background: #eef2f7;
+}
+
+/* 品牌列印頁尾（螢幕隱藏，只在友善列印的獨立頁面顯示） */
+.ur-ai-tax-calc__print-footer {
+	display: none;
+}
+
 .ur-ai-tax-calc__result-final {
 	display: flex;
 	align-items: baseline;

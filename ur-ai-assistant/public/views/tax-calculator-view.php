@@ -148,6 +148,14 @@ $scenario_options = array(
 
     <!-- 結果 -->
     <div class="ur-ai-tax-calc__result" data-tax-result hidden>
+
+        <div class="ur-ai-tax-calc__result-head">
+            <span class="ur-ai-tax-calc__result-date" data-tax-date></span>
+            <button type="button" class="ur-ai-tax-calc__print-btn" data-tax-action="print">
+                <?php esc_html_e('🖨 友善列印', 'ur-ai-assistant'); ?>
+            </button>
+        </div>
+
         <div class="ur-ai-tax-calc__result-final">
             <span class="ur-ai-tax-calc__result-label" data-tax-result-label></span>
             <span class="ur-ai-tax-calc__result-value" data-tax-result-value>—</span>
@@ -166,6 +174,11 @@ $scenario_options = array(
             <p class="ur-ai-tax-calc__disclaimer-text"><?php echo esc_html($disclaimer); ?></p>
         </div>
         <?php endif; ?>
+
+        <!-- 只在列印時顯示的品牌頁尾 -->
+        <div class="ur-ai-tax-calc__print-footer">
+            <?php echo esc_html(get_bloginfo('name')); ?> ・ <?php echo esc_html(home_url('/')); ?>
+        </div>
     </div>
 
     <div class="ur-ai-tax-calc__error" data-tax-error hidden></div>

@@ -47,6 +47,13 @@
 				compute(root, calcType, btn, resultBox, errorBox);
 			});
 		});
+
+		var printBtn = root.querySelector('[data-tax-action="print"]');
+		if (printBtn) {
+			printBtn.addEventListener('click', function () {
+				printResult(root);
+			});
+		}
 	}
 
 	function compute(root, calcType, btn, resultBox, errorBox) {
@@ -105,6 +112,11 @@
 		var valueEl = resultBox.querySelector('[data-tax-result-value]');
 		var noteEl = resultBox.querySelector('[data-tax-reduction-note]');
 		var listEl = resultBox.querySelector('[data-tax-breakdown]');
+		var dateEl = resultBox.querySelector('[data-tax-date]');
+
+		if (dateEl) {
+			dateEl.textContent = formatDate(new Date());
+		}
 
 		if (labelEl) {
 			labelEl.textContent = 'deed_tax' === data.calc_type ? '契稅應納稅額' : '土地增值稅應納稅額';
@@ -164,6 +176,113 @@
 	function formatMoney(n) {
 		var num = Math.round(Number(n) || 0);
 		return num.toLocaleString('zh-Hant-TW');
+	}
+
+	function formatDate(d) {
+		return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+	}
+
+	function pad(n) {
+		return n < 10 ? '0' + n : String(n);
+	}
+
+	/*
+	 * 友善列印：比照 calculator.js 的做法，用隱藏 iframe 印出結果區的
+	 * 乾淨副本（去掉列印按鈕本身），而不是直接呼叫 window.print()——
+	 * 避免把整個頁面（分頁按鈕、輸入表單、其他分頁的隱藏欄位）都印出來。
+	 */
+	function printResult(root) {
+		var resultBox = root.querySelector('[data-tax-result]');
+		if (!resultBox) {
+			return;
+		}
+
+		var labelEl = resultBox.querySelector('[data-tax-result-label]');
+		var title = labelEl && labelEl.textContent ? labelEl.textContent : '稅賦試算';
+		var dateEl = resultBox.querySelector('[data-tax-date]');
+		var dateTxt = dateEl ? dateEl.textContent : '';
+
+		var clone = resultBox.cloneNode(true);
+		['.ur-ai-tax-calc__result-head'].forEach(function (sel) {
+			var el = clone.querySelector(sel);
+			if (el && el.parentNode) {
+				el.parentNode.removeChild(el);
+			}
+		});
+
+		var css = printStyles();
+		var doc = '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">' +
+			'<title>' + escapeHtml(title) + '</title><style>' + css + '</style></head><body>' +
+			'<h1 class="pt-title">' + escapeHtml(title) + '</h1>' +
+			(dateTxt ? '<p class="pt-date">' + escapeHtml(dateTxt) + '</p>' : '') +
+			clone.innerHTML +
+			'</body></html>';
+
+		var iframe = document.createElement('iframe');
+		iframe.setAttribute('aria-hidden', 'true');
+		iframe.style.position = 'fixed';
+		iframe.style.right = '0';
+		iframe.style.bottom = '0';
+		iframe.style.width = '0';
+		iframe.style.height = '0';
+		iframe.style.border = '0';
+		document.body.appendChild(iframe);
+
+		var idoc = iframe.contentWindow.document;
+		idoc.open();
+		idoc.write(doc);
+		idoc.close();
+
+		var done = false;
+		function fire() {
+			if (done) {
+				return;
+			}
+			done = true;
+			try {
+				iframe.contentWindow.focus();
+				iframe.contentWindow.print();
+			} catch (e) {}
+			setTimeout(function () {
+				if (iframe.parentNode) {
+					iframe.parentNode.removeChild(iframe);
+				}
+			}, 1000);
+		}
+
+		if (iframe.contentWindow.document.readyState === 'complete') {
+			setTimeout(fire, 250);
+		} else {
+			iframe.onload = function () { setTimeout(fire, 250); };
+			setTimeout(fire, 600);
+		}
+	}
+
+	function escapeHtml(s) {
+		return String(s).replace(/[&<>"']/g, function (c) {
+			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+		});
+	}
+
+	function printStyles() {
+		return '' +
+		'@page{margin:1cm;}' +
+		'*{box-sizing:border-box;}' +
+		'body{margin:0;font-family:-apple-system,\'PingFang TC\',\'Microsoft JhengHei\',sans-serif;color:#1f2937;font-size:11px;line-height:1.5;}' +
+		'.pt-title{font-size:16px;font-weight:700;margin:0 0 2px;}' +
+		'.pt-date{font-size:9px;color:#6b7280;margin:0 0 8px;}' +
+		'.ur-ai-tax-calc__result-final{display:flex;align-items:baseline;justify-content:space-between;padding:8px 10px;background:#eff6ff;border-radius:6px;margin-bottom:8px;}' +
+		'.ur-ai-tax-calc__result-label{font-weight:600;}' +
+		'.ur-ai-tax-calc__result-value{font-size:15px;font-weight:700;color:#1d4ed8;}' +
+		'.ur-ai-tax-calc__reduction-note{padding:6px 9px;margin-bottom:8px;border-radius:6px;background:#ecfdf5;color:#065f46;}' +
+		'.ur-ai-tax-calc__reduction-note.is-ineligible{background:#fef3c7;color:#92400e;}' +
+		'.ur-ai-tax-calc__breakdown-title{margin:0 0 4px;font-weight:700;}' +
+		'.ur-ai-tax-calc__breakdown-list{margin:0 0 8px;padding-left:16px;}' +
+		'.ur-ai-tax-calc__breakdown-list li{margin-bottom:3px;}' +
+		'.ur-ai-tax-calc__disclaimer-box{padding:7px 10px;background:#fef2f2;border:1px solid #f87171;border-radius:6px;}' +
+		'.ur-ai-tax-calc__disclaimer-badge{display:inline-block;background:#dc2626;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;margin-bottom:3px;}' +
+		'.ur-ai-tax-calc__disclaimer-text{margin:0;font-size:10px;line-height:1.5;font-weight:600;color:#991b1b;}' +
+		'.ur-ai-tax-calc__print-footer{display:block;margin-top:10px;padding-top:6px;border-top:1px solid #cbd5e1;font-size:9px;color:#6b7280;text-align:center;}';
 	}
 
 	function showError(box, message) {
