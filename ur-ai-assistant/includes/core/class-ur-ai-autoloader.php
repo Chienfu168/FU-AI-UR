@@ -163,6 +163,14 @@ class UR_AI_Autoloader {
             'UR_AI_Market_Price_Ranking_Shortcode' => 'includes/modules/market-price/class-ur-ai-market-price-ranking-shortcode.php',
 
             /*
+             * Tax Calculator Module（稅賦試算：土地增值稅／契稅，v1.36.0 新增）
+             */
+            'UR_AI_Tax_Calculator_Module'   => 'includes/modules/tax-calculator/class-ur-ai-tax-calculator-module.php',
+            'UR_AI_Tax_Calculator_Service'  => 'includes/modules/tax-calculator/class-ur-ai-tax-calculator-service.php',
+            'UR_AI_Tax_Calculator_Settings' => 'includes/modules/tax-calculator/class-ur-ai-tax-calculator-settings.php',
+            'UR_AI_Tax_Calculator_Ajax'     => 'includes/modules/tax-calculator/class-ur-ai-tax-calculator-ajax.php',
+
+            /*
              * Quiz Module（知識大考驗，v1.9.0 新增）
              */
             'UR_AI_Quiz_Module'              => 'includes/modules/quiz/class-ur-ai-quiz-module.php',

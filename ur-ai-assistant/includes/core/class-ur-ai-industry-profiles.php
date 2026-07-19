@@ -346,9 +346,10 @@ class UR_AI_Industry_Profiles {
                  * 頁手動開關，這裡只影響「第一次安裝時」的預設值）。
                  */
                 'modules'   => array(
-                    'calculator'   => true,
-                    'market_price' => true,
-                    'quiz'         => true,
+                    'calculator'     => true,
+                    'market_price'   => true,
+                    'quiz'           => true,
+                    'tax_calculator' => true,
                 ),
                 'market_price' => array(
                     'ranking_title'  => __('雙北都更效益排行榜', 'ur-ai-assistant'),
@@ -381,9 +382,10 @@ class UR_AI_Industry_Profiles {
                 ),
                 'modules'   => array(
                     // 權利變換分回試算的計算邏輯不因自主更新／建商主導而不同，仍保留。
-                    'calculator'   => true,
-                    'market_price' => true,
-                    'quiz'         => true,
+                    'calculator'     => true,
+                    'market_price'   => true,
+                    'quiz'           => true,
+                    'tax_calculator' => true,
                 ),
                 'quiz' => array(
                     'default_title' => __('自主更新知識大考驗', 'ur-ai-assistant'),
@@ -402,9 +404,12 @@ class UR_AI_Industry_Profiles {
                 ),
                 'modules'   => array(
                     // 分回試算（權利變換）僅適用都更危老情境，地政士業務用不到。
-                    'calculator'   => false,
-                    'market_price' => true,
-                    'quiz'         => true,
+                    'calculator'     => false,
+                    'market_price'   => true,
+                    'quiz'           => true,
+                    // 稅費試算（土地增值稅／契稅）正是地政士業務高度需要的工具，
+                    // 詳見 docs/industry-expansion-architecture.md 提出的未來擴充方向。
+                    'tax_calculator' => true,
                 ),
                 'market_price' => array(
                     'ranking_title'  => __('雙北區域行情漲幅排行榜', 'ur-ai-assistant'),
