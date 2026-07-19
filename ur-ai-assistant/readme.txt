@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.36.0
+Stable tag: 1.36.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,9 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 6. 回饋分析頁。
 
 == Changelog ==
+
+= 1.36.1 =
+* 「稅賦試算」新增「友善列印」功能，做法比照既有「都更分回試算」：試算結果可獨立列印（含公式拆解、都更減免說明、免責聲明與網站品牌頁尾），不會把分頁按鈕、輸入表單一起印出來。
 
 = 1.36.0 =
 * 新增「稅賦試算」模組，提供獨立 shortcode `[ur_ai_tax_calculator]`：依土地稅法、契稅條例公開公式試算土地增值稅與契稅一般稅額（自用住宅用地、長期持有減徵、稅率速算表），並可選擇套用都市更新條例第67條的減免情境（權利變換首次移轉、現金補償、協議合建等）。刻意明列「危老重建」情境並說明其無土地增值稅／契稅減免（僅房屋稅／地價稅減半），避免與都市更新混淆；現金補償／協議合建減免的實施期限（目前展延至118年1月31日）由系統自動判斷是否仍適用。後台「稅賦試算」頁僅開放啟用開關與免責聲明文字，稅率／級距／減免比率為法定數字不開放調整。
