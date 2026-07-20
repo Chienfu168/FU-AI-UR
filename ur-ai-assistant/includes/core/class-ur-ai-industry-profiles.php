@@ -350,6 +350,7 @@ class UR_AI_Industry_Profiles {
                     'market_price'   => true,
                     'quiz'           => true,
                     'tax_calculator' => true,
+                    'joint_burden'   => true,
                 ),
                 'market_price' => array(
                     'ranking_title'  => __('雙北都更效益排行榜', 'ur-ai-assistant'),
@@ -386,6 +387,8 @@ class UR_AI_Industry_Profiles {
                     'market_price'   => true,
                     'quiz'           => true,
                     'tax_calculator' => true,
+                    // 共同負擔提列估算是自主更新／更新會規劃階段的核心工具。
+                    'joint_burden'   => true,
                 ),
                 'quiz' => array(
                     'default_title' => __('自主更新知識大考驗', 'ur-ai-assistant'),
@@ -410,6 +413,8 @@ class UR_AI_Industry_Profiles {
                     // 稅費試算（土地增值稅／契稅）正是地政士業務高度需要的工具，
                     // 詳見 docs/industry-expansion-architecture.md 提出的未來擴充方向。
                     'tax_calculator' => true,
+                    // 共同負擔提列估算屬更新會／實施者規劃工具，地政士日常業務較少用到，預設關閉。
+                    'joint_burden'   => false,
                 ),
                 'market_price' => array(
                     'ranking_title'  => __('雙北區域行情漲幅排行榜', 'ur-ai-assistant'),

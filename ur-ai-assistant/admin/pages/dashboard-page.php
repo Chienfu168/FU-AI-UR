@@ -130,6 +130,7 @@ $market_price_ranking_shortcode = '[ur_ai_market_price_ranking]';
 $quiz_shortcode                 = '[ur_ai_quiz]';
 $quiz_leaderboard_shortcode     = '[ur_ai_quiz_leaderboard]';
 $tax_calculator_shortcode       = '[ur_ai_tax_calculator]';
+$joint_burden_shortcode         = '[ur_ai_joint_burden]';
 
 $market_price_stale_days = null;
 
@@ -435,6 +436,17 @@ if (class_exists('UR_AI_Settings')) {
             </p>
             <p class="ur-ai-muted"><?php echo esc_html__('依土地稅法、契稅條例公開公式試算土地增值稅與契稅一般稅額，並可選擇套用都市更新條例第67條的減免情境（權利變換首次移轉、現金補償、協議合建等）。刻意列出「危老重建」選項並說明其僅有房屋稅／地價稅減半、無土地增值稅或契稅減免，避免與都市更新混淆；現金補償、協議合建兩項減免的實施期限由系統自動判斷是否仍適用。不提供額外 shortcode 參數，可於「稅賦試算」頁調整啟用狀態與免責聲明文字。', 'ur-ai-assistant'); ?></p>
 
+            <hr>
+
+            <h3><?php echo esc_html__('9. 共同負擔提列估算（新北市）', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-joint-burden"><?php echo esc_html($joint_burden_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-joint-burden">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('依「新北市」都市更新提列總表與各分項說明之公開公式，輸入基地與權屬條件，概算工程費用A（拆除、營建、外接管線）、權利變換費用C（規劃費、估價費、鑑界、鑽探、地籍整理）、貸款利息D與管理費用F（F1／F3／F5）。個案認定項目（建築設計費、公共設施、拆遷補償、信託費、G／H等）可自行帶入。第一階段尚未計入稅捐E（含營業稅）、銷售管理費F4與B項，亦未計算「共同負擔比率」；臺北市及其他縣市之公式與費率不同，不適用本結果。不提供額外 shortcode 參數，可於「共同負擔估算」頁調整啟用狀態與免責聲明文字。', 'ur-ai-assistant'); ?></p>
+
         </div>
     </details>
 
@@ -679,7 +691,7 @@ if (class_exists('UR_AI_Settings')) {
             </div>
 
             <p class="ur-ai-muted">
-                <?php echo esc_html__('本外掛共有 8 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜、知識大考驗、知識大考驗排行榜、稅賦試算），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
+                <?php echo esc_html__('本外掛共有 9 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜、知識大考驗、知識大考驗排行榜、稅賦試算、共同負擔估算），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
                 <a href="#ur-ai-shortcode-guide"><?php echo esc_html__('前往完整說明', 'ur-ai-assistant'); ?></a>
             </p>
         </div>

@@ -168,6 +168,18 @@ class UR_AI_Module_Manager {
         );
 
         /*
+         * 共同負擔提列估算模組（v1.37.0 新增）。
+         * 依「新北市」都市更新提列基準，概算工程費用A、權利變換費用C、
+         * 貸款利息D與管理費用F（F1／F3／F5）等有明確公式的共同負擔項目
+         * （第一階段，見 UR_AI_Joint_Burden_Service 內的法源與範圍說明）。
+         */
+        $this->register_module(
+            'joint_burden',
+            'UR_AI_Joint_Burden_Module',
+            true
+        );
+
+        /*
          * 後台 AI 對話模組（v1.26.0 新增）。
          * 讓管理者能與 AI 助理多輪對話腦力激盪知識庫內容，並可將對話
          * 整理成 FAQ 草稿（停用／待審核，需人工審核後再啟用）。
