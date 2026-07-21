@@ -171,6 +171,15 @@ class UR_AI_Autoloader {
             'UR_AI_Tax_Calculator_Ajax'     => 'includes/modules/tax-calculator/class-ur-ai-tax-calculator-ajax.php',
 
             /*
+             * Joint Burden Estimator Module（都市更新共同負擔提列估算，
+             * 新北市，v1.37.0 新增）
+             */
+            'UR_AI_Joint_Burden_Module'   => 'includes/modules/joint-burden/class-ur-ai-joint-burden-module.php',
+            'UR_AI_Joint_Burden_Service'  => 'includes/modules/joint-burden/class-ur-ai-joint-burden-service.php',
+            'UR_AI_Joint_Burden_Settings' => 'includes/modules/joint-burden/class-ur-ai-joint-burden-settings.php',
+            'UR_AI_Joint_Burden_Ajax'     => 'includes/modules/joint-burden/class-ur-ai-joint-burden-ajax.php',
+
+            /*
              * Quiz Module（知識大考驗，v1.9.0 新增）
              */
             'UR_AI_Quiz_Module'              => 'includes/modules/quiz/class-ur-ai-quiz-module.php',
