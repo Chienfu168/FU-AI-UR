@@ -26,6 +26,10 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
         <p class="ur-ai-jb__phase-note">
             <?php esc_html_e('※ 本工具目前僅依「新北市」提列基準計算，臺北市及其他縣市之公式與費率不同，不適用本結果。營業稅依財政部109年令釋公式，因共同負擔含營業稅本身屬循環定義，已以代數封閉解求出。', 'ur-ai-assistant'); ?>
         </p>
+        <p class="ur-ai-jb__caution">
+            <strong><?php esc_html_e('重要：', 'ur-ai-assistant'); ?></strong>
+            <?php esc_html_e('本估算僅供事前概算參考，實際金額會因個案條件（營建單價調整、各項個案認定費用、審查認定範圍等）而有差異，最終一律以「都市更新及爭議處理審議會」審查委員審議通過之數額為準。', 'ur-ai-assistant'); ?>
+        </p>
     </div>
 
     <div class="ur-ai-jb__form">
@@ -319,6 +323,10 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
         </div>
 
         <div class="ur-ai-jb__ratio" data-jb-ratio hidden></div>
+
+        <p class="ur-ai-jb__result-caution">
+            <?php esc_html_e('本結果僅供事前概算參考，實際金額因個案而異，最終以都市更新及爭議處理審議會審查委員審議通過之數額為準。', 'ur-ai-assistant'); ?>
+        </p>
 
         <div class="ur-ai-jb__groups" data-jb-groups></div>
 

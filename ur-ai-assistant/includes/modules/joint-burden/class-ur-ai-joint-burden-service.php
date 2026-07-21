@@ -283,6 +283,7 @@ class UR_AI_Joint_Burden_Service {
         $has_total_value  = $post_renewal_total_value > 0;
         $burden_ratio     = $has_total_value ? ($total_burden / $post_renewal_total_value) : null;
 
+        $notes[] = '本估算僅供事前概算參考，實際金額會因個案條件而有差異，最終一律以都市更新及爭議處理審議會審查委員審議通過之數額為準。';
         $notes[] = '本試算依「新北市」都市更新提列基準之公開公式計算，臺北市及其他縣市之公式與費率不同，不適用本結果。';
 
         if ($has_total_value) {

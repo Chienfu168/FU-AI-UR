@@ -32,13 +32,37 @@
 }
 
 .ur-ai-jb__phase-note {
-	margin: 0 0 1.4em;
+	margin: 0 0 0.8em;
 	padding: 0.6em 0.9em;
 	background: #fffbeb;
 	border: 1px solid #fde68a;
 	border-radius: 8px;
 	color: #92400e;
 	font-size: 0.85em;
+}
+
+.ur-ai-jb__caution {
+	margin: 0 0 1.4em;
+	padding: 0.7em 1em;
+	background: #fef2f2;
+	border: 1px solid #fca5a5;
+	border-left: 4px solid #dc2626;
+	border-radius: 8px;
+	color: #991b1b;
+	font-size: 0.88em;
+	line-height: 1.6;
+}
+
+.ur-ai-jb__result-caution {
+	margin: 0 0 1.2em;
+	padding: 0.6em 0.9em;
+	background: #fef2f2;
+	border-left: 4px solid #dc2626;
+	border-radius: 6px;
+	color: #991b1b;
+	font-size: 0.85em;
+	font-weight: 600;
+	line-height: 1.6;
 }
 
 /* 表單分區 */
