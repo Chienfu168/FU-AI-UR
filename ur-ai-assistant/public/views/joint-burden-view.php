@@ -21,10 +21,10 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
     <div class="ur-ai-jb__intro">
         <h3 class="ur-ai-jb__title"><?php esc_html_e('都市更新共同負擔提列估算（新北市）', 'ur-ai-assistant'); ?></h3>
         <p class="ur-ai-jb__lead">
-            <?php esc_html_e('依「新北市」都市更新提列總表與各分項說明之公開公式，輸入基地與權屬條件，概算工程費用A、權利變換費用C、貸款利息D與管理費用F（F1／F3／F5）等有明確公式的項目。個案認定項目（建築設計費、公共設施、拆遷補償、信託費、G／H等）可於下方「個案選填」自行帶入。', 'ur-ai-assistant'); ?>
+            <?php esc_html_e('依「新北市」都市更新提列總表與各分項說明之公開公式，輸入基地與權屬條件，概算共同負擔 A～H 各項——工程費用A、權利變換費用C、貸款利息D、稅捐E（印花稅／營業稅）、管理費用F（F1／F3／F4／F5）。填入「更新後總權利價值」後，會一併算出營業稅與「共同負擔比率」。個案認定項目（建築設計費、公共設施、拆遷補償、信託費、B／G／H等）可於下方「個案選填」自行帶入。', 'ur-ai-assistant'); ?>
         </p>
         <p class="ur-ai-jb__phase-note">
-            <?php esc_html_e('※ 第一階段尚未計入稅捐E（含營業稅）、銷售管理費F4與B項，且未計算「共同負擔比率」——這些需要主管機關核定之「更新後總權利價值」，將於後續版本補上。', 'ur-ai-assistant'); ?>
+            <?php esc_html_e('※ 本工具目前僅依「新北市」提列基準計算，臺北市及其他縣市之公式與費率不同，不適用本結果。營業稅依財政部109年令釋公式，因共同負擔含營業稅本身屬循環定義，已以代數封閉解求出。', 'ur-ai-assistant'); ?>
         </p>
     </div>
 
@@ -194,9 +194,50 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
             </div>
         </fieldset>
 
+        <!-- 更新後總權利價值與稅捐（第二階段） -->
+        <fieldset class="ur-ai-jb__section">
+            <legend class="ur-ai-jb__legend"><?php esc_html_e('四、更新後總權利價值與稅捐（營業稅 E、銷售管理費 F4、共同負擔比率）', 'ur-ai-assistant'); ?></legend>
+            <p class="ur-ai-jb__hint"><?php esc_html_e('填入「更新後總權利價值」才會計算營業稅與共同負擔比率；未填則結果僅到「不含營業稅」的部分。', 'ur-ai-assistant'); ?></p>
+
+            <div class="ur-ai-jb__grid">
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('更新後總權利價值（元）', 'ur-ai-assistant'); ?></span>
+                    <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="post_renewal_total_value" placeholder="<?php esc_attr_e('主管機關核定之更新後總權利價值', 'ur-ai-assistant'); ?>">
+                </label>
+
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('實施者實際獲配總價值（元，算 F4）', 'ur-ai-assistant'); ?></span>
+                    <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="allocated_value" placeholder="<?php esc_attr_e('單元及車位總價值', 'ur-ai-assistant'); ?>">
+                </label>
+
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('營業稅計算方式', 'ur-ai-assistant'); ?></span>
+                    <select class="ur-ai-jb__input" data-jb="business_tax_method">
+                        <option value="house_ratio"><?php esc_html_e('房屋評定比例法', 'ur-ai-assistant'); ?></option>
+                        <option value="cost_ratio"><?php esc_html_e('費用比例法', 'ur-ai-assistant'); ?></option>
+                    </select>
+                </label>
+
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('房屋評定標準價格（元，房評法用）', 'ur-ai-assistant'); ?></span>
+                    <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="house_assessed_value" placeholder="<?php esc_attr_e('房屋及車位產權面積×評定標準單價', 'ur-ai-assistant'); ?>">
+                </label>
+
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('土地公告現值（元，房評法用）', 'ur-ai-assistant'); ?></span>
+                    <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="land_announced_value_for_tax" placeholder="<?php esc_attr_e('留空則沿用上方土地公告現值總值', 'ur-ai-assistant'); ?>">
+                </label>
+
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('公共設施用地負擔（元，費用比例法用）', 'ur-ai-assistant'); ?></span>
+                    <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="public_facility_land_burden">
+                </label>
+            </div>
+        </fieldset>
+
         <!-- 個案選填 -->
         <details class="ur-ai-jb__section ur-ai-jb__optional">
-            <summary class="ur-ai-jb__legend"><?php esc_html_e('四、個案認定項目（選填，有數字才計入）', 'ur-ai-assistant'); ?></summary>
+            <summary class="ur-ai-jb__legend"><?php esc_html_e('五、個案認定項目（選填，有數字才計入）', 'ur-ai-assistant'); ?></summary>
             <p class="ur-ai-jb__hint"><?php esc_html_e('以下項目屬個案認定，無單一公式，請依實際契約／估價／審定金額填入；會一併納入A、C合計並影響D、F3、F5的計算。', 'ur-ai-assistant'); ?></p>
             <div class="ur-ai-jb__grid">
                 <label class="ur-ai-jb__field">
@@ -243,6 +284,10 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
                     </select>
                 </label>
                 <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('容積獎勵後續管理維護費 B（元）', 'ur-ai-assistant'); ?></span>
+                    <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="b_cost">
+                </label>
+                <label class="ur-ai-jb__field">
                     <span class="ur-ai-jb__label"><?php esc_html_e('都市計畫變更負擔費用 G（元）', 'ur-ai-assistant'); ?></span>
                     <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="g_cost">
                 </label>
@@ -269,9 +314,11 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
         </div>
 
         <div class="ur-ai-jb__result-final">
-            <span class="ur-ai-jb__result-label"><?php esc_html_e('共同負擔小計（第一階段）', 'ur-ai-assistant'); ?></span>
+            <span class="ur-ai-jb__result-label" data-jb-subtotal-label><?php esc_html_e('共同負擔總額', 'ur-ai-assistant'); ?></span>
             <span class="ur-ai-jb__result-value" data-jb-subtotal>—</span>
         </div>
+
+        <div class="ur-ai-jb__ratio" data-jb-ratio hidden></div>
 
         <div class="ur-ai-jb__groups" data-jb-groups></div>
 

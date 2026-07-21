@@ -20,7 +20,9 @@
 		'own_capital_ratio', 'postal_rate', 'bank_rate',
 		'design_fee', 'construction_mgmt_fee', 'public_facility_fee', 'condo_fund',
 		'demolition_compensation', 'relocation_fee', 'other_c_fee', 'planning_extra_wan',
-		'trust_fee', 'trust_fee_type', 'g_cost', 'h_cost'
+		'trust_fee', 'trust_fee_type', 'b_cost', 'g_cost', 'h_cost',
+		'post_renewal_total_value', 'allocated_value', 'business_tax_method',
+		'house_assessed_value', 'land_announced_value_for_tax', 'public_facility_land_burden'
 	];
 
 	document.addEventListener('DOMContentLoaded', function () {
@@ -93,9 +95,24 @@
 			dateEl.textContent = formatDate(new Date());
 		}
 
+		var labelEl = resultBox.querySelector('[data-jb-subtotal-label]');
+		if (labelEl) {
+			labelEl.textContent = data.has_total_value ? '共同負擔總額' : '共同負擔（不含營業稅）';
+		}
+
 		var subtotalEl = resultBox.querySelector('[data-jb-subtotal]');
 		if (subtotalEl) {
 			subtotalEl.textContent = formatMoney(data.subtotal) + ' 元';
+		}
+
+		var ratioEl = resultBox.querySelector('[data-jb-ratio]');
+		if (ratioEl) {
+			if (data.has_total_value && data.burden_ratio != null) {
+				ratioEl.hidden = false;
+				ratioEl.textContent = '共同負擔比率 ' + (data.burden_ratio * 100).toFixed(2) + '%（÷ 更新後總權利價值 ' + formatMoney(data.post_renewal_total_value) + ' 元）';
+			} else {
+				ratioEl.hidden = true;
+			}
 		}
 
 		var groupsEl = resultBox.querySelector('[data-jb-groups]');
@@ -104,11 +121,14 @@
 			groupsEl.appendChild(buildGroup('工程費用 A', data.a_items, data.a_total));
 			groupsEl.appendChild(buildGroup('權利變換費用 C', data.c_items, data.c_total));
 			groupsEl.appendChild(buildLoanGroup('貸款利息 D', data.d_detail, data.d_total));
-			groupsEl.appendChild(buildGroup('管理費用 F（F1／F2／F3／F5）', data.f_items, data.f_total));
+			if (data.e_items) {
+				groupsEl.appendChild(buildGroup('稅捐 E（印花稅／營業稅）', data.e_items, data.e_total));
+			}
+			groupsEl.appendChild(buildGroup('管理費用 F（F1／F2／F3／F4／F5）', data.f_items, data.f_total));
 
 			var ghItems = (data.gh_items || []).filter(function (it) { return Number(it.amount) > 0; });
 			if (ghItems.length) {
-				groupsEl.appendChild(buildGroup('都市計畫變更負擔 G／容積移轉費 H', ghItems, data.g_cost + data.h_cost));
+				groupsEl.appendChild(buildGroup('其他費用 B／G／H', ghItems, data.b_cost + data.g_cost + data.h_cost));
 			}
 		}
 
@@ -303,6 +323,7 @@
 		'.ur-ai-jb__result-final{display:flex;align-items:baseline;justify-content:space-between;padding:8px 10px;background:#eff6ff;border-radius:6px;margin-bottom:10px;}' +
 		'.ur-ai-jb__result-label{font-weight:600;}' +
 		'.ur-ai-jb__result-value{font-size:15px;font-weight:700;color:#1d4ed8;}' +
+		'.ur-ai-jb__ratio{padding:5px 9px;margin-bottom:8px;border-radius:6px;background:#ecfdf5;color:#065f46;font-weight:700;}' +
 		'.ur-ai-jb__group{margin-bottom:10px;page-break-inside:avoid;}' +
 		'.ur-ai-jb__group-head{display:flex;justify-content:space-between;font-weight:700;border-bottom:1.5px solid #cbd5e1;padding-bottom:2px;margin-bottom:4px;}' +
 		'.ur-ai-jb__group-total{color:#1d4ed8;}' +

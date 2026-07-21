@@ -106,6 +106,9 @@ class UR_AI_Joint_Burden_Ajax {
             'design_fee', 'construction_mgmt_fee', 'public_facility_fee', 'condo_fund',
             'demolition_compensation', 'relocation_fee', 'other_c_fee',
             'planning_extra_wan', 'trust_fee', 'g_cost', 'h_cost',
+            // 第二階段（營業稅 E、銷售管理費 F4、共同負擔比率）。
+            'b_cost', 'allocated_value', 'post_renewal_total_value',
+            'house_assessed_value', 'land_announced_value_for_tax', 'public_facility_land_burden',
         );
 
         $int_keys = array(
@@ -137,6 +140,9 @@ class UR_AI_Joint_Burden_Ajax {
 
         $trust_type = isset($_POST['trust_fee_type']) ? sanitize_key(wp_unslash($_POST['trust_fee_type'])) : 'self';
         $args['trust_fee_type'] = ('developer' === $trust_type) ? 'developer' : 'self';
+
+        $biz_method = isset($_POST['business_tax_method']) ? sanitize_key(wp_unslash($_POST['business_tax_method'])) : 'house_ratio';
+        $args['business_tax_method'] = ('cost_ratio' === $biz_method) ? 'cost_ratio' : 'house_ratio';
 
         $args['top_down_construction'] = !empty($_POST['top_down_construction']) ? 1 : 0;
         $args['include_selection_fee'] = isset($_POST['include_selection_fee']) ? !empty($_POST['include_selection_fee']) : 1;

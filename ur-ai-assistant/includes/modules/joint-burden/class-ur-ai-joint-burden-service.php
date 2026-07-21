@@ -14,19 +14,21 @@
  *   營造工程物價指數調整（見 calculate_construction_cost() 的
  *   price_index 參數）。
  *
- * 第一階段（本檔）只計算「有明確公式、且僅需面積／戶數／樓層等條件即可
- * 概算」的項目：
+ * 有明確公式、僅需面積／戶數／樓層等條件即可概算的項目：
  *   - 工程費用 A：拆除費用、營建費用、外接水電瓦斯管線費用。
  *   - 權利變換費用 C：都市更新規劃費、不動產估價費、土地鑑界費、鑽探
  *     費用、地籍整理費用。
  *   - 貸款利息 D（依施工期間推算）。
- *   - 管理費用 F：行政作業費 F1、人事行政管理費 F3、風險管理費 F5。
+ *   - 管理費用 F：行政作業費 F1、人事行政管理費 F3、銷售管理費 F4、
+ *     風險管理費 F5。
+ *   - 稅捐 E：印花稅（概估）與營業稅（財政部 109 年令釋公式，因共同負擔
+ *     含營業稅本身屬循環定義，改以代數封閉解求出，見
+ *     calculate_business_tax()）。
+ *   - 共同負擔比率 = 共同負擔 ÷ 更新後總權利價值（需輸入更新後總權利
+ *     價值；未輸入時僅計算不含營業稅的部分，並顯示提醒）。
  * 其餘「個案認定」項目（建築設計費、工程管理費、公共及公益設施、拆遷
- * 補償／安置費、信託費 F2、都市計畫變更負擔 G、容積移轉費 H 等）做成
- * 選填欄位，有數字才計入。
- *
- * 第二階段（未含於本檔）：營業稅 E、銷售管理費 F4 與「共同負擔比率」——
- * 這些需要「主管機關核定之更新後總權利價值」等估價數字，留待後續版本。
+ * 補償／安置費、信託費 F2、容積獎勵後續管理維護費 B、都市計畫變更負擔
+ * G、容積移轉費 H 等）做成選填欄位，有數字才計入。
  *
  * 設計原則：比照 UR_AI_Tax_Calculator_Service，所有輸出都保留完整拆解
  * 過程（每一項的公式與金額），而不是只給一個總數，方便使用者逐項核對。
@@ -131,6 +133,9 @@ class UR_AI_Joint_Burden_Service {
     /** 行政作業費 F1 = 土地公告現值總值 × 2.5%。 */
     const F1_RATE = 0.025;
 
+    /** 印花稅（承攬契據，印花稅法第5條）稅率千分之一，以營建費用為稅基概估。 */
+    const STAMP_TAX_RATE = 0.001;
+
     /**
      * 計算共同負擔（第一階段）。
      *
@@ -201,7 +206,10 @@ class UR_AI_Joint_Burden_Service {
         $loan = $this->calculate_loan_interest($args, $a_total, $c_total, $condo_fund, $demolition_compensation, $g_cost, $h_cost);
         $d_total = $loan['amount'];
 
-        // ---- 管理費用 F（第一階段：F1／F2／F3／F5，F4 屬第二階段） ----
+        // ---- 個案選填：申請容積獎勵後續管理維護費用 B（依審定金額） ----
+        $b_cost = max(0.0, (float) ($args['b_cost'] ?? 0));
+
+        // ---- 管理費用 F（F1／F2／F3／F4／F5） ----
         $land_current_value_total = max(0.0, (float) ($args['land_current_value_total'] ?? 0));
         $f1 = $land_current_value_total * self::F1_RATE;
 
@@ -221,6 +229,12 @@ class UR_AI_Joint_Burden_Service {
         $f3_rate = $this->f3_rate($property_grade, $base_site_area);
         $f3 = ($a_total + $c_total + $g_cost) * $f3_rate;
 
+        // F4 銷售管理費 = 實施者實際獲配之單元及車位總價值 × 費率（累進遞減）。
+        $allocated_value = max(0.0, (float) ($args['allocated_value'] ?? 0));
+        $f4_detail = $this->calculate_sales_management_fee($allocated_value);
+        $f4 = $f4_detail['amount'];
+
+        // F5 風險管理費（依原公式，基數不含 F4）。
         $f5_rate = $this->f5_rate($property_grade, $total_floor_area_ping);
         $f5 = ($a_total + $c_total + $d_total + $f1 + $f2 + $f3 + $g_cost + $h_cost) * $f5_rate;
 
@@ -228,21 +242,59 @@ class UR_AI_Joint_Burden_Service {
             array('key' => 'f1', 'label' => '行政作業費用 F1', 'amount' => $f1, 'auto' => true, 'note' => sprintf('更新單元內土地公告現值總值 %s 元 × 2.5%% = %s 元。', $this->fmt($land_current_value_total), $this->fmt($f1))),
             array('key' => 'f2', 'label' => '信託費用 F2（個案填入）', 'amount' => $f2, 'auto' => false, 'note' => $trust_fee_full > 0 ? sprintf('信託費全額 %s 元%s = %s 元。', $this->fmt($trust_fee_full), 'developer' === $trust_type ? '（一般建商折半）× 50%' : '（自組更新會全額）', $this->fmt($f2)) : ''),
             array('key' => 'f3', 'label' => '人事行政管理費用 F3', 'amount' => $f3, 'auto' => true, 'note' => sprintf('(A %s ＋ C %s ＋ G %s) × 費率 %s%% = %s 元。〔產權級別 %s、基地面積 %s㎡〕', $this->fmt($a_total), $this->fmt($c_total), $this->fmt($g_cost), $this->fmt_pct($f3_rate), $this->fmt($f3), $this->fmt_num($property_grade), $this->fmt_num($base_site_area))),
+            array('key' => 'f4', 'label' => '銷售管理費用 F4', 'amount' => $f4, 'auto' => true, 'note' => $f4_detail['note']),
             array('key' => 'f5', 'label' => '風險管理費用 F5', 'amount' => $f5, 'auto' => true, 'note' => sprintf('(A＋C＋D＋F1＋F2＋F3＋G＋H) %s × 費率 %s%% = %s 元。〔產權級別 %s、總樓地板面積 %s坪〕', $this->fmt($a_total + $c_total + $d_total + $f1 + $f2 + $f3 + $g_cost + $h_cost), $this->fmt_pct($f5_rate), $this->fmt($f5), $this->fmt_num($property_grade), $this->fmt_num($total_floor_area_ping))),
         );
         $f_total = $this->sum_items($f_items);
 
+        // ---- 稅捐 E（印花稅 + 營業稅） ----
+        // 印花稅：承攬契據依印花稅法第 5 條千分之一，概以營建費用為稅基估算。
+        $stamp_tax = $construction['amount'] * self::STAMP_TAX_RATE;
+
+        // 營業稅：財政部 109 年令釋公式，因「更新後總權利價值 − 共同負擔」中的
+        // 共同負擔本身含營業稅，屬循環定義，改以代數解出封閉解（見
+        // calculate_business_tax()）。K = 共同負擔扣除營業稅後的部分。
+        $k_without_business_tax = $a_total + $b_cost + $c_total + $d_total + $f_total + $g_cost + $h_cost + $stamp_tax;
+
+        $post_renewal_total_value = max(0.0, (float) ($args['post_renewal_total_value'] ?? 0));
+
+        $business = $this->calculate_business_tax($args, $k_without_business_tax, $post_renewal_total_value);
+        $business_tax = $business['amount'];
+
+        $e_total = $stamp_tax + $business_tax;
+
+        $e_items = array(
+            array('key' => 'stamp_tax', 'label' => '印花稅', 'amount' => $stamp_tax, 'auto' => true, 'note' => sprintf('承攬契據（印花稅法第5條，千分之一），以營建費用 %s 元為稅基概估 = %s 元。', $this->fmt($construction['amount']), $this->fmt($stamp_tax))),
+            array('key' => 'business_tax', 'label' => '營業稅', 'amount' => $business_tax, 'auto' => true, 'note' => $business['note']),
+        );
+
         // ---- 個案選填 G/H 金額列（供顯示） ----
         $gh_items = array(
+            array('key' => 'b_cost', 'label' => '申請容積獎勵後續管理維護費用 B（個案填入）', 'amount' => $b_cost, 'auto' => false, 'note' => ''),
             array('key' => 'g_cost', 'label' => '都市計畫變更負擔費用 G（個案填入）', 'amount' => $g_cost, 'auto' => false, 'note' => ''),
             array('key' => 'h_cost', 'label' => '容積移轉費用 H（個案填入）',         'amount' => $h_cost, 'auto' => false, 'note' => ''),
         );
 
-        // ---- 共同負擔小計（第一階段） ----
-        $subtotal = $a_total + $c_total + $d_total + $f_total + $g_cost + $h_cost;
+        // ---- 共同負擔總額與比率 ----
+        // 共同負擔 = A+B+C+D+E+F+G+H = K（不含營業稅） + 營業稅。
+        $subtotal_without_e = $a_total + $b_cost + $c_total + $d_total + $f_total + $g_cost + $h_cost;
+        $total_burden       = $subtotal_without_e + $e_total;
+
+        $has_total_value  = $post_renewal_total_value > 0;
+        $burden_ratio     = $has_total_value ? ($total_burden / $post_renewal_total_value) : null;
 
         $notes[] = '本試算依「新北市」都市更新提列基準之公開公式計算，臺北市及其他縣市之公式與費率不同，不適用本結果。';
-        $notes[] = '第一階段尚未計入：稅捐 E（含營業稅）、銷售管理費 F4、以及「申請容積獎勵後續管理維護計畫費用 B」，且未計算「共同負擔比率」——這些項目需要主管機關核定之「更新後總權利價值」等估價數字，將於後續版本補上。';
+
+        if ($has_total_value) {
+            $notes[] = sprintf('共同負擔比率 = 共同負擔 %s 元 ÷ 更新後總權利價值 %s 元 = %s%%。', $this->fmt($total_burden), $this->fmt($post_renewal_total_value), $this->fmt_num($burden_ratio * 100));
+            if (null !== $burden_ratio && $burden_ratio < 0.40) {
+                $notes[] = '共同負擔比率低於 40%，若為自組更新會或非以更新後房地折價抵付之代執行機構，風險管理費 F5 費率得提列至 14%（須經審議會審議同意）；本試算仍以費率表計算，未自動套用此上限。';
+            }
+        } else {
+            $notes[] = '未輸入「更新後總權利價值」，故未計算營業稅與共同負擔比率（顯示金額不含營業稅）。填入後即可得出完整共同負擔與比率。';
+        }
+
+        $notes[] = '個案認定項目（B／G／H、建築設計費、公共設施、拆遷補償、信託費等）之實際認列，仍以新北市都市更新及爭議處理審議會審定為準。';
 
         return array(
             'success'    => true,
@@ -252,15 +304,101 @@ class UR_AI_Joint_Burden_Service {
             'c_total'    => $c_total,
             'd_detail'   => $loan,
             'd_total'    => $d_total,
+            'e_items'    => $e_items,
+            'e_total'    => $e_total,
             'f_items'    => $f_items,
             'f_total'    => $f_total,
             'gh_items'   => $gh_items,
+            'b_cost'     => $b_cost,
             'g_cost'     => $g_cost,
             'h_cost'     => $h_cost,
-            'subtotal'   => $subtotal,
+            'subtotal'   => $total_burden,
+            'total_burden' => $total_burden,
+            'has_total_value' => $has_total_value,
+            'post_renewal_total_value' => $post_renewal_total_value,
+            'burden_ratio' => $burden_ratio,
             'property_grade' => $property_grade,
             'notes'      => $notes,
         );
+    }
+
+    /**
+     * 銷售管理費 F4 ＝ 實施者實際獲配之單元及車位總價值 × 費率（累進遞減）。
+     *
+     * @param float $allocated_value 實施者實際獲配之單元及車位總價值（元）。
+     * @return array{amount: float, note: string, rate_effective: float}
+     */
+    public function calculate_sales_management_fee($allocated_value) {
+        $allocated_value = max(0.0, (float) $allocated_value);
+
+        // 25 億以下 6%、25-50 億 5.5%、50 億以上 5%（分級累加）。
+        $brackets = array(
+            array('limit' => 2500000000.0, 'rate' => 0.06),
+            array('limit' => 5000000000.0, 'rate' => 0.055),
+            array('limit' => INF,          'rate' => 0.05),
+        );
+
+        $amount = $this->progressive_sum($allocated_value, $brackets);
+        $rate_effective = $allocated_value > 0 ? $amount / $allocated_value : 0.0;
+
+        $note = $allocated_value > 0
+            ? sprintf('獲配總價值 %s 元，分級累加（25億以下6%%、25-50億5.5%%、50億以上5%%）= %s 元（等效費率 %s%%）。', $this->fmt($allocated_value), $this->fmt($amount), $this->fmt_num($rate_effective * 100))
+            : '未輸入實施者實際獲配之單元及車位總價值，F4 以 0 計。';
+
+        return array('amount' => $amount, 'note' => $note, 'rate_effective' => $rate_effective);
+    }
+
+    /**
+     * 營業稅（財政部 109 年 9 月 14 日台財稅字第 10900611910 號令釋）。
+     *
+     * 令釋原式：營業稅 = (更新後總權利價值 V − 共同負擔) × 比例 r × 5%。
+     * 其中共同負擔含營業稅本身，屬循環定義；令 K = 共同負擔 − 營業稅，
+     * 則 營業稅 = (V − K − 營業稅) × r × 0.05，解得封閉解：
+     *   營業稅 = (V − K) × r × 0.05 ÷ (1 + r × 0.05)。
+     *
+     * r 依令釋「擇一計算」提供兩種：
+     * - house_ratio（房屋評定比例法）：r = 房評 ÷ (土地公告現值 + 房評)。
+     * - cost_ratio（費用比例法）：r = (K − 公共設施用地負擔) ÷ V。
+     *
+     * @param array $args 參數。
+     * @param float $k    共同負擔扣除營業稅後之金額。
+     * @param float $v    更新後總權利價值。
+     * @return array{amount: float, note: string, ratio: float, method: string}
+     */
+    public function calculate_business_tax(array $args, $k, $v) {
+        $v = max(0.0, (float) $v);
+
+        if ($v <= 0) {
+            return array('amount' => 0.0, 'note' => '未輸入更新後總權利價值，營業稅以 0 計。', 'ratio' => 0.0, 'method' => 'none');
+        }
+
+        $method = ('cost_ratio' === ($args['business_tax_method'] ?? 'house_ratio')) ? 'cost_ratio' : 'house_ratio';
+
+        if ('cost_ratio' === $method) {
+            $pub = max(0.0, (float) ($args['public_facility_land_burden'] ?? 0));
+            $ratio = max(0.0, ($k - $pub) / $v);
+            $ratio_note = sprintf('費用比例法：r = (K %s − 公設用地負擔 %s) ÷ V %s = %s%%', $this->fmt($k), $this->fmt($pub), $this->fmt($v), $this->fmt_num($ratio * 100));
+        } else {
+            $house = max(0.0, (float) ($args['house_assessed_value'] ?? 0));
+            $land  = (float) ($args['land_announced_value_for_tax'] ?? 0);
+            if ($land <= 0) {
+                $land = max(0.0, (float) ($args['land_current_value_total'] ?? 0));
+            }
+            $denom = $house + $land;
+            if ($denom <= 0) {
+                return array('amount' => 0.0, 'note' => '房屋評定比例法需輸入房屋評定標準價格與土地公告現值，資料不足，營業稅暫以 0 計。', 'ratio' => 0.0, 'method' => $method);
+            }
+            $ratio = $house / $denom;
+            $ratio_note = sprintf('房屋評定比例法：r = 房評 %s ÷ (土地公告現值 %s + 房評 %s) = %s%%', $this->fmt($house), $this->fmt($land), $this->fmt($house), $this->fmt_num($ratio * 100));
+        }
+
+        $factor = $ratio * 0.05;
+        $amount = ($v - $k) * $factor / (1 + $factor);
+        $amount = max(0.0, $amount);
+
+        $note = sprintf('%s；營業稅 = (V %s − K %s) × r×5%% ÷ (1 + r×5%%) = %s 元（K 為共同負擔扣除營業稅後之金額，已解循環定義）。', $ratio_note, $this->fmt($v), $this->fmt($k), $this->fmt($amount));
+
+        return array('amount' => $amount, 'note' => $note, 'ratio' => $ratio, 'method' => $method);
     }
 
     /* ---------------------------------------------------------------------

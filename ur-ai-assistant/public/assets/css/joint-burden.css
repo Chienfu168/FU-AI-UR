@@ -199,6 +199,16 @@ summary.ur-ai-jb__legend {
 	color: #1d4ed8;
 }
 
+.ur-ai-jb__ratio {
+	padding: 0.7em 1em;
+	margin-bottom: 1.2em;
+	border-radius: 8px;
+	background: #ecfdf5;
+	color: #065f46;
+	font-weight: 700;
+	font-size: 0.95em;
+}
+
 /* 分組 */
 .ur-ai-jb__group {
 	margin-bottom: 1.2em;
