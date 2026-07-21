@@ -15,7 +15,8 @@
  *   price_index 參數）。
  *
  * 有明確公式、僅需面積／戶數／樓層等條件即可概算的項目：
- *   - 工程費用 A：拆除費用、營建費用、外接水電瓦斯管線費用。
+ *   - 工程費用 A：拆除費用、營建費用、外接水電瓦斯管線費用、建築設計費
+ *     （依全國建築師公會版酬金標準表估算，採區間下限；亦可改為手動填入）。
  *   - 權利變換費用 C：都市更新規劃費、不動產估價費、土地鑑界費、鑽探
  *     費用、地籍整理費用。
  *   - 貸款利息 D（依施工期間推算）。
@@ -26,9 +27,9 @@
  *     calculate_business_tax()）。
  *   - 共同負擔比率 = 共同負擔 ÷ 更新後總權利價值（需輸入更新後總權利
  *     價值；未輸入時僅計算不含營業稅的部分，並顯示提醒）。
- * 其餘「個案認定」項目（建築設計費、工程管理費、公共及公益設施、拆遷
- * 補償／安置費、信託費 F2、容積獎勵後續管理維護費 B、都市計畫變更負擔
- * G、容積移轉費 H 等）做成選填欄位，有數字才計入。
+ * 其餘「個案認定」項目（工程管理費、公共及公益設施、拆遷補償／安置費、
+ * 信託費 F2、容積獎勵後續管理維護費 B、都市計畫變更負擔 G、容積移轉費 H
+ * 等）做成選填欄位，有數字才計入。
  *
  * 設計原則：比照 UR_AI_Tax_Calculator_Service，所有輸出都保留完整拆解
  * 過程（每一項的公式與金額），而不是只給一個總數，方便使用者逐項核對。
@@ -152,8 +153,23 @@ class UR_AI_Joint_Burden_Service {
         $household   = max(0, (int) ($args['household_count'] ?? 0));
         $utility     = $household * self::UTILITY_LINE_PER_HOUSEHOLD;
 
+        // 建築設計費：預設依建築師酬金標準表自動估算（採區間下限），
+        // 亦可切換為個案手動填入。
+        $design_mode = ('manual' === ($args['design_fee_mode'] ?? 'auto')) ? 'manual' : 'auto';
+        if ('auto' === $design_mode) {
+            $design = $this->calculate_design_fee($construction['amount'], $args['design_fee_category'] ?? 'public_highrise');
+            $design_fee   = $design['amount_low'];
+            $design_label = '建築設計費用（依建築師酬金標準表估算）';
+            $design_auto  = true;
+            $design_note  = $design['note'];
+        } else {
+            $design_fee   = max(0.0, (float) ($args['design_fee'] ?? 0));
+            $design_label = '建築設計費用（個案填入）';
+            $design_auto  = false;
+            $design_note  = '';
+        }
+
         // 個案選填（工程費用 A）。
-        $design_fee        = max(0.0, (float) ($args['design_fee'] ?? 0));
         $construction_mgmt = max(0.0, (float) ($args['construction_mgmt_fee'] ?? 0));
         $public_facility   = max(0.0, (float) ($args['public_facility_fee'] ?? 0));
         $condo_fund        = max(0.0, (float) ($args['condo_fund'] ?? 0));
@@ -162,7 +178,7 @@ class UR_AI_Joint_Burden_Service {
             array('key' => 'demolition',    'label' => '拆除費用',                  'amount' => $demolition['amount'],   'auto' => true,  'note' => $demolition['note']),
             array('key' => 'construction',  'label' => '營建費用',                  'amount' => $construction['amount'], 'auto' => true,  'note' => $construction['note']),
             array('key' => 'utility',       'label' => '外接水電瓦斯管線費用',        'amount' => $utility,                'auto' => true,  'note' => sprintf('更新後 %d 戶 × 每戶 %s 元 = %s 元。', $household, $this->fmt($this->UTILITY()), $this->fmt($utility))),
-            array('key' => 'design_fee',    'label' => '建築設計費用（個案填入）',      'amount' => $design_fee,             'auto' => false, 'note' => ''),
+            array('key' => 'design_fee',    'label' => $design_label,               'amount' => $design_fee,             'auto' => $design_auto, 'note' => $design_note),
             array('key' => 'construction_mgmt', 'label' => '工程管理費（個案填入）',    'amount' => $construction_mgmt,      'auto' => false, 'note' => ''),
             array('key' => 'public_facility', 'label' => '公共及公益設施費用（個案填入）', 'amount' => $public_facility,       'auto' => false, 'note' => ''),
             array('key' => 'condo_fund',    'label' => '公寓大廈公共基金（個案填入）',   'amount' => $condo_fund,             'auto' => false, 'note' => ''),
@@ -499,6 +515,68 @@ class UR_AI_Joint_Burden_Service {
             'note'            => implode(' ', $sub_notes),
             'unit_price'      => $unit,
             'base_unit_price' => (float) $base_unit,
+        );
+    }
+
+    /**
+     * 建築設計費 ＝ 總工程費（採營建費用）× 建築師酬金百分率（依級距累進）。
+     *
+     * 費率依「全國建築師公會版建築師酬金標準表」（全建師會111字第0030號），
+     * 按建築物種別與總工程費級距查表。費率為可協議之區間（下限～9.0%），
+     * 故同時回傳下限累進金額與上限（9.0%）金額；共同負擔小計採下限概算。
+     *
+     * 註：此為「全國建築師公會」版本，非新北市建築師公會自訂版本，
+     * 實際新北市個案仍應以新北市建築師公會酬金表為準。
+     *
+     * @param float  $construction_cost 總工程費（元，採營建費用）。
+     * @param string $category          建築物種別：general／public_highrise／special。
+     * @return array{amount_low: float, amount_high: float, note: string, category: string}
+     */
+    public function calculate_design_fee($construction_cost, $category) {
+        $cc = max(0.0, (float) $construction_cost);
+
+        $tables = array(
+            // 種別 => 各級距下限費率：[≤300萬, 300萬-1500萬, 1500萬-6000萬, >6000萬]。
+            'general'         => array(0.065, 0.055, 0.05,  0.045),
+            'public_highrise' => array(0.07,  0.06,  0.055, 0.05),
+            'special'         => array(0.08,  0.07,  0.065, 0.06),
+        );
+        $labels = array(
+            'general'         => '一般建築',
+            'public_highrise' => '公共及高層建築',
+            'special'         => '特殊建築',
+        );
+
+        if (!isset($tables[$category])) {
+            $category = 'public_highrise';
+        }
+
+        $rates    = $tables[$category];
+        $brackets = array(
+            array('limit' => 3000000.0,  'rate' => $rates[0]),
+            array('limit' => 15000000.0, 'rate' => $rates[1]),
+            array('limit' => 60000000.0, 'rate' => $rates[2]),
+            array('limit' => INF,        'rate' => $rates[3]),
+        );
+
+        $low  = $this->progressive_sum($cc, $brackets);
+        $high = $cc * 0.09; // 上限一律 9.0%。
+        $low_rate = $cc > 0 ? $low / $cc : 0.0;
+
+        $note = sprintf(
+            '總工程費（採營建費用）%s 元，%s：下限費率累進 = %s 元（等效 %s%%）～ 上限 9%% = %s 元。費率為可協議區間，共同負擔小計採下限概算。（依全國建築師公會版酬金表，新北市個案仍應以新北市建築師公會酬金表為準）',
+            $this->fmt($cc),
+            $labels[$category],
+            $this->fmt($low),
+            $this->fmt_num($low_rate * 100),
+            $this->fmt($high)
+        );
+
+        return array(
+            'amount_low'  => $low,
+            'amount_high' => $high,
+            'note'        => $note,
+            'category'    => $category,
         );
     }
 

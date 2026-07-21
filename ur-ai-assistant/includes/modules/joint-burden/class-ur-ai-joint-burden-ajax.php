@@ -141,6 +141,12 @@ class UR_AI_Joint_Burden_Ajax {
         $trust_type = isset($_POST['trust_fee_type']) ? sanitize_key(wp_unslash($_POST['trust_fee_type'])) : 'self';
         $args['trust_fee_type'] = ('developer' === $trust_type) ? 'developer' : 'self';
 
+        $design_mode = isset($_POST['design_fee_mode']) ? sanitize_key(wp_unslash($_POST['design_fee_mode'])) : 'auto';
+        $args['design_fee_mode'] = ('manual' === $design_mode) ? 'manual' : 'auto';
+
+        $design_cat = isset($_POST['design_fee_category']) ? sanitize_key(wp_unslash($_POST['design_fee_category'])) : 'public_highrise';
+        $args['design_fee_category'] = in_array($design_cat, array('general', 'public_highrise', 'special'), true) ? $design_cat : 'public_highrise';
+
         $biz_method = isset($_POST['business_tax_method']) ? sanitize_key(wp_unslash($_POST['business_tax_method'])) : 'house_ratio';
         $args['business_tax_method'] = ('cost_ratio' === $biz_method) ? 'cost_ratio' : 'house_ratio';
 
