@@ -245,7 +245,22 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
             <p class="ur-ai-jb__hint"><?php esc_html_e('以下項目屬個案認定，無單一公式，請依實際契約／估價／審定金額填入；會一併納入A、C合計並影響D、F3、F5的計算。', 'ur-ai-assistant'); ?></p>
             <div class="ur-ai-jb__grid">
                 <label class="ur-ai-jb__field">
-                    <span class="ur-ai-jb__label"><?php esc_html_e('建築設計費（元）', 'ur-ai-assistant'); ?></span>
+                    <span class="ur-ai-jb__label"><?php esc_html_e('建築設計費計算方式', 'ur-ai-assistant'); ?></span>
+                    <select class="ur-ai-jb__input" data-jb="design_fee_mode">
+                        <option value="auto"><?php esc_html_e('自動（依建築師酬金標準表）', 'ur-ai-assistant'); ?></option>
+                        <option value="manual"><?php esc_html_e('手動填入', 'ur-ai-assistant'); ?></option>
+                    </select>
+                </label>
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('建築物種別（自動計算用）', 'ur-ai-assistant'); ?></span>
+                    <select class="ur-ai-jb__input" data-jb="design_fee_category">
+                        <option value="public_highrise"><?php esc_html_e('公共及高層建築（5樓以上集合住宅）', 'ur-ai-assistant'); ?></option>
+                        <option value="general"><?php esc_html_e('一般建築（4層以下住宅）', 'ur-ai-assistant'); ?></option>
+                        <option value="special"><?php esc_html_e('特殊建築（高級住宅別墅等）', 'ur-ai-assistant'); ?></option>
+                    </select>
+                </label>
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('建築設計費（元，手動時填入）', 'ur-ai-assistant'); ?></span>
                     <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="design_fee">
                 </label>
                 <label class="ur-ai-jb__field">
@@ -257,7 +272,14 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
                     <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="public_facility_fee">
                 </label>
                 <label class="ur-ai-jb__field">
-                    <span class="ur-ai-jb__label"><?php esc_html_e('公寓大廈公共基金（元）', 'ur-ai-assistant'); ?></span>
+                    <span class="ur-ai-jb__label"><?php esc_html_e('公寓大廈公共基金計算方式', 'ur-ai-assistant'); ?></span>
+                    <select class="ur-ai-jb__input" data-jb="condo_fund_mode">
+                        <option value="auto"><?php esc_html_e('自動（依施行細則第5條，以營建費用為工程造價）', 'ur-ai-assistant'); ?></option>
+                        <option value="manual"><?php esc_html_e('手動填入', 'ur-ai-assistant'); ?></option>
+                    </select>
+                </label>
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('公寓大廈公共基金（元，手動時填入）', 'ur-ai-assistant'); ?></span>
                     <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="condo_fund">
                 </label>
                 <label class="ur-ai-jb__field">
