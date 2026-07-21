@@ -272,7 +272,14 @@ $instance_id = 'ur-ai-jb-' . wp_rand(1000, 999999);
                     <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="public_facility_fee">
                 </label>
                 <label class="ur-ai-jb__field">
-                    <span class="ur-ai-jb__label"><?php esc_html_e('公寓大廈公共基金（元）', 'ur-ai-assistant'); ?></span>
+                    <span class="ur-ai-jb__label"><?php esc_html_e('公寓大廈公共基金計算方式', 'ur-ai-assistant'); ?></span>
+                    <select class="ur-ai-jb__input" data-jb="condo_fund_mode">
+                        <option value="auto"><?php esc_html_e('自動（依施行細則第5條，以營建費用為工程造價）', 'ur-ai-assistant'); ?></option>
+                        <option value="manual"><?php esc_html_e('手動填入', 'ur-ai-assistant'); ?></option>
+                    </select>
+                </label>
+                <label class="ur-ai-jb__field">
+                    <span class="ur-ai-jb__label"><?php esc_html_e('公寓大廈公共基金（元，手動時填入）', 'ur-ai-assistant'); ?></span>
                     <input type="number" min="0" step="1" class="ur-ai-jb__input" data-jb="condo_fund">
                 </label>
                 <label class="ur-ai-jb__field">

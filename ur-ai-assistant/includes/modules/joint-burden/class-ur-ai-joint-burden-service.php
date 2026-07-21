@@ -16,7 +16,9 @@
  *
  * 有明確公式、僅需面積／戶數／樓層等條件即可概算的項目：
  *   - 工程費用 A：拆除費用、營建費用、外接水電瓦斯管線費用、建築設計費
- *     （依全國建築師公會版酬金標準表估算，採區間下限；亦可改為手動填入）。
+ *     （依全國建築師公會版酬金標準表估算，採區間下限；亦可改為手動填入）、
+ *     公寓大廈公共基金（依公寓大廈管理條例施行細則第5條累進估算；亦可
+ *     改為手動填入）。
  *   - 權利變換費用 C：都市更新規劃費、不動產估價費、土地鑑界費、鑽探
  *     費用、地籍整理費用。
  *   - 貸款利息 D（依施工期間推算）。
@@ -169,10 +171,25 @@ class UR_AI_Joint_Burden_Service {
             $design_note  = '';
         }
 
+        // 公寓大廈公共基金：預設依施行細則第5條以工程造價（採營建費用）
+        // 累進估算，亦可切換為個案手動填入。
+        $condo_mode = ('manual' === ($args['condo_fund_mode'] ?? 'auto')) ? 'manual' : 'auto';
+        if ('auto' === $condo_mode) {
+            $condo = $this->calculate_condo_fund($construction['amount']);
+            $condo_fund  = $condo['amount'];
+            $condo_label = '公寓大廈公共基金（依施行細則第5條估算）';
+            $condo_auto  = true;
+            $condo_note  = $condo['note'];
+        } else {
+            $condo_fund  = max(0.0, (float) ($args['condo_fund'] ?? 0));
+            $condo_label = '公寓大廈公共基金（個案填入）';
+            $condo_auto  = false;
+            $condo_note  = '';
+        }
+
         // 個案選填（工程費用 A）。
         $construction_mgmt = max(0.0, (float) ($args['construction_mgmt_fee'] ?? 0));
         $public_facility   = max(0.0, (float) ($args['public_facility_fee'] ?? 0));
-        $condo_fund        = max(0.0, (float) ($args['condo_fund'] ?? 0));
 
         $a_items = array(
             array('key' => 'demolition',    'label' => '拆除費用',                  'amount' => $demolition['amount'],   'auto' => true,  'note' => $demolition['note']),
@@ -181,7 +198,7 @@ class UR_AI_Joint_Burden_Service {
             array('key' => 'design_fee',    'label' => $design_label,               'amount' => $design_fee,             'auto' => $design_auto, 'note' => $design_note),
             array('key' => 'construction_mgmt', 'label' => '工程管理費（個案填入）',    'amount' => $construction_mgmt,      'auto' => false, 'note' => ''),
             array('key' => 'public_facility', 'label' => '公共及公益設施費用（個案填入）', 'amount' => $public_facility,       'auto' => false, 'note' => ''),
-            array('key' => 'condo_fund',    'label' => '公寓大廈公共基金（個案填入）',   'amount' => $condo_fund,             'auto' => false, 'note' => ''),
+            array('key' => 'condo_fund',    'label' => $condo_label,                'amount' => $condo_fund,             'auto' => $condo_auto, 'note' => $condo_note),
         );
         $a_total = $this->sum_items($a_items);
 
@@ -578,6 +595,42 @@ class UR_AI_Joint_Burden_Service {
             'note'        => $note,
             'category'    => $category,
         );
+    }
+
+    /**
+     * 公寓大廈公共基金（公寓大廈管理條例施行細則第5條）。
+     *
+     * 依工程造價累進提列：
+     * - 1000萬元以下：千分之20。
+     * - 逾1000萬至1億元部分：千分之15。
+     * - 逾1億至10億元部分：千分之5。
+     * - 逾10億元部分：千分之3。
+     *
+     * 條文所稱工程造價指「建造執照載明之工程造價」；本工具無該欄位，
+     * 以已估算之營建費用作為工程造價近似，實際仍以建照載明造價為準。
+     *
+     * @param float $construction_cost 工程造價（元，採營建費用近似）。
+     * @return array{amount: float, note: string}
+     */
+    public function calculate_condo_fund($construction_cost) {
+        $cc = max(0.0, (float) $construction_cost);
+
+        $brackets = array(
+            array('limit' => 10000000.0,   'rate' => 0.020),
+            array('limit' => 100000000.0,  'rate' => 0.015),
+            array('limit' => 1000000000.0, 'rate' => 0.005),
+            array('limit' => INF,          'rate' => 0.003),
+        );
+
+        $amount = $this->progressive_sum($cc, $brackets);
+
+        $note = sprintf(
+            '工程造價（採營建費用）%s 元，依施行細則第5條累進（1千萬內20‰、至1億15‰、至10億5‰、逾10億3‰）= %s 元。（工程造價以建照載明造價為準，本工具以營建費用近似）',
+            $this->fmt($cc),
+            $this->fmt($amount)
+        );
+
+        return array('amount' => $amount, 'note' => $note);
     }
 
     /* ---------------------------------------------------------------------

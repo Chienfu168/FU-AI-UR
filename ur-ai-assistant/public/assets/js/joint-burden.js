@@ -18,7 +18,7 @@
 		'main_building_parcels_after', 'boundary_survey_parcels', 'drilling_holes',
 		'land_current_value_total', 'base_site_area_sqm', 'door_count', 'owner_count',
 		'own_capital_ratio', 'postal_rate', 'bank_rate',
-		'design_fee', 'design_fee_mode', 'design_fee_category', 'construction_mgmt_fee', 'public_facility_fee', 'condo_fund',
+		'design_fee', 'design_fee_mode', 'design_fee_category', 'construction_mgmt_fee', 'public_facility_fee', 'condo_fund', 'condo_fund_mode',
 		'demolition_compensation', 'relocation_fee', 'other_c_fee', 'planning_extra_wan',
 		'trust_fee', 'trust_fee_type', 'b_cost', 'g_cost', 'h_cost',
 		'post_renewal_total_value', 'allocated_value', 'business_tax_method',

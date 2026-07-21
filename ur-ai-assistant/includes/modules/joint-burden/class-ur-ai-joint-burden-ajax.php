@@ -147,6 +147,9 @@ class UR_AI_Joint_Burden_Ajax {
         $design_cat = isset($_POST['design_fee_category']) ? sanitize_key(wp_unslash($_POST['design_fee_category'])) : 'public_highrise';
         $args['design_fee_category'] = in_array($design_cat, array('general', 'public_highrise', 'special'), true) ? $design_cat : 'public_highrise';
 
+        $condo_mode = isset($_POST['condo_fund_mode']) ? sanitize_key(wp_unslash($_POST['condo_fund_mode'])) : 'auto';
+        $args['condo_fund_mode'] = ('manual' === $condo_mode) ? 'manual' : 'auto';
+
         $biz_method = isset($_POST['business_tax_method']) ? sanitize_key(wp_unslash($_POST['business_tax_method'])) : 'house_ratio';
         $args['business_tax_method'] = ('cost_ratio' === $biz_method) ? 'cost_ratio' : 'house_ratio';
 
