@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<ruleset name="UR AI Assistant">
+    <description>UR AI Assistant 外掛的 WordPress 編碼標準與 PHP 相容性檢查設定。</description>
+
+    <!-- 掃描目前目錄（外掛根目錄）。 -->
+    <file>.</file>
+
+    <!-- 排除不需檢查的目錄。 -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>            <!-- 隨附之第三方套件（plugin-update-checker）。 -->
+    <exclude-pattern>*/.phpcs-vendor/*</exclude-pattern>     <!-- 開發工具（WPCS 等）。 -->
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/languages/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <!-- 只檢查 PHP。 -->
+    <arg name="extensions" value="php"/>
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="parallel" value="8"/>
+    <arg value="ps"/> <!-- 顯示進度與 sniff 代碼。 -->
+
+    <!--
+        WordPress 編碼標準（含安全性相關 sniff：逸出、淨化、nonce、$wpdb prepare）。
+
+        本專案刻意採用一致的 4 空格縮排風格（非 WordPress 核心的 Tab 縮排），
+        故排除「純排版格式」類 sniff，讓 phpcs 聚焦在安全性、i18n、命名、
+        PHP 相容性等真正有價值的檢查上，而非產生數萬筆與程式碼風格選擇
+        有關、可自動修正的雜訊。若日後決定改採 WordPress 核心 Tab 風格，
+        移除下列 <exclude> 後執行 `composer lint:fix` 即可自動轉換。
+    -->
+    <rule ref="WordPress-Extra">
+        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+        <exclude name="Generic.WhiteSpace.ScopeIndent"/>
+        <exclude name="Generic.WhiteSpace.ArbitraryParenthesesSpacing"/>
+        <exclude name="Generic.Formatting.MultipleStatementAlignment"/>
+        <exclude name="Generic.Files.LineEndings"/>
+        <exclude name="PEAR.Functions.FunctionCallSignature"/>
+        <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing"/>
+        <exclude name="Squiz.Strings.DoubleQuoteUsage"/>
+        <exclude name="PSR2.Files.EndFileNewline"/>
+        <exclude name="Universal.WhiteSpace.CommaSpacing"/>
+        <exclude name="WordPress.WhiteSpace"/>
+        <exclude name="WordPress.Arrays.ArrayDeclarationSpacing"/>
+        <exclude name="WordPress.Arrays.ArrayKeySpacingRestrictions"/>
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
+        <exclude name="NormalizedArrays.Arrays.ArrayBraceSpacing"/>
+    </rule>
+    <rule ref="WordPress.Security"/>
+
+    <!-- 文字網域與 i18n 檢查。 -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="ur-ai-assistant"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- 前綴檢查（全域函式、類別、常數、option/transient 命名）。 -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="ur_ai"/>
+                <element value="UR_AI"/>
+                <element value="UR_AI_ASSISTANT"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- 最低支援之 WordPress 版本（對應 readme.txt「Requires at least」）。 -->
+    <config name="minimum_wp_version" value="6.0"/>
+
+    <!-- PHP 相容性：對應 Requires PHP 7.4 以上。 -->
+    <config name="testVersion" value="7.4-"/>
+    <rule ref="PHPCompatibilityWP"/>
+</ruleset>

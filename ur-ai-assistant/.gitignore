@@ -1,0 +1,8 @@
+# 開發工具（WPCS／phpcs）安裝目錄 —— 不隨外掛發布。
+# 注意：外掛執行時所需的 vendor/plugin-update-checker/ 為隨附套件，仍需版控，故不在此忽略。
+/.phpcs-vendor/
+/composer.lock
+
+# 作業系統／編輯器雜項。
+.DS_Store
+Thumbs.db
