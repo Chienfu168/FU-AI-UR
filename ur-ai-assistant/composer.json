@@ -1,0 +1,33 @@
+{
+    "name": "ur-promoter/ur-ai-assistant",
+    "description": "UR AI Assistant — 都更危老 AI 助理 WordPress 外掛（開發工具設定）。",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.9",
+        "wp-coding-standards/wpcs": "^3.1",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+    },
+    "config": {
+        "vendor-dir": ".phpcs-vendor",
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "scripts": {
+        "lint": "phpcs",
+        "lint:fix": "phpcbf",
+        "lint:security": "phpcs --sniffs=WordPress.Security.EscapeOutput,WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput,WordPress.DB.PreparedSQL,WordPress.DB.PreparedSQLPlaceholders,WordPress.WP.I18n",
+        "lint:compat": "phpcs --standard=PHPCompatibilityWP --runtime-set testVersion 7.4-"
+    },
+    "scripts-descriptions": {
+        "lint": "以 phpcs.xml.dist（WordPress 編碼標準，已排除純排版格式 sniff）掃描外掛程式碼。",
+        "lint:fix": "自動修正可修復的編碼風格問題（phpcbf）。",
+        "lint:security": "只跑安全性／i18n 相關 sniff（逸出、nonce、淨化、$wpdb prepare）。",
+        "lint:compat": "檢查 PHP 7.4+ 相容性。"
+    }
+}
