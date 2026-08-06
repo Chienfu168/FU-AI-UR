@@ -351,6 +351,7 @@ class UR_AI_Industry_Profiles {
                     'quiz'           => true,
                     'tax_calculator' => true,
                     'joint_burden'   => true,
+                    'partners'       => true,
                 ),
                 'market_price' => array(
                     'ranking_title'  => __('雙北都更效益排行榜', 'ur-ai-assistant'),
@@ -389,6 +390,7 @@ class UR_AI_Industry_Profiles {
                     'tax_calculator' => true,
                     // 共同負擔提列估算是自主更新／更新會規劃階段的核心工具。
                     'joint_burden'   => true,
+                    'partners'       => true,
                 ),
                 'quiz' => array(
                     'default_title' => __('自主更新知識大考驗', 'ur-ai-assistant'),
@@ -415,6 +417,8 @@ class UR_AI_Industry_Profiles {
                     'tax_calculator' => true,
                     // 共同負擔提列估算屬更新會／實施者規劃工具，地政士日常業務較少用到，預設關閉。
                     'joint_burden'   => false,
+                    // 相關產業名錄對地政士也是有用的專業服務資訊，預設開啟。
+                    'partners'       => true,
                 ),
                 'market_price' => array(
                     'ranking_title'  => __('雙北區域行情漲幅排行榜', 'ur-ai-assistant'),

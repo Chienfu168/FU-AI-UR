@@ -122,6 +122,7 @@ class UR_AI_Autoloader {
             'UR_AI_Schema_Market_Prices'     => 'includes/database/schemas/class-ur-ai-schema-market-prices.php',
             'UR_AI_Schema_Quiz_Questions'    => 'includes/database/schemas/class-ur-ai-schema-quiz-questions.php',
             'UR_AI_Schema_Quiz_Attempts'     => 'includes/database/schemas/class-ur-ai-schema-quiz-attempts.php',
+            'UR_AI_Schema_Partners'          => 'includes/database/schemas/class-ur-ai-schema-partners.php',
 
             /*
              * Admin Module
@@ -178,6 +179,14 @@ class UR_AI_Autoloader {
             'UR_AI_Joint_Burden_Service'  => 'includes/modules/joint-burden/class-ur-ai-joint-burden-service.php',
             'UR_AI_Joint_Burden_Settings' => 'includes/modules/joint-burden/class-ur-ai-joint-burden-settings.php',
             'UR_AI_Joint_Burden_Ajax'     => 'includes/modules/joint-burden/class-ur-ai-joint-burden-ajax.php',
+
+            /*
+             * Partners Module（相關產業名錄，v1.40.0 新增）
+             */
+            'UR_AI_Partners_Module'    => 'includes/modules/partners/class-ur-ai-partners-module.php',
+            'UR_AI_Partner_Service'    => 'includes/modules/partners/class-ur-ai-partner-service.php',
+            'UR_AI_Partner_Repository' => 'includes/modules/partners/class-ur-ai-partner-repository.php',
+            'UR_AI_Partner_Settings'   => 'includes/modules/partners/class-ur-ai-partner-settings.php',
 
             /*
              * Quiz Module（知識大考驗，v1.9.0 新增）
