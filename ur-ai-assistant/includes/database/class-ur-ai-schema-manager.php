@@ -248,6 +248,8 @@ class UR_AI_Schema_Manager {
             // 知識大考驗題庫與作答紀錄表（v1.9.0 新增）。
             'UR_AI_Schema_Quiz_Questions',
             'UR_AI_Schema_Quiz_Attempts',
+            // 相關產業名錄表（v1.40.0 新增）。
+            'UR_AI_Schema_Partners',
         );
     }
 

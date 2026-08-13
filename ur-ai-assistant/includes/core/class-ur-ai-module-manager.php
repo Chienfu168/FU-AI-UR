@@ -180,6 +180,17 @@ class UR_AI_Module_Manager {
         );
 
         /*
+         * 相關產業名錄模組（v1.40.0 新增）。
+         * 提供都市更新專業服務與相關組織名錄 shortcode [ur_ai_partners]
+         * 與後台名錄管理（CSV 匯入匯出、CRUD、批次操作）。移植自 UR_SYS。
+         */
+        $this->register_module(
+            'partners',
+            'UR_AI_Partners_Module',
+            true
+        );
+
+        /*
          * 後台 AI 對話模組（v1.26.0 新增）。
          * 讓管理者能與 AI 助理多輪對話腦力激盪知識庫內容，並可將對話
          * 整理成 FAQ 草稿（停用／待審核，需人工審核後再啟用）。

@@ -5212,6 +5212,98 @@ PHP 整合測試（3 項檢查點，模擬真實 WordPress 請求生命週期：
 
 ---
 
+## v1.40.0
+
+更新日期
+2026-07-22
+
+版本定位
+
+新增「相關產業名錄」功能，移植自既有 UR_SYS 系統的合作夥伴／相關產業
+名錄。提供一個依分類列出都市更新專業服務與相關組織的目錄，前台可瀏覽
+篩選、後台可管理。
+
+一、主要新增功能
+
+1. 前台 shortcode `[ur_ai_partners]`：都市更新專業服務與相關組織名錄。
+   - 內建分類：估價師、地政士、建商、實施者、建築師、營造廠、律師、
+     金融／融資、更新顧問、其他；並支援自訂分類（如「公協會」）自動
+     出現。
+   - 前台以分類按鈕（含各分類筆數）＋縣市下拉＋即時關鍵字搜尋做篩選，
+     卡片顯示名稱、分類、地區、標語、簡介、電話（可點擊撥號）、官方
+     網站，以及資料狀態。
+   - 排序：置頂曝光（有效期內）優先 → 權重高→低 → 已核對優先 →
+     每日輪替（以當日日期為 RAND 種子，同權重不會永遠固定順序）。
+2. 誠實原則（沿用 UR_SYS 設計）：全頁標示「僅供資訊查詢與自行洽詢
+   參考」，卡片只標「資料已核對／公開資料待補充」與資料來源、最後
+   核對日，不使用「推薦」字樣；置頂項目以「置頂曝光」標示，不隱含
+   平台之推薦、認證或背書。
+3. 後台「相關產業名錄」管理頁：
+   - 單筆新增／編輯／刪除，欄位含名稱、分類、地區、標語、簡介、聯絡
+     人、電話、Email、官方網站、Logo、等級（一般／置頂曝光）、權重、
+     狀態、資料來源、核對日、置頂到期日等。
+   - CSV 匯入（欄位以逗號分隔，第一列標題自動略過）與 CSV 匯出
+     （含 UTF-8 BOM，Excel 可正確辨識中文；欄位順序與匯入相容，可當
+     範本）。
+   - 依分類／狀態／關鍵字篩選、分頁、批次操作（設顯示／隱藏、標記／
+     取消已核對、刪除）。
+4. 後台可設定前台標題、說明文字與免責聲明；啟用開關預設依產業別
+   （都市更新／自主更新／地政士皆預設開啟）。
+
+二、設計原則
+
+- 完全比照既有模組架構（Schema／Repository／Service／Settings／Module），
+  服務層邏輯（分類正規化、地區「台／臺」通用解析、卡片渲染、排序）
+  移植自 UR_SYS `inc/partners.php`，並改用 WordPress 逸出函式與外掛
+  自有樣式（不依賴 Bootstrap，改以 emoji 作分類圖示）。
+- 名錄卡片所有欄位皆逐一逸出；官方網站僅接受 http(s) 並加
+  `rel="noopener noreferrer nofollow"`；資料以本外掛獨立資料表儲存。
+
+三、新增檔案
+
+- includes/database/schemas/class-ur-ai-schema-partners.php
+- includes/modules/partners/class-ur-ai-partner-service.php
+- includes/modules/partners/class-ur-ai-partner-repository.php
+- includes/modules/partners/class-ur-ai-partner-settings.php
+- includes/modules/partners/class-ur-ai-partners-module.php
+- public/views/partners-view.php
+- public/assets/css/partners.css
+- public/assets/js/partners.js
+- admin/pages/partners-page.php
+
+四、修改檔案
+
+- ur-ai-assistant.php（版本號 1.39.1 → 1.40.0；資料庫版本 1.1.0 → 1.2.0）
+- includes/database/class-ur-ai-schema-manager.php（註冊 Partners schema）
+- includes/core/class-ur-ai-autoloader.php（新增類別對應）
+- includes/core/class-ur-ai-module-manager.php（註冊 partners 模組）
+- includes/core/class-ur-ai-industry-profiles.php（三個產業別預設開啟）
+- admin/pages/dashboard-page.php（Shortcode 使用說明新增第 10 組、9→10）
+- readme.txt
+
+五、資料表變更
+
+新增 wp_ur_ai_partners 資料表（相關產業名錄）。資料庫版本由 1.1.0
+升級至 1.2.0，升級時自動建立。
+
+六、測試方式
+
+- PHP 整合測試（42 項檢查點）：服務層（分類正規化雙向對應、地區
+  「台／臺」通用解析、置頂有效期判斷、卡片與 data-* 屬性的 XSS 逸出、
+  電話撥號與官網連結、已核對／待補充標示）＋模組生命週期（construct→
+  register→boot→admin_menu→shortcode 渲染，以假 $wpdb 回傳名錄資料，
+  確認前台輸出分類按鈕、卡片與免責聲明且正確逸出）＋CSV 解析（標題
+  略過、分類正規化、等級／狀態／權重／已核對型別轉換），全部通過。
+- `php -l` 確認全部新增與修改的 PHP 檔案語法正確；`node --check` 確認
+  前台 JS 語法正確；CSV 讀寫改為明確傳入 escape 參數以相容 PHP 8.4。
+
+七、是否建議上正式站
+
+建議更新。純新增功能，預設在三個產業別皆啟用；新增一張獨立資料表，
+升級時自動建立，不影響既有功能與資料。
+
+---
+
 ## 這個檔案的設計重點
 
 ### 1. 留下完整版本脈絡

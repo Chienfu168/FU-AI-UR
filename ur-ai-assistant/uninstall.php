@@ -68,6 +68,7 @@ $tables = array(
     $wpdb->prefix . 'ur_ai_market_prices',
     $wpdb->prefix . 'ur_ai_quiz_questions',
     $wpdb->prefix . 'ur_ai_quiz_attempts',
+    $wpdb->prefix . 'ur_ai_partners',
 );
 
 foreach ($tables as $table) {

@@ -131,6 +131,7 @@ $quiz_shortcode                 = '[ur_ai_quiz]';
 $quiz_leaderboard_shortcode     = '[ur_ai_quiz_leaderboard]';
 $tax_calculator_shortcode       = '[ur_ai_tax_calculator]';
 $joint_burden_shortcode         = '[ur_ai_joint_burden]';
+$partners_shortcode             = '[ur_ai_partners]';
 
 $market_price_stale_days = null;
 
@@ -447,6 +448,17 @@ if (class_exists('UR_AI_Settings')) {
             </p>
             <p class="ur-ai-muted"><?php echo esc_html__('依「新北市」都市更新提列總表與各分項說明之公開公式，輸入基地與權屬條件，概算共同負擔 A～H 各項：工程費用A（拆除、營建、外接管線）、權利變換費用C（規劃費、估價費、鑑界、鑽探、地籍整理）、貸款利息D、稅捐E（印花稅／營業稅）、管理費用F（F1行政作業費、F3人事行政管理費、F4銷售管理費、F5風險管理費）。填入「更新後總權利價值」後會一併算出營業稅與「共同負擔比率」（營業稅依財政部109年令釋公式，因共同負擔含營業稅本身屬循環定義，以代數封閉解求出）。個案認定項目（建築設計費、公共設施、拆遷補償、信託費、B／G／H等）可自行帶入。臺北市及其他縣市之公式與費率不同，不適用本結果。不提供額外 shortcode 參數，可於「共同負擔估算」頁調整啟用狀態與免責聲明文字。', 'ur-ai-assistant'); ?></p>
 
+            <hr>
+
+            <h3><?php echo esc_html__('10. 相關產業名錄', 'ur-ai-assistant'); ?></h3>
+            <p>
+                <code class="ur-ai-code" id="ur-ai-guide-shortcode-partners"><?php echo esc_html($partners_shortcode); ?></code>
+                <button type="button" class="button ur-ai-copy-button" data-copy-target="#ur-ai-guide-shortcode-partners">
+                    <?php echo esc_html__('複製', 'ur-ai-assistant'); ?>
+                </button>
+            </p>
+            <p class="ur-ai-muted"><?php echo esc_html__('都市更新專業服務與相關組織名錄：依分類（建築師、估價師、地政士、律師、實施者、建商、營造廠、公協會等，也可自訂分類）列出相關產業，前台可依分類／縣市篩選並即時搜尋。名錄僅供資訊查詢與自行洽詢參考，不代表本平台之推薦、認證或背書；卡片標示「資料已核對／公開資料待補充」與資料來源、最後核對日。名錄資料於後台「相關產業名錄」頁管理（單筆新增／編輯、CSV 匯入匯出、批次操作），並可設定前台標題、說明與免責聲明。', 'ur-ai-assistant'); ?></p>
+
         </div>
     </details>
 
@@ -691,7 +703,7 @@ if (class_exists('UR_AI_Settings')) {
             </div>
 
             <p class="ur-ai-muted">
-                <?php echo esc_html__('本外掛共有 9 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜、知識大考驗、知識大考驗排行榜、稅賦試算、共同負擔估算），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
+                <?php echo esc_html__('本外掛共有 10 組 Shortcode（AI 助理、FAQ 知識庫查詢頁、試算器、行情參考、都更效益排行榜、知識大考驗、知識大考驗排行榜、稅賦試算、共同負擔估算、相關產業名錄），完整參數與範例請見上方「Shortcode 使用說明」。', 'ur-ai-assistant'); ?>
                 <a href="#ur-ai-shortcode-guide"><?php echo esc_html__('前往完整說明', 'ur-ai-assistant'); ?></a>
             </p>
         </div>
