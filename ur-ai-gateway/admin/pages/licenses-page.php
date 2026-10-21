@@ -19,12 +19,21 @@ $msg_type = isset($_GET['ur_msg_type']) ? sanitize_key(wp_unslash($_GET['ur_msg_
 $messages = array(
     'license_created'  => __('已手動建立授權碼。', 'ur-ai-gateway'),
     'license_updated'  => __('授權碼狀態已更新。', 'ur-ai-gateway'),
+    'license_rotated'  => __('已重新產生授權碼，舊金鑰已立即失效。', 'ur-ai-gateway'),
     'invalid_request'  => __('請求不正確。', 'ur-ai-gateway'),
 );
 
 $repository = class_exists('UR_AI_Gateway_License_Repository') ? new UR_AI_Gateway_License_Repository() : null;
 $licenses   = $repository ? $repository->query(array('limit' => 100)) : array();
 $statuses   = class_exists('UR_AI_Gateway_Schema_Licenses') ? UR_AI_Gateway_Schema_Licenses::get_statuses() : array();
+
+// 剛產生／輪替的完整金鑰——僅顯示這一次，顯示後立即清掉。
+$one_time_key_transient = 'ur_ai_gw_new_key_' . get_current_user_id();
+$one_time_key           = get_transient($one_time_key_transient);
+
+if (false !== $one_time_key) {
+    delete_transient($one_time_key_transient);
+}
 ?>
 <div class="wrap">
     <h1><?php echo esc_html__('授權碼管理', 'ur-ai-gateway'); ?></h1>
@@ -32,6 +41,14 @@ $statuses   = class_exists('UR_AI_Gateway_Schema_Licenses') ? UR_AI_Gateway_Sche
     <?php if ('' !== $message && isset($messages[$message])) : ?>
         <div class="notice notice-<?php echo esc_attr('error' === $msg_type ? 'error' : 'success'); ?> is-dismissible">
             <p><?php echo esc_html($messages[$message]); ?></p>
+        </div>
+    <?php endif; ?>
+
+    <?php if (false !== $one_time_key && '' !== (string) $one_time_key) : ?>
+        <div class="notice notice-warning">
+            <p><strong><?php echo esc_html__('請立即複製以下完整授權碼交給客戶——基於安全考量，離開本頁後將無法再次查看：', 'ur-ai-gateway'); ?></strong></p>
+            <p><code style="font-size:15px; padding:6px 10px; display:inline-block; background:#fff8e5;"><?php echo esc_html($one_time_key); ?></code></p>
+            <p class="description"><?php echo esc_html__('資料庫只保存這組金鑰的雜湊與遮罩顯示值，不保存明文；若客戶日後遺失，請使用「重新產生」輪替重發。', 'ur-ai-gateway'); ?></p>
         </div>
     <?php endif; ?>
 
@@ -79,7 +96,7 @@ $statuses   = class_exists('UR_AI_Gateway_Schema_Licenses') ? UR_AI_Gateway_Sche
     <table class="wp-list-table widefat fixed striped">
         <thead>
             <tr>
-                <th><?php echo esc_html__('授權碼', 'ur-ai-gateway'); ?></th>
+                <th><?php echo esc_html__('授權碼（遮罩）', 'ur-ai-gateway'); ?></th>
                 <th><?php echo esc_html__('客戶 Email', 'ur-ai-gateway'); ?></th>
                 <th><?php echo esc_html__('方案', 'ur-ai-gateway'); ?></th>
                 <th><?php echo esc_html__('狀態', 'ur-ai-gateway'); ?></th>
@@ -123,6 +140,18 @@ $statuses   = class_exists('UR_AI_Gateway_Schema_Licenses') ? UR_AI_Gateway_Sche
                                     <?php endforeach; ?>
                                 </select>
                                 <button type="submit" class="button"><?php echo esc_html__('更新', 'ur-ai-gateway'); ?></button>
+                            </form>
+                            <form method="post" style="display:inline-block; margin-left:6px;" onsubmit="return confirm('<?php echo esc_js(__('確定要重新產生這組授權碼嗎？舊金鑰會立即失效，使用舊金鑰的客戶端將無法連線，需改用新金鑰。', 'ur-ai-gateway')); ?>');">
+                                <?php
+                                if (class_exists('UR_AI_Gateway_Security')) {
+                                    UR_AI_Gateway_Security::admin_form_nonce_field();
+                                } else {
+                                    wp_nonce_field('ur_ai_gateway_admin_action', 'ur_ai_gateway_nonce');
+                                }
+                                ?>
+                                <input type="hidden" name="ur_ai_gateway_action" value="rotate_license_key">
+                                <input type="hidden" name="license_id" value="<?php echo esc_attr(absint($license->id)); ?>">
+                                <button type="submit" class="button"><?php echo esc_html__('重新產生', 'ur-ai-gateway'); ?></button>
                             </form>
                         </td>
                     </tr>

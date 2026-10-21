@@ -99,10 +99,33 @@ class UR_AI_Gateway_Admin_Menu {
                 $this->handle_create_manual_license();
                 break;
 
+            case 'rotate_license_key':
+                $this->handle_rotate_license_key();
+                break;
+
             case 'update_license_status':
                 $this->handle_update_license_status();
                 break;
         }
+    }
+
+    /**
+     * 把「剛產生、僅顯示一次」的完整金鑰暫存起來，待導回清單頁時顯示。
+     *
+     * 刻意用短時效 transient（綁定目前操作者）而非網址參數，避免完整
+     * 金鑰出現在瀏覽紀錄／伺服器 log。
+     *
+     * @param string $full_key 完整金鑰。
+     * @return void
+     */
+    private function stash_one_time_key($full_key) {
+        $full_key = (string) $full_key;
+
+        if ('' === $full_key) {
+            return;
+        }
+
+        set_transient('ur_ai_gw_new_key_' . get_current_user_id(), $full_key, 300);
     }
 
     /**
@@ -146,9 +169,41 @@ class UR_AI_Gateway_Admin_Menu {
         $admin_note  = isset($_POST['admin_note']) ? sanitize_textarea_field(wp_unslash($_POST['admin_note'])) : '';
 
         $service = new UR_AI_Gateway_License_Service();
-        $service->create_manual($email, $plan, $daily_limit, $admin_note);
+        $license = $service->create_manual($email, $plan, $daily_limit, $admin_note);
+
+        if ($license && !empty($license->full_license_key)) {
+            $this->stash_one_time_key($license->full_license_key);
+        }
 
         $this->redirect_with_message(self::MENU_SLUG, 'license_created');
+    }
+
+    /**
+     * 輪替（重新產生）某授權碼：舊金鑰立即失效，新金鑰僅顯示一次。
+     *
+     * @return void
+     */
+    private function handle_rotate_license_key() {
+        if (!class_exists('UR_AI_Gateway_License_Service')) {
+            return;
+        }
+
+        $license_id = isset($_POST['license_id']) ? absint(wp_unslash($_POST['license_id'])) : 0;
+
+        if ($license_id <= 0) {
+            $this->redirect_with_message(self::MENU_SLUG, 'invalid_request', 'error');
+        }
+
+        $service = new UR_AI_Gateway_License_Service();
+        $new_key = $service->rotate_key($license_id);
+
+        if ('' === $new_key) {
+            $this->redirect_with_message(self::MENU_SLUG, 'invalid_request', 'error');
+        }
+
+        $this->stash_one_time_key($new_key);
+
+        $this->redirect_with_message(self::MENU_SLUG, 'license_rotated');
     }
 
     /**

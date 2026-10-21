@@ -83,7 +83,19 @@ class UR_AI_Gateway_License_Service {
             )
         );
 
-        return $id > 0 ? $this->repository->find($id) : null;
+        if ($id <= 0) {
+            return null;
+        }
+
+        $row = $this->repository->find($id);
+
+        // 把「完整金鑰」隨新建立的列一併帶回（資料庫只存遮罩值＋雜湊）：
+        // 呼叫端（寄信給客戶、後台顯示一次）需要這個明文，之後就無從取得。
+        if ($row) {
+            $row->full_license_key = $license_key;
+        }
+
+        return $row;
     }
 
     /**
@@ -136,9 +148,11 @@ class UR_AI_Gateway_License_Service {
             $daily_limit = class_exists('UR_AI_Gateway_Settings') ? UR_AI_Gateway_Settings::get_default_daily_limit() : 200;
         }
 
+        $license_key = $this->generate_license_key();
+
         $id = $this->repository->insert(
             array(
-                'license_key'    => $this->generate_license_key(),
+                'license_key'    => $license_key,
                 'customer_email' => $customer_email,
                 'plan'           => $plan,
                 'status'         => 'active',
@@ -147,7 +161,51 @@ class UR_AI_Gateway_License_Service {
             )
         );
 
-        return $id > 0 ? $this->repository->find($id) : null;
+        if ($id <= 0) {
+            return null;
+        }
+
+        $row = $this->repository->find($id);
+
+        if ($row) {
+            $row->full_license_key = $license_key;
+        }
+
+        return $row;
+    }
+
+    /**
+     * 重新產生（輪替）某授權碼：舊金鑰立即失效，回傳新的完整金鑰。
+     *
+     * 用於客戶遺失金鑰或疑似外洩時重發——因為金鑰不再以明文儲存，
+     * 無法「查回」舊金鑰，只能輪替重發。回傳的完整金鑰同樣只會出現
+     * 這一次。
+     *
+     * @param int $license_id 授權碼 ID。
+     * @return string 新的完整金鑰；失敗回空字串。
+     */
+    public function rotate_key($license_id) {
+        if (!$this->repository instanceof UR_AI_Gateway_License_Repository) {
+            return '';
+        }
+
+        $license_id = absint($license_id);
+
+        if ($license_id <= 0 || !$this->repository->find($license_id)) {
+            return '';
+        }
+
+        $new_key = $this->generate_license_key();
+
+        $updated = $this->repository->update(
+            $license_id,
+            array(
+                'license_key' => UR_AI_Gateway_License_Repository::mask_key($new_key),
+                'key_hash'    => UR_AI_Gateway_License_Repository::hash_key($new_key),
+            )
+        );
+
+        return $updated ? $new_key : '';
     }
 
     /**

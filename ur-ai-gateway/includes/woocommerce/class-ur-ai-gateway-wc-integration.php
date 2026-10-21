@@ -122,7 +122,12 @@ class UR_AI_Gateway_WC_Integration {
             return;
         }
 
-        if ($license->created_at !== $license->updated_at) {
+        // 金鑰不再以明文儲存，資料列只有遮罩值；只有「剛建立」時 service
+        // 才會把完整金鑰隨 full_license_key 帶回。沒有它就無法寄出可用的
+        // 金鑰，也代表這不是新建立（例如訂閱重新啟用），因此不寄信。
+        $full_key = isset($license->full_license_key) ? (string) $license->full_license_key : '';
+
+        if ('' === $full_key) {
             return;
         }
 
@@ -130,8 +135,8 @@ class UR_AI_Gateway_WC_Integration {
 
         $body = sprintf(
             /* translators: %s: 授權碼 */
-            __("感謝您的訂閱，以下是您的 AI 代管服務授權碼：\n\n%s\n\n請將這組授權碼填入 UR AI Assistant 外掛「功能設定」頁的「代管服務授權碼」欄位，並將「AI 服務來源」切換為「使用代管服務」即可開始使用，不需要自行申請 OpenAI API Key。", 'ur-ai-gateway'),
-            $license->license_key
+            __("感謝您的訂閱，以下是您的 AI 代管服務授權碼：\n\n%s\n\n請將這組授權碼填入 UR AI Assistant 外掛「功能設定」頁的「代管服務授權碼」欄位，並將「AI 服務來源」切換為「使用代管服務」即可開始使用，不需要自行申請 OpenAI API Key。\n\n（基於安全考量，這組授權碼僅會寄送這一次，請妥善保存；若日後遺失，請聯絡我們重新發放。）", 'ur-ai-gateway'),
+            $full_key
         );
 
         wp_mail($license->customer_email, $subject, $body);
