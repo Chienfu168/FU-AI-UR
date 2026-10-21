@@ -87,6 +87,16 @@ class UR_AI_Gateway_REST_Controller {
             return $this->error_response(500, '代管服務尚未正確載入，請聯絡服務提供者。', 'gateway_not_loaded');
         }
 
+        // 端點層每 IP 節流（在查授權碼之前，擋匿名洪水請求、省 DB／OpenAI）。
+        if (class_exists('UR_AI_Gateway_Rate_Limiter') && class_exists('UR_AI_Gateway_Settings')) {
+            $per_min = UR_AI_Gateway_Settings::get_rate_limit_per_min();
+            $ip      = UR_AI_Gateway_Rate_Limiter::get_client_ip();
+
+            if (!UR_AI_Gateway_Rate_Limiter::check($ip, $per_min)) {
+                return $this->error_response(429, '請求過於頻繁，請稍後再試。', 'too_many_requests');
+            }
+        }
+
         $token = $this->extract_bearer_token($request);
 
         if ('' === $token) {

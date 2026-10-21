@@ -31,6 +31,7 @@ $allowed_models      = $settings_available ? (string) UR_AI_Gateway_Settings::ge
 $max_output_tokens   = $settings_available ? absint(UR_AI_Gateway_Settings::get('max_output_tokens', 16384)) : 16384;
 $max_messages        = $settings_available ? absint(UR_AI_Gateway_Settings::get('max_messages', 100)) : 100;
 $max_input_chars     = $settings_available ? absint(UR_AI_Gateway_Settings::get('max_input_chars', 200000)) : 200000;
+$rate_limit_per_min  = $settings_available ? absint(UR_AI_Gateway_Settings::get('rate_limit_per_min', 120)) : 120;
 
 $rest_endpoint = rest_url('ur-ai-gateway/v1/chat');
 ?>
@@ -140,6 +141,24 @@ $rest_endpoint = rest_url('ur-ai-gateway/v1/chat');
                     <input type="number" id="max_input_chars" name="max_input_chars" value="<?php echo esc_attr($max_input_chars); ?>" min="1" max="5000000" class="regular-text">
                     <p class="description">
                         <?php echo esc_html__('單次請求所有訊息內容的總字元數上限，超過即退回（粗略對應輸入 token 成本）。', 'ur-ai-gateway'); ?>
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+        <h2><?php echo esc_html__('濫用防護', 'ur-ai-gateway'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="rate_limit_per_min"><?php echo esc_html__('每 IP 每分鐘請求上限', 'ur-ai-gateway'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="rate_limit_per_min" name="rate_limit_per_min" value="<?php echo esc_attr($rate_limit_per_min); ?>" min="0" max="1000000" class="small-text">
+                    <p class="description">
+                        <?php echo esc_html__('在驗證授權碼「之前」先擋同一 IP 的高頻洪水請求，用來省下資料庫與 OpenAI 的浪費。0＝停用節流。預設 120 相當寬鬆，正常客戶因各自有每日額度幾乎不會撞到；此限制主要對付匿名濫用。', 'ur-ai-gateway'); ?>
+                    </p>
+                    <p class="description">
+                        <?php echo esc_html__('若本服務站在反向代理／CDN 之後，請於 wp-config.php 定義 UR_AI_GATEWAY_CLIENT_IP_HEADER（例如 CF-Connecting-IP）以正確辨識來源 IP；未定義時以 REMOTE_ADDR 為準。', 'ur-ai-gateway'); ?>
                     </p>
                 </td>
             </tr>

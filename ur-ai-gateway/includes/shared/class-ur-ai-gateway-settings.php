@@ -124,6 +124,15 @@ class UR_AI_Gateway_Settings {
     }
 
     /**
+     * 取得端點層每 IP 每分鐘請求上限（0＝停用節流）。
+     *
+     * @return int
+     */
+    public static function get_rate_limit_per_min() {
+        return absint(self::get('rate_limit_per_min', 120));
+    }
+
+    /**
      * 取得預設每日呼叫上限（新授權碼建立時的預設值，個別授權碼仍可
      * 各自覆蓋）。
      *
@@ -149,6 +158,8 @@ class UR_AI_Gateway_Settings {
             'max_output_tokens'    => 16384,
             'max_messages'         => 100,
             'max_input_chars'      => 200000,
+            // 端點層每 IP 每分鐘請求上限（見 UR_AI_Gateway_Rate_Limiter）；0＝停用。
+            'rate_limit_per_min'   => 120,
         );
     }
 
@@ -191,6 +202,10 @@ class UR_AI_Gateway_Settings {
             case 'max_input_chars':
                 $v = absint($value);
                 return $v > 0 ? min($v, 5000000) : 200000;
+
+            case 'rate_limit_per_min':
+                // 0 合法（＝停用）；上限設個合理天花板避免誤填天文數字。
+                return min(absint($value), 1000000);
 
             default:
                 return is_scalar($value) ? sanitize_text_field((string) $value) : '';

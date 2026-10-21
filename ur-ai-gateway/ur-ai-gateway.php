@@ -3,7 +3,7 @@
  * Plugin Name: UR AI Gateway
  * Plugin URI: https://www.ur-promoter.com/
  * Description: 「UR AI Assistant」外掛的代管 AI 服務授權與代理外掛。安裝在服務提供站（例如 ur-promoter.com），依 WooCommerce／WooCommerce Subscriptions 訂單狀態發放與管理授權碼，並提供一個 REST API 端點代理呼叫 OpenAI，讓客戶端網站不需要自行申請 OpenAI API Key。
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: UR Promoter
  * Author URI: https://www.ur-promoter.com/
  * Text Domain: ur-ai-gateway
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 /**
  * 外掛版本。
  */
-define('UR_AI_GATEWAY_VERSION', '1.1.0');
+define('UR_AI_GATEWAY_VERSION', '1.2.0');
 
 /**
  * 外掛基本路徑常數。

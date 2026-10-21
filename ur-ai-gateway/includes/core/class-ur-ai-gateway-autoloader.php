@@ -68,6 +68,7 @@ class UR_AI_Gateway_Autoloader {
 
             'UR_AI_Gateway_REST_Controller'         => 'includes/rest/class-ur-ai-gateway-rest-controller.php',
             'UR_AI_Gateway_Request_Validator'       => 'includes/rest/class-ur-ai-gateway-request-validator.php',
+            'UR_AI_Gateway_Rate_Limiter'            => 'includes/rest/class-ur-ai-gateway-rate-limiter.php',
 
             'UR_AI_Gateway_Admin_Menu'              => 'admin/class-ur-ai-gateway-admin-menu.php',
         );

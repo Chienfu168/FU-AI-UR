@@ -123,6 +123,7 @@ class UR_AI_Gateway_Admin_Menu {
                 'max_output_tokens'   => isset($_POST['max_output_tokens']) ? wp_unslash($_POST['max_output_tokens']) : '',
                 'max_messages'        => isset($_POST['max_messages']) ? wp_unslash($_POST['max_messages']) : '',
                 'max_input_chars'     => isset($_POST['max_input_chars']) ? wp_unslash($_POST['max_input_chars']) : '',
+                'rate_limit_per_min'  => isset($_POST['rate_limit_per_min']) ? wp_unslash($_POST['rate_limit_per_min']) : '',
             )
         );
 
