@@ -267,6 +267,83 @@ class UR_AI_Gateway_License_Repository {
     }
 
     /**
+     * 原子性地「檢查並扣用一次每日額度」。
+     *
+     * 以單一條件式 UPDATE 完成「換日重設 ＋ 額度檢查 ＋ 遞增」，避免原本
+     * 「讀→比較→寫」三步分離在併發下各自讀到舊值、衝破額度的問題。
+     *
+     * 一句 SQL 同時處理：
+     * - 換日：若 daily_usage_reset_at 不是今天（或為 NULL），視為新的一天，
+     *   daily_usage_count 重設為 1、reset_at 設為今天。
+     * - 未換日：daily_usage_count + 1。
+     * WHERE 條件保證「只有在額度內（或無上限、或換日）時」才會更新到該列，
+     * 因此以受影響列數判斷是否成功扣用：0＝已達上限。
+     *
+     * @param int $id 授權碼 ID。
+     * @return bool true＝成功扣用一次（可繼續呼叫）；false＝已達上限或無效。
+     */
+    public function try_consume_daily($id) {
+        global $wpdb;
+
+        $id = absint($id);
+
+        if ($id <= 0) {
+            return false;
+        }
+
+        $today = current_time('Y-m-d');
+        $now   = current_time('mysql');
+
+        $sql = "UPDATE {$this->table_name}
+                SET total_usage_count = total_usage_count + 1,
+                    daily_usage_count = CASE WHEN DATE(daily_usage_reset_at) = %s THEN daily_usage_count + 1 ELSE 1 END,
+                    daily_usage_reset_at = CASE WHEN DATE(daily_usage_reset_at) = %s THEN daily_usage_reset_at ELSE %s END,
+                    updated_at = %s
+                WHERE id = %d
+                  AND (
+                        daily_limit = 0
+                        OR daily_usage_reset_at IS NULL
+                        OR DATE(daily_usage_reset_at) <> %s
+                        OR daily_usage_count < daily_limit
+                  )";
+
+        $affected = $wpdb->query(
+            $wpdb->prepare($sql, $today, $today, $now, $now, $id, $today)
+        );
+
+        return (int) $affected > 0;
+    }
+
+    /**
+     * 累加 token 用量（成功呼叫 OpenAI 後記錄，供用量計費與毛利分析）。
+     *
+     * @param int $id           授權碼 ID。
+     * @param int $total_tokens  本次請求總 token 數。
+     * @return void
+     */
+    public function add_tokens($id, $total_tokens) {
+        global $wpdb;
+
+        $id           = absint($id);
+        $total_tokens = max(0, (int) $total_tokens);
+
+        if ($id <= 0 || 0 === $total_tokens) {
+            return;
+        }
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$this->table_name}
+                 SET total_tokens = total_tokens + %d, updated_at = %s
+                 WHERE id = %d",
+                $total_tokens,
+                current_time('mysql'),
+                $id
+            )
+        );
+    }
+
+    /**
      * 重設每日使用次數（換日時呼叫）。
      *
      * @param int $id 授權碼 ID。

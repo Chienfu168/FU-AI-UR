@@ -59,6 +59,7 @@ class UR_AI_Gateway_Schema_Licenses {
             daily_usage_count INT UNSIGNED NOT NULL DEFAULT 0,
             daily_usage_reset_at DATETIME NULL,
             total_usage_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            total_tokens BIGINT UNSIGNED NOT NULL DEFAULT 0,
             admin_note TEXT NULL,
             expires_at DATETIME NULL,
             created_at DATETIME NOT NULL,

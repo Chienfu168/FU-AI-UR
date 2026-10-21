@@ -4,6 +4,76 @@
 
 ---
 
+## v1.1.0
+
+更新日期
+2026-10-21
+
+版本定位
+
+針對一份系統體檢報告中「與線上收費服務（gateway）成本與安全相關」的
+高優先項目，做**第一批**修補。這一版只處理「成本防護＋金鑰安全＋
+用量可視」四件最急的事，刻意不動任何會改變既有付費客戶行為的部分，
+升級後即使服務提供者什麼設定都不改，行為與 v1.0.0 一致（新限制全部
+採用寬鬆、非破壞性的預設值）。
+
+> 開發與部署分離：本版只提交到開發分支並附驗證，**是否實際部署到
+> 線上 gateway 站（ur-promoter.com）由服務提供者自行決定時機**。
+
+一、主要新增／修補（對應體檢報告項目）
+
+1. **轉發請求成本防護**（報告 A／G，`UR_AI_Gateway_Request_Validator`）：
+   在「扣用每日額度之前」先驗證轉發給 OpenAI 的 payload——拒絕串流
+   （stream，gateway 無法處理 SSE）、強制 `max_tokens` 上限（取
+   `min(客戶端值, 上限)`，未給則補為上限）、限制 messages 筆數與輸入
+   總字元數、可選的 model 白名單。無效請求直接退回且**不佔用客戶
+   當日額度**。所有上限預設寬鬆（輸出 16384 tokens／100 則／200000
+   字元／不限 model），可於設定頁調整。
+2. **每日額度原子扣用**（報告 B，`License_Repository::try_consume_daily()`）：
+   把原本「讀 → 比較 → 寫」三步分離的額度檢查，改為單一條件式 UPDATE
+   一次完成「換日重設＋額度檢查＋遞增」，以受影響列數判斷是否成功
+   扣用（0＝已達上限）。避免高併發下多個請求各自讀到舊值、一起衝破
+   每日上限的競態問題。
+3. **token 用量記錄**（報告 F，新增 `ur_ai_gateway_usage` 資料表與
+   `UR_AI_Gateway_Usage_Repository`）：每次成功且含 `usage` 的回應，
+   記錄 model／prompt／completion／total tokens 與狀態碼，同時在授權碼
+   列累計 `total_tokens`。供日後用量計費、毛利分析與出帳爭議時的依據。
+   驗證失敗、額度超限、上游錯誤等「不產生 OpenAI 計費」的情況不寫入。
+4. **OpenAI 金鑰可改放 wp-config.php**（報告 E，`Settings::get_openai_api_key()`）：
+   優先讀取 `wp-config.php` 的 `UR_AI_GATEWAY_OPENAI_KEY` 常數，金鑰
+   不落在資料庫，降低資料庫備份或其他外掛漏洞外洩金鑰的風險；未定義
+   時才退回資料庫設定（向下相容）。設定頁會顯示目前金鑰來源。
+
+二、資料庫
+
+- 授權碼表新增 `total_tokens` 欄位；新增 `ur_ai_gateway_usage` 明細表。
+- DB 版本 1.0.0 → 1.1.0，`Schema_Manager::install()` 以 `dbDelta`
+  同時建立／升級兩張表（既有站台升級會自動補欄位與新表，不需手動介入）。
+
+三、測試方式
+
+獨立 PHP harness（不需 WordPress）共 25 項檢查全部通過：
+- 驗證器 17 項：空內容／非 JSON／拒 stream／正常放行且移除 stream 鍵／
+  `max_tokens` 壓上限、補預設、保留較小值／model 白名單命中與未命中／
+  空白名單放行任意 model／缺 messages／筆數超限／字元數超限（含多段式
+  vision content）／`max_output_tokens=0` 時不強制注入。
+- 原子扣額度 8 項（以 SQLite 模擬 MySQL 的 `CASE`/`DATE` 條件式 UPDATE
+  語意）：`limit=3` 前三次成功、第四五次被擋且計數停在 3、被擋的不計入
+  累計；換日自動重設為 1 並更新日期、累計續增；`limit=0` 視為無上限。
+
+`php -l` 確認所有變更檔案語法正確。
+
+四、是否建議上正式站
+
+本批修補皆為非破壞性（寬鬆預設、向下相容），但因 gateway 是線上收費
+服務，建議服務提供者在測試站先完整走一次「訂閱 → 授權碼 → 客戶端
+代管問答」流程，並：(1) 在 OpenAI 後台設定每月用量上限（硬性成本天花板，
+與本外掛的軟性防護互補）；(2) 考慮把 OpenAI 金鑰改以 `wp-config.php`
+常數提供後，再正式部署。後續批次（REST 層 IP 節流、授權碼雜湊儲存與
+site_url 綁定、金鑰輪替等）見 `docs/security-cost-tracking.md`。
+
+---
+
 ## v1.0.0
 
 更新日期

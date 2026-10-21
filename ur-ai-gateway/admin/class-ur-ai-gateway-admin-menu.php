@@ -119,6 +119,10 @@ class UR_AI_Gateway_Admin_Menu {
             array(
                 'openai_api_key'      => isset($_POST['openai_api_key']) ? wp_unslash($_POST['openai_api_key']) : '',
                 'default_daily_limit' => isset($_POST['default_daily_limit']) ? wp_unslash($_POST['default_daily_limit']) : '',
+                'allowed_models'      => isset($_POST['allowed_models']) ? wp_unslash($_POST['allowed_models']) : '',
+                'max_output_tokens'   => isset($_POST['max_output_tokens']) ? wp_unslash($_POST['max_output_tokens']) : '',
+                'max_messages'        => isset($_POST['max_messages']) ? wp_unslash($_POST['max_messages']) : '',
+                'max_input_chars'     => isset($_POST['max_input_chars']) ? wp_unslash($_POST['max_input_chars']) : '',
             )
         );
 

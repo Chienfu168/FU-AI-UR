@@ -189,6 +189,9 @@ class UR_AI_Gateway_License_Service {
     /**
      * 檢查並累加每日用量：換日時自動重設，超過每日上限時回傳 false。
      *
+     * 實際的「換日重設＋額度檢查＋遞增」已改由 repository 以單一條件式
+     * UPDATE 原子完成（try_consume_daily），避免併發下衝破額度。
+     *
      * @param object $license 授權碼資料列。
      * @return bool 是否還在額度內（true=可以繼續呼叫並已扣一次額度）。
      */
@@ -197,25 +200,22 @@ class UR_AI_Gateway_License_Service {
             return false;
         }
 
-        $id           = absint($license->id);
-        $daily_count  = absint($license->daily_usage_count);
-        $daily_limit  = absint($license->daily_limit);
-        $last_reset   = !empty($license->daily_usage_reset_at) ? strtotime($license->daily_usage_reset_at) : 0;
-        $today        = date('Y-m-d', current_time('timestamp'));
-        $last_reset_d = $last_reset ? date('Y-m-d', $last_reset) : '';
+        return $this->repository->try_consume_daily(absint($license->id));
+    }
 
-        if ($last_reset_d !== $today) {
-            $this->repository->reset_daily_usage($id);
-            $daily_count = 0;
+    /**
+     * 記錄某授權碼的 token 用量（成功呼叫 OpenAI 後）。
+     *
+     * @param int $license_id  授權碼 ID。
+     * @param int $total_tokens 本次總 token 數。
+     * @return void
+     */
+    public function add_token_usage($license_id, $total_tokens) {
+        if (!$this->repository instanceof UR_AI_Gateway_License_Repository) {
+            return;
         }
 
-        if ($daily_limit > 0 && $daily_count >= $daily_limit) {
-            return false;
-        }
-
-        $this->repository->increment_usage($id);
-
-        return true;
+        $this->repository->add_tokens(absint($license_id), (int) $total_tokens);
     }
 
     /**
