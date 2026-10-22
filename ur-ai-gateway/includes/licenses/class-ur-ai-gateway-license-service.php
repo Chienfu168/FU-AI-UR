@@ -83,7 +83,19 @@ class UR_AI_Gateway_License_Service {
             )
         );
 
-        return $id > 0 ? $this->repository->find($id) : null;
+        if ($id <= 0) {
+            return null;
+        }
+
+        $row = $this->repository->find($id);
+
+        // 把「完整金鑰」隨新建立的列一併帶回（資料庫只存遮罩值＋雜湊）：
+        // 呼叫端（寄信給客戶、後台顯示一次）需要這個明文，之後就無從取得。
+        if ($row) {
+            $row->full_license_key = $license_key;
+        }
+
+        return $row;
     }
 
     /**
@@ -136,9 +148,11 @@ class UR_AI_Gateway_License_Service {
             $daily_limit = class_exists('UR_AI_Gateway_Settings') ? UR_AI_Gateway_Settings::get_default_daily_limit() : 200;
         }
 
+        $license_key = $this->generate_license_key();
+
         $id = $this->repository->insert(
             array(
-                'license_key'    => $this->generate_license_key(),
+                'license_key'    => $license_key,
                 'customer_email' => $customer_email,
                 'plan'           => $plan,
                 'status'         => 'active',
@@ -147,7 +161,51 @@ class UR_AI_Gateway_License_Service {
             )
         );
 
-        return $id > 0 ? $this->repository->find($id) : null;
+        if ($id <= 0) {
+            return null;
+        }
+
+        $row = $this->repository->find($id);
+
+        if ($row) {
+            $row->full_license_key = $license_key;
+        }
+
+        return $row;
+    }
+
+    /**
+     * 重新產生（輪替）某授權碼：舊金鑰立即失效，回傳新的完整金鑰。
+     *
+     * 用於客戶遺失金鑰或疑似外洩時重發——因為金鑰不再以明文儲存，
+     * 無法「查回」舊金鑰，只能輪替重發。回傳的完整金鑰同樣只會出現
+     * 這一次。
+     *
+     * @param int $license_id 授權碼 ID。
+     * @return string 新的完整金鑰；失敗回空字串。
+     */
+    public function rotate_key($license_id) {
+        if (!$this->repository instanceof UR_AI_Gateway_License_Repository) {
+            return '';
+        }
+
+        $license_id = absint($license_id);
+
+        if ($license_id <= 0 || !$this->repository->find($license_id)) {
+            return '';
+        }
+
+        $new_key = $this->generate_license_key();
+
+        $updated = $this->repository->update(
+            $license_id,
+            array(
+                'license_key' => UR_AI_Gateway_License_Repository::mask_key($new_key),
+                'key_hash'    => UR_AI_Gateway_License_Repository::hash_key($new_key),
+            )
+        );
+
+        return $updated ? $new_key : '';
     }
 
     /**
@@ -189,6 +247,9 @@ class UR_AI_Gateway_License_Service {
     /**
      * 檢查並累加每日用量：換日時自動重設，超過每日上限時回傳 false。
      *
+     * 實際的「換日重設＋額度檢查＋遞增」已改由 repository 以單一條件式
+     * UPDATE 原子完成（try_consume_daily），避免併發下衝破額度。
+     *
      * @param object $license 授權碼資料列。
      * @return bool 是否還在額度內（true=可以繼續呼叫並已扣一次額度）。
      */
@@ -197,25 +258,22 @@ class UR_AI_Gateway_License_Service {
             return false;
         }
 
-        $id           = absint($license->id);
-        $daily_count  = absint($license->daily_usage_count);
-        $daily_limit  = absint($license->daily_limit);
-        $last_reset   = !empty($license->daily_usage_reset_at) ? strtotime($license->daily_usage_reset_at) : 0;
-        $today        = date('Y-m-d', current_time('timestamp'));
-        $last_reset_d = $last_reset ? date('Y-m-d', $last_reset) : '';
+        return $this->repository->try_consume_daily(absint($license->id));
+    }
 
-        if ($last_reset_d !== $today) {
-            $this->repository->reset_daily_usage($id);
-            $daily_count = 0;
+    /**
+     * 記錄某授權碼的 token 用量（成功呼叫 OpenAI 後）。
+     *
+     * @param int $license_id  授權碼 ID。
+     * @param int $total_tokens 本次總 token 數。
+     * @return void
+     */
+    public function add_token_usage($license_id, $total_tokens) {
+        if (!$this->repository instanceof UR_AI_Gateway_License_Repository) {
+            return;
         }
 
-        if ($daily_limit > 0 && $daily_count >= $daily_limit) {
-            return false;
-        }
-
-        $this->repository->increment_usage($id);
-
-        return true;
+        $this->repository->add_tokens(absint($license_id), (int) $total_tokens);
     }
 
     /**

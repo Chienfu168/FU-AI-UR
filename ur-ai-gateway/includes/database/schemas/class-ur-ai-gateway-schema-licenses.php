@@ -46,9 +46,14 @@ class UR_AI_Gateway_Schema_Licenses {
         $table_name      = self::table_name();
         $charset_collate = $wpdb->get_charset_collate();
 
+        // 注意：license_key 自 v1.3.0 起改存「遮罩顯示值」（如 urg_abcd...wxyz），
+        // 不再是可用的完整金鑰，因此移除原本的 UNIQUE 索引（遮罩值可能重複）；
+        // 實際查詢改用 key_hash（完整金鑰的 SHA-256）。既有站台升級時，
+        // Schema_Manager 會把舊的 UNIQUE 索引一次性移除並完成資料遷移。
         return "CREATE TABLE {$table_name} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             license_key VARCHAR(64) NOT NULL,
+            key_hash CHAR(64) NULL DEFAULT NULL,
             customer_email VARCHAR(190) NOT NULL DEFAULT '',
             site_url VARCHAR(255) NOT NULL DEFAULT '',
             plan VARCHAR(100) NOT NULL DEFAULT '',
@@ -59,12 +64,13 @@ class UR_AI_Gateway_Schema_Licenses {
             daily_usage_count INT UNSIGNED NOT NULL DEFAULT 0,
             daily_usage_reset_at DATETIME NULL,
             total_usage_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+            total_tokens BIGINT UNSIGNED NOT NULL DEFAULT 0,
             admin_note TEXT NULL,
             expires_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NULL,
             PRIMARY KEY  (id),
-            UNIQUE KEY license_key (license_key),
+            KEY key_hash (key_hash),
             KEY status (status),
             KEY subscription_id (subscription_id),
             KEY order_id (order_id)

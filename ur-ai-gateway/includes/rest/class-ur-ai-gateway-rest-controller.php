@@ -43,10 +43,18 @@ class UR_AI_Gateway_REST_Controller {
     private $license_service;
 
     /**
+     * Usage Repository（token 用量記錄）。
+     *
+     * @var UR_AI_Gateway_Usage_Repository|null
+     */
+    private $usage_repository;
+
+    /**
      * 建構子。
      */
     public function __construct() {
-        $this->license_service = class_exists('UR_AI_Gateway_License_Service') ? new UR_AI_Gateway_License_Service() : null;
+        $this->license_service  = class_exists('UR_AI_Gateway_License_Service') ? new UR_AI_Gateway_License_Service() : null;
+        $this->usage_repository = class_exists('UR_AI_Gateway_Usage_Repository') ? new UR_AI_Gateway_Usage_Repository() : null;
     }
 
     /**
@@ -79,6 +87,16 @@ class UR_AI_Gateway_REST_Controller {
             return $this->error_response(500, '代管服務尚未正確載入，請聯絡服務提供者。', 'gateway_not_loaded');
         }
 
+        // 端點層每 IP 節流（在查授權碼之前，擋匿名洪水請求、省 DB／OpenAI）。
+        if (class_exists('UR_AI_Gateway_Rate_Limiter') && class_exists('UR_AI_Gateway_Settings')) {
+            $per_min = UR_AI_Gateway_Settings::get_rate_limit_per_min();
+            $ip      = UR_AI_Gateway_Rate_Limiter::get_client_ip();
+
+            if (!UR_AI_Gateway_Rate_Limiter::check($ip, $per_min)) {
+                return $this->error_response(429, '請求過於頻繁，請稍後再試。', 'too_many_requests');
+            }
+        }
+
         $token = $this->extract_bearer_token($request);
 
         if ('' === $token) {
@@ -99,6 +117,16 @@ class UR_AI_Gateway_REST_Controller {
             );
         }
 
+        // 轉發前先做成本防護驗證（拒 stream、限 model／max_tokens／長度）。
+        // 刻意放在「扣用額度之前」：無效請求直接退回，不佔用客戶每日額度。
+        $limits     = class_exists('UR_AI_Gateway_Settings') ? UR_AI_Gateway_Settings::get_request_limits() : array();
+        $validation = UR_AI_Gateway_Request_Validator::validate($request->get_body(), is_array($limits) ? $limits : array());
+
+        if (empty($validation['ok'])) {
+            return $this->error_response((int) $validation['status'], (string) $validation['message'], (string) $validation['code']);
+        }
+
+        // 原子性地檢查並扣用一次每日額度（超限回 429）。
         if (!$this->license_service->check_and_consume_daily_limit($license)) {
             return $this->error_response(429, '已達每日呼叫次數上限，請明日再試，或聯絡服務提供者調整方案。', 'rate_limit_exceeded');
         }
@@ -109,12 +137,6 @@ class UR_AI_Gateway_REST_Controller {
             return $this->error_response(500, '代管服務尚未設定 OpenAI API Key，請聯絡服務提供者。', 'gateway_not_configured');
         }
 
-        $payload = $request->get_body();
-
-        if (!is_string($payload) || '' === trim($payload)) {
-            return $this->error_response(400, '請求內容為空。', 'empty_payload');
-        }
-
         $response = wp_remote_post(
             self::OPENAI_ENDPOINT,
             array(
@@ -123,7 +145,7 @@ class UR_AI_Gateway_REST_Controller {
                     'Authorization' => 'Bearer ' . $api_key,
                     'Content-Type'  => 'application/json',
                 ),
-                'body'    => $payload,
+                'body'    => $validation['payload'],
             )
         );
 
@@ -139,7 +161,49 @@ class UR_AI_Gateway_REST_Controller {
             return $this->error_response(502, 'OpenAI 回傳格式無法解析。', 'invalid_upstream_response');
         }
 
+        // 記錄 token 用量（僅在回應含 usage 時），供用量計費與毛利分析。
+        $this->record_usage($license, $validation['model'], $decoded, $status_code);
+
         return new WP_REST_Response($decoded, $status_code > 0 ? $status_code : 200);
+    }
+
+    /**
+     * 記錄本次請求的 token 用量。
+     *
+     * @param object $license     授權碼資料列。
+     * @param string $model       請求 model。
+     * @param array  $decoded     OpenAI 回應（已解析）。
+     * @param int    $status_code 上游 HTTP 狀態碼。
+     * @return void
+     */
+    private function record_usage($license, $model, array $decoded, $status_code) {
+        if (!isset($decoded['usage']) || !is_array($decoded['usage'])) {
+            return;
+        }
+
+        $usage      = $decoded['usage'];
+        $prompt     = (int) ($usage['prompt_tokens'] ?? 0);
+        $comp       = (int) ($usage['completion_tokens'] ?? 0);
+        $total      = (int) ($usage['total_tokens'] ?? ($prompt + $comp));
+        $resp_model = isset($decoded['model']) ? (string) $decoded['model'] : (string) $model;
+        $license_id = (int) ($license->id ?? 0);
+
+        if ($this->usage_repository instanceof UR_AI_Gateway_Usage_Repository) {
+            $this->usage_repository->record(
+                array(
+                    'license_id'        => $license_id,
+                    'model'             => $resp_model,
+                    'prompt_tokens'     => $prompt,
+                    'completion_tokens' => $comp,
+                    'total_tokens'      => $total,
+                    'status_code'       => (int) $status_code,
+                )
+            );
+        }
+
+        if ($this->license_service instanceof UR_AI_Gateway_License_Service) {
+            $this->license_service->add_token_usage($license_id, $total);
+        }
     }
 
     /**

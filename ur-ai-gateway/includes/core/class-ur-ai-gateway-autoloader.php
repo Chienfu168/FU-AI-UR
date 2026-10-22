@@ -55,16 +55,20 @@ class UR_AI_Gateway_Autoloader {
         return array(
             'UR_AI_Gateway_Schema_Manager'        => 'includes/database/class-ur-ai-gateway-schema-manager.php',
             'UR_AI_Gateway_Schema_Licenses'        => 'includes/database/schemas/class-ur-ai-gateway-schema-licenses.php',
+            'UR_AI_Gateway_Schema_Usage'           => 'includes/database/schemas/class-ur-ai-gateway-schema-usage.php',
 
             'UR_AI_Gateway_Settings'               => 'includes/shared/class-ur-ai-gateway-settings.php',
             'UR_AI_Gateway_Security'               => 'includes/shared/class-ur-ai-gateway-security.php',
 
             'UR_AI_Gateway_License_Repository'      => 'includes/licenses/class-ur-ai-gateway-license-repository.php',
             'UR_AI_Gateway_License_Service'         => 'includes/licenses/class-ur-ai-gateway-license-service.php',
+            'UR_AI_Gateway_Usage_Repository'        => 'includes/licenses/class-ur-ai-gateway-usage-repository.php',
 
             'UR_AI_Gateway_WC_Integration'          => 'includes/woocommerce/class-ur-ai-gateway-wc-integration.php',
 
             'UR_AI_Gateway_REST_Controller'         => 'includes/rest/class-ur-ai-gateway-rest-controller.php',
+            'UR_AI_Gateway_Request_Validator'       => 'includes/rest/class-ur-ai-gateway-request-validator.php',
+            'UR_AI_Gateway_Rate_Limiter'            => 'includes/rest/class-ur-ai-gateway-rate-limiter.php',
 
             'UR_AI_Gateway_Admin_Menu'              => 'admin/class-ur-ai-gateway-admin-menu.php',
         );

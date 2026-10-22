@@ -49,9 +49,29 @@ class UR_AI_Gateway_Schema_Manager {
             return;
         }
 
+        // 授權碼表（含 v1.1.0 新增的 total_tokens 欄位，dbDelta 會自動補欄位）。
         dbDelta(UR_AI_Gateway_Schema_Licenses::get_sql());
 
-        if (self::table_exists(UR_AI_Gateway_Schema_Licenses::table_name())) {
+        // 用量明細表（v1.1.0 新增）。
+        if (class_exists('UR_AI_Gateway_Schema_Usage')) {
+            dbDelta(UR_AI_Gateway_Schema_Usage::get_sql());
+        }
+
+        // v1.3.0：把既有明文授權碼遷移成「雜湊＋遮罩」儲存，並移除 license_key
+        // 的舊 UNIQUE 索引。須在 dbDelta 補上 key_hash 欄位之後執行；本身具
+        // 冪等性，重複執行無副作用。
+        if (class_exists('UR_AI_Gateway_License_Repository')) {
+            $repository = new UR_AI_Gateway_License_Repository();
+
+            if (method_exists($repository, 'migrate_to_hashed_keys')) {
+                $repository->migrate_to_hashed_keys();
+            }
+        }
+
+        $licenses_ok = self::table_exists(UR_AI_Gateway_Schema_Licenses::table_name());
+        $usage_ok    = !class_exists('UR_AI_Gateway_Schema_Usage') || self::table_exists(UR_AI_Gateway_Schema_Usage::table_name());
+
+        if ($licenses_ok && $usage_ok) {
             update_option(UR_AI_GATEWAY_OPTION_DB_VERSION, UR_AI_GATEWAY_DB_VERSION);
         }
     }
