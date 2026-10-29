@@ -90,6 +90,15 @@ class UR_AI_Admin_Menu {
 
         add_submenu_page(
             self::MENU_SLUG,
+            __('LINE 對話', 'ur-ai-assistant'),
+            __('LINE 對話', 'ur-ai-assistant'),
+            $this->get_view_logs_capability(),
+            'ur-ai-assistant-line-chats',
+            array($this, 'render_line_chats_page')
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
             __('問答紀錄', 'ur-ai-assistant'),
             __('問答數據分析', 'ur-ai-assistant'),
             $this->get_view_logs_capability(),
@@ -269,6 +278,15 @@ class UR_AI_Admin_Menu {
      */
     public function render_line_page() {
         $this->render_page('admin/pages/line-bot-page.php');
+    }
+
+    /**
+     * 顯示 LINE 對話管理頁。
+     *
+     * @return void
+     */
+    public function render_line_chats_page() {
+        $this->render_page('admin/pages/line-conversations-page.php');
     }
 
     /**

@@ -5457,3 +5457,51 @@ P1 僅處理 1:1 的文字訊息與加好友事件。群組 @、AI 多供應商�
 客服要「真正運作」需另外：申請官方帳號與 Messaging API、填入 Channel
 憑證、把 Webhook URL 設到 LINE 後台並開啟 webhook、關閉內建自動回應，
 並於 OpenAI 後台設每月花費上限。建議先以測試官方帳號走過一輪再對外。
+
+---
+
+## v1.43.0
+
+更新日期
+2026-10-29
+
+版本定位
+
+LINE 客服第二階段（P2）的第一部分：新增**後台「LINE 對話管理」頁**，讓
+管理者不必進資料庫或只靠 LINE 後台，就能在 WordPress 內檢視 LINE 對話與
+切換 AI／專人模式。純新增、非破壞性，不新增資料表（沿用 v1.42.0 的
+ur_ai_line_customers／ur_ai_line_messages）。
+
+一、主要新增
+
+1. **後台選單「LINE 對話」**（`admin/pages/line-conversations-page.php`）：
+   - **對話列表**：每位使用者一列，顯示狀態（AI 自動回覆／專人處理中）、
+     最後訊息時間；可依模式篩選、以 userId／名稱搜尋、分頁。列表依最後
+     訊息時間新到舊排序。
+   - **單一對話檢視**：逐則顯示 user／assistant 訊息與時間（氣泡式版面）。
+   - **一鍵切換模式**：列表與對話頁皆可「轉專人（AI 停止回覆）」或
+     「恢復 AI 自動回覆」，等同後台版的轉人／`#恢復`。
+   - 明確提示：回覆客戶仍於 LINE 官方帳號後台操作，本頁用於檢視與切換模式。
+2. Repository 擴充：`UR_AI_Line_Customer_Repository` 新增 `query()`／`count()`
+   （模式篩選、搜尋、排序、分頁）；`UR_AI_Line_Message_Repository` 新增
+   `list_for_chat()`（由舊到新取完整對話）。
+
+二、修改檔案
+
+- autoloader 無新增類別；admin-menu 新增「LINE 對話」子選單與 render 方法；
+  兩個 LINE repository 各新增查詢方法。
+
+三、資料表變更
+
+無（沿用 v1.42.0 既有兩張表）。DB 版本不變（1.5.0）。
+
+四、測試結果
+
+獨立 PHP harness（SQLite + wpdb shim 跑真實 repository）共 13 項檢查全通過：
+客戶列表的模式篩選、搜尋、NULL 時間排最後、最後訊息新到舊排序、分頁；
+訊息 `list_for_chat` 由舊到新、含時間欄位、空 chat_id 回空陣列、不混入
+其他對話。`php -l` 確認所有新增與修改檔案語法正確。
+
+五、是否建議上正式站
+
+純新增、非破壞性，可安全隨版本更新上線。
