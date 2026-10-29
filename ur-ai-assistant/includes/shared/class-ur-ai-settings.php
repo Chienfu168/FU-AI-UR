@@ -324,6 +324,24 @@ class UR_AI_Settings {
     }
 
     /**
+     * 取得全站每日 AI 呼叫總量上限（0＝不限制）。
+     *
+     * @return int
+     */
+    public static function get_site_daily_ai_limit() {
+        return absint(self::get('site_daily_ai_limit', 0));
+    }
+
+    /**
+     * 取得全站每月 AI 呼叫總量上限（0＝不限制）。
+     *
+     * @return int
+     */
+    public static function get_site_monthly_ai_limit() {
+        return absint(self::get('site_monthly_ai_limit', 0));
+    }
+
+    /**
      * 前台是否啟用。
      *
      * @return bool
@@ -499,6 +517,10 @@ class UR_AI_Settings {
             'member_daily_limit'  => 50,
             'admin_daily_limit'   => 0,
 
+            // 全站 AI 呼叫總量上限（與單一使用者的每日次數互補），0＝不限制。
+            'site_daily_ai_limit'   => 0,
+            'site_monthly_ai_limit' => 0,
+
             'faq_enabled'         => 1,
             'related_enabled'     => 1,
             'popular_enabled'     => 1,
@@ -661,6 +683,11 @@ class UR_AI_Settings {
                 }
 
                 return $limit;
+
+            case 'site_daily_ai_limit':
+            case 'site_monthly_ai_limit':
+                // 0＝不限制；設個合理天花板避免誤填天文數字。
+                return min(absint($value), 10000000);
 
             case 'cost_per_million_tokens':
                 $rate = (float) $value;

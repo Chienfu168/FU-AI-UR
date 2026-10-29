@@ -232,6 +232,16 @@ class UR_AI_Answer_Service {
             return $this->error_result($message, 'api_key_missing', 500, $log_id);
         }
 
+        // 全站 AI 呼叫總量上限（守住整體成本）：達上限時不再呼叫 AI，
+        // FAQ 已在上一步嘗試過，這裡直接以友善訊息退回（不影響知識庫搜尋）。
+        if (class_exists('UR_AI_Usage_Guard') && !UR_AI_Usage_Guard::can_call_ai()) {
+            $message = __('本日 AI 回答已達全站服務量上限，您可改用知識庫搜尋，或稍後再試。', 'ur-ai-assistant');
+
+            $log_id = $this->create_error_log($question, $message, 'site_ai_limit_reached', $related_pages);
+
+            return $this->error_result($message, 'site_ai_limit_reached', 429, $log_id);
+        }
+
         $api_result = $this->api_client->chat($question);
 
         if (!is_array($api_result) || empty($api_result['success'])) {
@@ -276,6 +286,11 @@ class UR_AI_Answer_Service {
                 'status'               => 'success',
             )
         );
+
+        // 成功呼叫 AI 後，累計全站 AI 用量（供全站每日／每月上限判斷）。
+        if (class_exists('UR_AI_Usage_Guard')) {
+            UR_AI_Usage_Guard::record_ai_call();
+        }
 
         return array(
             'success'             => true,

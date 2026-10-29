@@ -109,6 +109,7 @@ class UR_AI_Autoloader {
             'UR_AI_Helper'      => 'includes/shared/class-ur-ai-helper.php',
             'UR_AI_Formatter'   => 'includes/shared/class-ur-ai-formatter.php',
             'UR_AI_Exporter'    => 'includes/shared/class-ur-ai-exporter.php',
+            'UR_AI_Usage_Guard' => 'includes/shared/class-ur-ai-usage-guard.php',
 
             /*
              * Database
