@@ -136,7 +136,9 @@ class UR_AI_Line_Conversation_Service {
             $this->record($chat_id, $line_user_id, 'user', $text);
             $this->customers->set_mode($line_user_id, 'human');
             $this->notify_admin($line_user_id, $text_trim);
-            $this->reply($reply_token, '好的，已為您轉接專人，稍後將由真人回覆。');
+            $msg = '好的，已為您轉接專人，稍後將由真人回覆。';
+            $this->record($chat_id, $line_user_id, 'assistant', $msg, 'system');
+            $this->reply($reply_token, $msg);
             return 'keyword_transfer';
         }
 
@@ -164,7 +166,8 @@ class UR_AI_Line_Conversation_Service {
 
         if ('answer' === $type && '' !== trim((string) $result['text'])) {
             $this->increment_hourly($line_user_id);
-            $this->record($chat_id, $line_user_id, 'assistant', $result['text']);
+            $source = isset($result['source']) ? (string) $result['source'] : 'ai';
+            $this->record($chat_id, $line_user_id, 'assistant', $result['text'], $source);
             $this->reply($reply_token, $result['text']);
 
             $resumed = isset($result['resumed']) && $result['resumed'];
@@ -174,14 +177,18 @@ class UR_AI_Line_Conversation_Service {
         if ('transfer' === $type) {
             $this->customers->set_mode($line_user_id, 'human');
             $this->notify_admin($line_user_id, $text_trim);
-            $this->reply($reply_token, '這部分需要專人進一步協助，已為您轉接專人，稍後將由真人回覆。');
+            $msg = '這部分需要專人進一步協助，已為您轉接專人，稍後將由真人回覆。';
+            $this->record($chat_id, $line_user_id, 'assistant', $msg, 'system');
+            $this->reply($reply_token, $msg);
             return 'ai_transfer';
         }
 
         // error（含額度用罄）→ 轉專人並告知忙碌。
         $this->customers->set_mode($line_user_id, 'human');
         $this->notify_admin($line_user_id, $text_trim);
-        $this->reply($reply_token, '系統目前較忙碌，已為您轉接專人，稍後將由真人回覆，謝謝您的耐心。');
+        $msg = '系統目前較忙碌，已為您轉接專人，稍後將由真人回覆，謝謝您的耐心。';
+        $this->record($chat_id, $line_user_id, 'assistant', $msg, 'system');
+        $this->reply($reply_token, $msg);
         return 'error_transfer';
     }
 
@@ -333,9 +340,9 @@ class UR_AI_Line_Conversation_Service {
      * @param string $content      內容。
      * @return void
      */
-    private function record($chat_id, $line_user_id, $role, $content) {
+    private function record($chat_id, $line_user_id, $role, $content, $source = '') {
         if ($this->messages && method_exists($this->messages, 'add')) {
-            $this->messages->add($chat_id, $line_user_id, $role, $content);
+            $this->messages->add($chat_id, $line_user_id, $role, $content, $source);
         }
     }
 
