@@ -45,6 +45,7 @@ class UR_AI_Schema_Line_Messages {
             chat_id VARCHAR(80) NOT NULL DEFAULT '',
             line_user_id VARCHAR(64) NOT NULL DEFAULT '',
             role VARCHAR(20) NOT NULL DEFAULT 'user',
+            source VARCHAR(20) NOT NULL DEFAULT '',
             content TEXT NOT NULL,
             created_at DATETIME NOT NULL,
             PRIMARY KEY  (id),

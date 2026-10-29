@@ -57,6 +57,25 @@ function ur_ai_line_mode_label($mode) {
         ? __('專人處理中', 'ur-ai-assistant')
         : __('AI 自動回覆', 'ur-ai-assistant');
 }
+
+/**
+ * 回覆來源標籤與顏色。
+ *
+ * @param string $source 來源（faq｜ai｜system｜空）。
+ * @return array array{label, bg}
+ */
+function ur_ai_line_source_badge($source) {
+    switch ($source) {
+        case 'faq':
+            return array('label' => __('FAQ 知識庫', 'ur-ai-assistant'), 'bg' => '#e5f5e9');
+        case 'ai':
+            return array('label' => __('AI 回答', 'ur-ai-assistant'), 'bg' => '#d8ebff');
+        case 'system':
+            return array('label' => __('系統', 'ur-ai-assistant'), 'bg' => '#eceff1');
+        default:
+            return array('label' => '—', 'bg' => '#f0f0f1');
+    }
+}
 ?>
 <div class="wrap">
     <h1><?php echo esc_html__('LINE 對話管理', 'ur-ai-assistant'); ?></h1>
@@ -117,6 +136,16 @@ function ur_ai_line_mode_label($mode) {
                         <div style="max-width:80%;padding:8px 12px;border-radius:10px;background:<?php echo $is_assistant ? '#f0f0f1' : '#d8ebff'; ?>;">
                             <div style="font-size:11px;color:#646970;margin-bottom:2px;">
                                 <?php echo esc_html($is_assistant ? __('助理', 'ur-ai-assistant') : __('使用者', 'ur-ai-assistant')); ?>
+                                <?php
+                                if ($is_assistant) {
+                                    $badge = ur_ai_line_source_badge(isset($m->source) ? (string) $m->source : '');
+                                    printf(
+                                        ' <span style="padding:1px 6px;border-radius:8px;background:%1$s;">%2$s</span>',
+                                        esc_attr($badge['bg']),
+                                        esc_html($badge['label'])
+                                    );
+                                }
+                                ?>
                                 ・<?php echo esc_html($m->created_at); ?>
                             </div>
                             <div style="white-space:pre-wrap;word-break:break-word;"><?php echo esc_html($m->content); ?></div>

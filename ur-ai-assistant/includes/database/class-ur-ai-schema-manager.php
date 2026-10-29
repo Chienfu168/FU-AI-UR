@@ -30,7 +30,7 @@ class UR_AI_Schema_Manager {
      *
      * @var string
      */
-    const DB_VERSION = '1.5.0';
+    const DB_VERSION = '1.6.0';
 
     /**
      * 安裝或更新資料表。

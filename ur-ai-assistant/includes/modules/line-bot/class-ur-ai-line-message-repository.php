@@ -40,9 +40,10 @@ class UR_AI_Line_Message_Repository {
      * @param string $line_user_id LINE userId。
      * @param string $role         user｜assistant。
      * @param string $content      內容。
+     * @param string $source       回答來源（faq｜ai｜system；user 訊息留空）。
      * @return int 新 id 或 0。
      */
-    public function add($chat_id, $line_user_id, $role, $content) {
+    public function add($chat_id, $line_user_id, $role, $content, $source = '') {
         global $wpdb;
 
         $content = (string) $content;
@@ -57,10 +58,11 @@ class UR_AI_Line_Message_Repository {
                 'chat_id'      => (string) $chat_id,
                 'line_user_id' => (string) $line_user_id,
                 'role'         => ('assistant' === $role) ? 'assistant' : 'user',
+                'source'       => sanitize_key((string) $source),
                 'content'      => $content,
                 'created_at'   => current_time('mysql'),
             ),
-            array('%s', '%s', '%s', '%s', '%s')
+            array('%s', '%s', '%s', '%s', '%s', '%s')
         );
 
         return $ok ? absint($wpdb->insert_id) : 0;
@@ -128,7 +130,7 @@ class UR_AI_Line_Message_Repository {
 
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT role, content, created_at FROM {$this->table_name} WHERE chat_id = %s ORDER BY id ASC LIMIT %d",
+                "SELECT role, source, content, created_at FROM {$this->table_name} WHERE chat_id = %s ORDER BY id ASC LIMIT %d",
                 $chat_id,
                 $limit
             )
