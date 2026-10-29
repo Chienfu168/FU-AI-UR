@@ -75,6 +75,8 @@ if (
         'guest_daily_limit'   => isset($_POST['guest_daily_limit']) ? wp_unslash($_POST['guest_daily_limit']) : '',
         'member_daily_limit'  => isset($_POST['member_daily_limit']) ? wp_unslash($_POST['member_daily_limit']) : '',
         'admin_daily_limit'   => isset($_POST['admin_daily_limit']) ? wp_unslash($_POST['admin_daily_limit']) : '',
+        'site_daily_ai_limit'   => isset($_POST['site_daily_ai_limit']) ? wp_unslash($_POST['site_daily_ai_limit']) : '',
+        'site_monthly_ai_limit' => isset($_POST['site_monthly_ai_limit']) ? wp_unslash($_POST['site_monthly_ai_limit']) : '',
         'faq_enabled'         => !empty($_POST['faq_enabled']) ? 1 : 0,
         'related_enabled'     => !empty($_POST['related_enabled']) ? 1 : 0,
         'popular_enabled'     => !empty($_POST['popular_enabled']) ? 1 : 0,
@@ -113,6 +115,12 @@ $max_question_length = UR_AI_Settings::get_max_question_length();
 $guest_daily_limit  = UR_AI_Settings::get_daily_limit('guest');
 $member_daily_limit = UR_AI_Settings::get_daily_limit('member');
 $admin_daily_limit  = UR_AI_Settings::get_daily_limit('admin');
+
+$site_daily_ai_limit   = UR_AI_Settings::get_site_daily_ai_limit();
+$site_monthly_ai_limit = UR_AI_Settings::get_site_monthly_ai_limit();
+$ai_usage_snapshot     = class_exists('UR_AI_Usage_Guard')
+    ? UR_AI_Usage_Guard::get_usage_snapshot()
+    : array('day_count' => 0, 'month_count' => 0);
 
 $faq_enabled     = UR_AI_Settings::is_faq_enabled();
 $related_enabled = UR_AI_Settings::is_related_enabled();
@@ -433,6 +441,67 @@ $article_min_length = UR_AI_Settings::get_article_min_length();
                     <?php echo esc_html__('請依實際使用的模型定價自行填入（輸入／輸出合併估算的參考費率），用於「問答紀錄」頁的花費估算，非 OpenAI 官方即時金額。', 'ur-ai-assistant'); ?>
                 </p>
             </div>
+
+            <div class="ur-ai-card-header" style="margin-top:16px;">
+                <div>
+                    <h3 class="ur-ai-card-title" style="font-size:15px;"><?php echo esc_html__('全站 AI 呼叫總量上限', 'ur-ai-assistant'); ?></h3>
+                    <p class="ur-ai-card-description">
+                        <?php echo esc_html__('上方是「每位使用者」的每日次數；這裡是「整站加總」的 AI 呼叫上限，用來守住整體帳單。只計實際呼叫 AI 的次數（FAQ 命中不計）。設定 0 代表不限制。達上限後 AI 暫停回答，知識庫搜尋仍可使用。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+            </div>
+
+            <div class="ur-ai-grid ur-ai-grid-4">
+                <div class="ur-ai-form-row">
+                    <label for="site_daily_ai_limit"><?php echo esc_html__('全站每日 AI 上限', 'ur-ai-assistant'); ?></label>
+                    <input
+                        type="number"
+                        id="site_daily_ai_limit"
+                        name="site_daily_ai_limit"
+                        value="<?php echo esc_attr($site_daily_ai_limit); ?>"
+                        min="0"
+                        max="10000000"
+                    >
+                    <p class="ur-ai-form-help">
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %d: 今日已使用的 AI 呼叫次數 */
+                                __('今日已用：%d 次', 'ur-ai-assistant'),
+                                absint($ai_usage_snapshot['day_count'])
+                            )
+                        );
+                        ?>
+                    </p>
+                </div>
+
+                <div class="ur-ai-form-row">
+                    <label for="site_monthly_ai_limit"><?php echo esc_html__('全站每月 AI 上限', 'ur-ai-assistant'); ?></label>
+                    <input
+                        type="number"
+                        id="site_monthly_ai_limit"
+                        name="site_monthly_ai_limit"
+                        value="<?php echo esc_attr($site_monthly_ai_limit); ?>"
+                        min="0"
+                        max="10000000"
+                    >
+                    <p class="ur-ai-form-help">
+                        <?php
+                        echo esc_html(
+                            sprintf(
+                                /* translators: %d: 本月已使用的 AI 呼叫次數 */
+                                __('本月已用：%d 次', 'ur-ai-assistant'),
+                                absint($ai_usage_snapshot['month_count'])
+                            )
+                        );
+                        ?>
+                    </p>
+                </div>
+            </div>
+
+            <p class="ur-ai-form-help">
+                <?php echo esc_html__('提醒：這是程式層的軟性防護；最硬的成本天花板請在 OpenAI 後台另外設定每月花費上限，兩者互補。', 'ur-ai-assistant'); ?>
+            </p>
         </div>
 
         <div class="ur-ai-card">
