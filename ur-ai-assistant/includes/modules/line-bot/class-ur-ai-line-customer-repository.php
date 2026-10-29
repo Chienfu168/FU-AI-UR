@@ -118,6 +118,86 @@ class UR_AI_Line_Customer_Repository {
     }
 
     /**
+     * 查詢客戶列表（後台對話管理頁用）。
+     *
+     * @param array $args mode／search／limit／offset。
+     * @return array
+     */
+    public function query($args = array()) {
+        global $wpdb;
+
+        $args = wp_parse_args(
+            $args,
+            array('mode' => '', 'search' => '', 'limit' => 20, 'offset' => 0)
+        );
+
+        $where  = array('1=1');
+        $values = array();
+
+        if ('' !== $args['mode']) {
+            $where[]  = 'mode = %s';
+            $values[] = sanitize_key($args['mode']);
+        }
+
+        if ('' !== $args['search']) {
+            $like     = '%' . $wpdb->esc_like($args['search']) . '%';
+            $where[]  = '(line_user_id LIKE %s OR display_name LIKE %s)';
+            $values[] = $like;
+            $values[] = $like;
+        }
+
+        $limit  = absint($args['limit']);
+        $offset = absint($args['offset']);
+
+        if ($limit <= 0) {
+            $limit = 20;
+        }
+
+        $sql  = "SELECT * FROM {$this->table_name} WHERE " . implode(' AND ', $where);
+        $sql .= ' ORDER BY (last_message_at IS NULL), last_message_at DESC, id DESC LIMIT %d OFFSET %d';
+
+        $values[] = $limit;
+        $values[] = $offset;
+
+        return $wpdb->get_results($wpdb->prepare($sql, $values));
+    }
+
+    /**
+     * 計算符合條件的客戶筆數。
+     *
+     * @param array $args mode／search。
+     * @return int
+     */
+    public function count($args = array()) {
+        global $wpdb;
+
+        $args = wp_parse_args($args, array('mode' => '', 'search' => ''));
+
+        $where  = array('1=1');
+        $values = array();
+
+        if ('' !== $args['mode']) {
+            $where[]  = 'mode = %s';
+            $values[] = sanitize_key($args['mode']);
+        }
+
+        if ('' !== $args['search']) {
+            $like     = '%' . $wpdb->esc_like($args['search']) . '%';
+            $where[]  = '(line_user_id LIKE %s OR display_name LIKE %s)';
+            $values[] = $like;
+            $values[] = $like;
+        }
+
+        $sql = "SELECT COUNT(*) FROM {$this->table_name} WHERE " . implode(' AND ', $where);
+
+        if (!empty($values)) {
+            return absint($wpdb->get_var($wpdb->prepare($sql, $values)));
+        }
+
+        return absint($wpdb->get_var($sql));
+    }
+
+    /**
      * 更新顯示名稱與最後訊息時間。
      *
      * @param string $line_user_id LINE userId。

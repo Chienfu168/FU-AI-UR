@@ -110,6 +110,34 @@ class UR_AI_Line_Message_Repository {
     }
 
     /**
+     * 取得某對話的完整訊息（由舊到新，含時間；後台對話檢視用）。
+     *
+     * @param string $chat_id 對話 id。
+     * @param int    $limit   最多筆數。
+     * @return array 每筆物件含 role／content／created_at。
+     */
+    public function list_for_chat($chat_id, $limit = 200) {
+        global $wpdb;
+
+        $chat_id = (string) $chat_id;
+        $limit   = max(1, absint($limit));
+
+        if ('' === $chat_id) {
+            return array();
+        }
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT role, content, created_at FROM {$this->table_name} WHERE chat_id = %s ORDER BY id ASC LIMIT %d",
+                $chat_id,
+                $limit
+            )
+        );
+
+        return is_array($rows) ? $rows : array();
+    }
+
+    /**
      * 刪除早於指定天數的紀錄。
      *
      * @param int $days 保留天數。
