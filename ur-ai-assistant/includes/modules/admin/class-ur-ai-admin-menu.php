@@ -81,6 +81,15 @@ class UR_AI_Admin_Menu {
 
         add_submenu_page(
             self::MENU_SLUG,
+            __('LINE 客服', 'ur-ai-assistant'),
+            __('LINE 客服', 'ur-ai-assistant'),
+            $this->get_settings_capability(),
+            'ur-ai-assistant-line',
+            array($this, 'render_line_page')
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
             __('問答紀錄', 'ur-ai-assistant'),
             __('問答數據分析', 'ur-ai-assistant'),
             $this->get_view_logs_capability(),
@@ -251,6 +260,15 @@ class UR_AI_Admin_Menu {
      */
     public function render_faqs_page() {
         $this->render_page('admin/pages/faq-page.php');
+    }
+
+    /**
+     * 顯示 LINE 客服設定頁。
+     *
+     * @return void
+     */
+    public function render_line_page() {
+        $this->render_page('admin/pages/line-bot-page.php');
     }
 
     /**

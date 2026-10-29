@@ -30,7 +30,7 @@ class UR_AI_Schema_Manager {
      *
      * @var string
      */
-    const DB_VERSION = '1.4.0';
+    const DB_VERSION = '1.5.0';
 
     /**
      * 安裝或更新資料表。
@@ -250,6 +250,9 @@ class UR_AI_Schema_Manager {
             'UR_AI_Schema_Quiz_Attempts',
             // 相關產業名錄表（v1.40.0 新增）。
             'UR_AI_Schema_Partners',
+            // LINE 客服：客戶狀態與對話紀錄表（v1.42.0 新增）。
+            'UR_AI_Schema_Line_Customers',
+            'UR_AI_Schema_Line_Messages',
         );
     }
 

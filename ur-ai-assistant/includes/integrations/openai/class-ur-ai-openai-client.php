@@ -204,6 +204,110 @@ class UR_AI_OpenAI_Client {
     }
 
     /**
+     * 以「呼叫端自訂的 system prompt」進行多輪對話（供 LINE 客服等通道
+     * 使用）。與 chat_conversation() 相同的 HTTP／錯誤／解析流程，差別只在
+     * system prompt 由參數指定，而非固定使用後台對話用的提示詞。
+     *
+     * @param array  $messages      對話訊息，格式同 chat_conversation()（role/content）。
+     * @param string $system_prompt 自訂 system prompt；空則退回預設對話提示詞。
+     * @return array 成功時含 success/answer/model/tokens_used；失敗時 success=false 與 message。
+     */
+    public function chat_with_system($messages, $system_prompt) {
+        $messages = $this->sanitize_conversation_messages($messages);
+
+        if (empty($messages)) {
+            return $this->error_result(
+                __('對話內容不可空白。', 'ur-ai-assistant'),
+                'empty_conversation'
+            );
+        }
+
+        $api_key = $this->get_api_key();
+
+        if ('' === $api_key) {
+            return $this->error_result(
+                __('尚未設定 OpenAI API Key。', 'ur-ai-assistant'),
+                'api_key_missing'
+            );
+        }
+
+        $system_prompt = is_string($system_prompt) ? trim($system_prompt) : '';
+
+        if ('' === $system_prompt) {
+            $system_prompt = $this->admin_chat_system_prompt();
+        }
+
+        $payload = array(
+            'model'       => $this->get_model(),
+            'messages'    => array_merge(
+                array(
+                    array('role' => 'system', 'content' => $system_prompt),
+                ),
+                $messages
+            ),
+            'temperature' => $this->get_temperature(),
+            'max_tokens'  => $this->get_max_answer_tokens(),
+        );
+
+        /**
+         * Filter 自訂 system prompt 對話用的 OpenAI payload。
+         *
+         * @param array  $payload       OpenAI payload。
+         * @param array  $messages      對話紀錄。
+         * @param string $system_prompt 使用的 system prompt。
+         */
+        $payload = apply_filters('ur_ai_chat_with_system_openai_payload', $payload, $messages, $system_prompt);
+
+        $response = wp_remote_post(
+            $this->get_api_endpoint(),
+            array(
+                'timeout' => 45,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $api_key,
+                    'Content-Type'  => 'application/json',
+                ),
+                'body' => wp_json_encode($payload),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return $this->error_result($response->get_error_message(), 'wp_remote_error');
+        }
+
+        $status_code = absint(wp_remote_retrieve_response_code($response));
+        $body        = wp_remote_retrieve_body($response);
+
+        if ($status_code < 200 || $status_code >= 300) {
+            return $this->handle_api_error($body, $status_code);
+        }
+
+        $decoded = json_decode($body, true);
+
+        if (!is_array($decoded)) {
+            return $this->error_result(
+                __('OpenAI 回傳格式無法解析。', 'ur-ai-assistant'),
+                'invalid_json'
+            );
+        }
+
+        $answer = $this->extract_answer($decoded);
+
+        if ('' === trim($answer)) {
+            return $this->error_result(
+                __('OpenAI 回傳內容為空。', 'ur-ai-assistant'),
+                'empty_response'
+            );
+        }
+
+        return array(
+            'success'     => true,
+            'answer'      => $answer,
+            'model'       => isset($decoded['model']) ? sanitize_text_field($decoded['model']) : $this->get_model(),
+            'tokens_used' => $this->extract_tokens_used($decoded),
+        );
+    }
+
+    /**
      * 後台「AI 對話」：把整段對話紀錄整理成適合收錄進 FAQ 知識庫的
      * 「標準問題」／「固定回答」草稿建議（最多 5 則）。
      *

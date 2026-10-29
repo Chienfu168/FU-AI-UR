@@ -124,6 +124,8 @@ class UR_AI_Autoloader {
             'UR_AI_Schema_Quiz_Questions'    => 'includes/database/schemas/class-ur-ai-schema-quiz-questions.php',
             'UR_AI_Schema_Quiz_Attempts'     => 'includes/database/schemas/class-ur-ai-schema-quiz-attempts.php',
             'UR_AI_Schema_Partners'          => 'includes/database/schemas/class-ur-ai-schema-partners.php',
+            'UR_AI_Schema_Line_Customers'    => 'includes/database/schemas/class-ur-ai-schema-line-customers.php',
+            'UR_AI_Schema_Line_Messages'     => 'includes/database/schemas/class-ur-ai-schema-line-messages.php',
 
             /*
              * Admin Module
@@ -206,6 +208,20 @@ class UR_AI_Autoloader {
              */
             'UR_AI_Admin_Chat_Module' => 'includes/modules/admin-chat/class-ur-ai-admin-chat-module.php',
             'UR_AI_Admin_Chat_Ajax'   => 'includes/modules/admin-chat/class-ur-ai-admin-chat-ajax.php',
+
+            /*
+             * LINE 官方帳號客服模組（v1.42.0 新增）
+             */
+            'UR_AI_Line_Module'                 => 'includes/modules/line-bot/class-ur-ai-line-module.php',
+            'UR_AI_Line_Settings'               => 'includes/modules/line-bot/class-ur-ai-line-settings.php',
+            'UR_AI_Line_Signature'              => 'includes/modules/line-bot/class-ur-ai-line-signature.php',
+            'UR_AI_Line_Client'                 => 'includes/modules/line-bot/class-ur-ai-line-client.php',
+            'UR_AI_Line_Customer_Repository'    => 'includes/modules/line-bot/class-ur-ai-line-customer-repository.php',
+            'UR_AI_Line_Message_Repository'     => 'includes/modules/line-bot/class-ur-ai-line-message-repository.php',
+            'UR_AI_Line_Answer_Service'         => 'includes/modules/line-bot/class-ur-ai-line-answer-service.php',
+            'UR_AI_Line_Conversation_Service'   => 'includes/modules/line-bot/class-ur-ai-line-conversation-service.php',
+            'UR_AI_Line_Event_Router'           => 'includes/modules/line-bot/class-ur-ai-line-event-router.php',
+            'UR_AI_Line_Webhook_Controller'     => 'includes/modules/line-bot/class-ur-ai-line-webhook-controller.php',
 
             /*
              * AJAX Module
