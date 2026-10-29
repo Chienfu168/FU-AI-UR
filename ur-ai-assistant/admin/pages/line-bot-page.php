@@ -27,6 +27,7 @@ if (
             'channel_secret'       => isset($_POST['channel_secret']) ? wp_unslash($_POST['channel_secret']) : '',
             'channel_access_token' => isset($_POST['channel_access_token']) ? wp_unslash($_POST['channel_access_token']) : '',
             'welcome_message'      => isset($_POST['welcome_message']) ? wp_unslash($_POST['welcome_message']) : '',
+            'reply_signature'      => isset($_POST['reply_signature']) ? wp_unslash($_POST['reply_signature']) : '',
             'transfer_keywords'    => isset($_POST['transfer_keywords']) ? wp_unslash($_POST['transfer_keywords']) : '',
             'admin_notify_email'   => isset($_POST['admin_notify_email']) ? wp_unslash($_POST['admin_notify_email']) : '',
             'admin_line_ids'       => isset($_POST['admin_line_ids']) ? wp_unslash($_POST['admin_line_ids']) : '',
@@ -46,6 +47,7 @@ $secret_from_const    = UR_AI_Line_Settings::credentials_from_constant();
 $channel_secret_db    = (string) UR_AI_Line_Settings::get('channel_secret', '');
 $channel_token_db     = (string) UR_AI_Line_Settings::get('channel_access_token', '');
 $welcome_message      = (string) UR_AI_Line_Settings::get('welcome_message', '');
+$reply_signature      = (string) UR_AI_Line_Settings::get('reply_signature', '');
 $transfer_keywords    = (string) UR_AI_Line_Settings::get('transfer_keywords', '');
 $admin_notify_email   = (string) UR_AI_Line_Settings::get('admin_notify_email', '');
 $admin_line_ids       = (string) UR_AI_Line_Settings::get('admin_line_ids', '');
@@ -104,6 +106,12 @@ $webhook_url = rest_url('ur-ai/v1/line/webhook');
                 <th scope="row"><label for="welcome_message"><?php echo esc_html__('歡迎訊息（加好友時）', 'ur-ai-assistant'); ?></label></th>
                 <td><textarea id="welcome_message" name="welcome_message" rows="3" class="large-text"><?php echo esc_textarea($welcome_message); ?></textarea>
                     <p class="description"><?php echo esc_html__('建議揭露「由 AI 協助處理並保存紀錄」以符合個資告知。', 'ur-ai-assistant'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="reply_signature"><?php echo esc_html__('回覆署名（推廣）', 'ur-ai-assistant'); ?></label></th>
+                <td><textarea id="reply_signature" name="reply_signature" rows="4" class="large-text"><?php echo esc_textarea($reply_signature); ?></textarea>
+                    <p class="description"><?php echo esc_html__('會附加在每則「AI／FAQ 回答」的最後（轉接、系統訊息不加）。可放官網網址推廣；留空則不附加。', 'ur-ai-assistant'); ?></p>
                 </td>
             </tr>
         </table>

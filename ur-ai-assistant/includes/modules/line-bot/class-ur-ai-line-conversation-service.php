@@ -167,8 +167,9 @@ class UR_AI_Line_Conversation_Service {
         if ('answer' === $type && '' !== trim((string) $result['text'])) {
             $this->increment_hourly($line_user_id);
             $source = isset($result['source']) ? (string) $result['source'] : 'ai';
+            // 紀錄存原始答案（乾淨，利於日後轉 FAQ）；回覆才附上推廣署名。
             $this->record($chat_id, $line_user_id, 'assistant', $result['text'], $source);
-            $this->reply($reply_token, $result['text']);
+            $this->reply($reply_token, $this->append_signature($result['text']));
 
             $resumed = isset($result['resumed']) && $result['resumed'];
             return $resumed ? 'auto_resumed_answer' : 'answer';
@@ -344,6 +345,25 @@ class UR_AI_Line_Conversation_Service {
         if ($this->messages && method_exists($this->messages, 'add')) {
             $this->messages->add($chat_id, $line_user_id, $role, $content, $source);
         }
+    }
+
+    /**
+     * 在答覆文字後附上推廣署名（若有設定）。只用於實質回答，不用於
+     * 轉接／忙碌等系統訊息。
+     *
+     * @param string $text 答覆文字。
+     * @return string
+     */
+    private function append_signature($text) {
+        $signature = class_exists('UR_AI_Line_Settings')
+            ? trim((string) UR_AI_Line_Settings::get('reply_signature', ''))
+            : '';
+
+        if ('' === $signature) {
+            return $text;
+        }
+
+        return rtrim((string) $text) . "\n\n" . $signature;
     }
 
     /**

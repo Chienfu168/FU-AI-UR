@@ -94,6 +94,7 @@ class UR_AI_Line_Settings {
             'channel_secret'       => '',
             'channel_access_token' => '',
             'welcome_message'      => '您好，我是 AI 客服助理，可協助回答都更危老的常見問題。本對話由 AI 協助處理並保存紀錄；需要專人服務時，請輸入「我要找真人」。',
+            'reply_signature'      => "—\n更多都更危老資訊：\nwww.ur-promoter.com\nwww.fudawang.com",
             'transfer_keywords'    => '真人,專人,客服人員,人工',
             'admin_notify_email'   => '',
             'admin_line_ids'       => '',
@@ -252,6 +253,7 @@ class UR_AI_Line_Settings {
                 return sanitize_text_field((string) $value);
 
             case 'welcome_message':
+            case 'reply_signature':
                 return sanitize_textarea_field((string) $value);
 
             case 'transfer_keywords':
