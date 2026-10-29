@@ -4,7 +4,7 @@ Tags: ai, chatbot, faq, urban renewal, wordpress
 Requires at least: 6.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 1.41.0
+Stable tag: 1.42.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,7 @@ UR AI Assistant 是一套專為「都更危老資訊平台」設計的 WordPress
 * 雙北成屋行情參考（老屋現況／新成屋，歷史成交統計）。
 * 知識大考驗（隨機抽題挑戰、伺服器端計分、排行榜）。
 * 相關產業名錄（都更專業服務與相關組織，分類／縣市篩選、CSV 匯入匯出）。
+* LINE 官方帳號 AI 客服（共用同一套 FAQ 知識庫；FAQ 優先、AI 補位、關鍵字／AI 判斷轉真人、專人模式與自動恢復）。
 * Token 使用量紀錄。
 * CSV 匯出。
 * 每日提問限制。

@@ -200,6 +200,17 @@ class UR_AI_Module_Manager {
             'UR_AI_Admin_Chat_Module',
             true
         );
+
+        /*
+         * LINE 官方帳號客服模組（v1.42.0 新增）。
+         * 註冊 webhook REST 端點與每日清理排程；實際是否運作由「LINE 客服」
+         * 設定頁的啟用開關與 Channel 憑證決定（預設關閉，設定好才生效）。
+         */
+        $this->register_module(
+            'line_bot',
+            'UR_AI_Line_Module',
+            true
+        );
     }
 
     /**

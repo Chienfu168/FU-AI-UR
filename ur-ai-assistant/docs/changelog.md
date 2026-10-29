@@ -5381,3 +5381,79 @@ v1.1.0 擴充架構
 本外掛是程式層軟性防護，OpenAI 後台那層才是真正的硬性成本天花板。
 
 逐步穩定發展。
+
+---
+
+## v1.42.0
+
+更新日期
+2026-10-29
+
+版本定位
+
+新增「LINE 官方帳號 AI 客服」模組（第一階段 P1）。與網站問答**共用同一套
+FAQ 知識庫**：常見問題由 AI 依 FAQ 即時回覆，答不出來或涉及客訴／付款／
+合約時自動轉專人。核心原則「能答就答、不確定就轉人」。此版僅新增模組，
+預設關閉（需於「LINE 客服」設定頁啟用並填入 Channel 憑證才生效），不影響
+既有功能。
+
+一、主要新增
+
+1. **LINE webhook 端點**（新 REST 路由 `POST /wp-json/ur-ai/v1/line/webhook`）：
+   驗證 `X-Line-Signature`（HMAC-SHA256，不符回 400），解析 events 後分派。
+   這是本外掛第一個對外 REST 端點（既有前台走 admin-ajax）。
+2. **FAQ 優先 + AI 補位**：沿用既有 `UR_AI_FAQ_Matcher`；未命中才以客服
+   專用 system prompt＋最近 N 則對話脈絡呼叫 AI（OpenAI client 新增
+   `chat_with_system()` 可帶自訂 system prompt）。回覆為純文字、3~5 句、
+   繁中、不用 Markdown。
+3. **轉真人狀態機**：關鍵字（真人／專人…）即時轉人；AI 沒把握或涉及
+   客訴／付款／合約時輸出 `[[TRANSFER]]` 標記→轉人；系統錯誤或全站 AI
+   額度用罄→告知忙碌並轉人。轉人以 Email 通知管理者。
+4. **專人模式**：轉人後 AI 靜默只記錄訊息；超過可設定時數（預設 12 小時）
+   自動恢復；設定的管理員可傳「#恢復 <使用者ID>」立即恢復（非管理員無效）。
+5. **成本控制**：每位使用者每小時上限（預設 30，0＝不限）＋單則字數上限
+   （預設 1000）；AI 呼叫同時受上一版「全站 AI 呼叫上限」(`UR_AI_Usage_Guard`)
+   一併管控。歡迎訊息揭露「由 AI 協助並保存紀錄」。
+6. **設定頁「LINE 客服」**：啟用開關、Channel secret／access token（可改放
+   wp-config.php 常數 `UR_AI_LINE_CHANNEL_SECRET`／`UR_AI_LINE_CHANNEL_ACCESS_TOKEN`）、
+   歡迎詞、轉人關鍵字、通知 Email、管理員 LINE id、各項上限與保留天數，
+   並顯示 Webhook URL。對話紀錄每日排程清理（預設保留 180 天）。
+
+二、新增檔案
+
+- schema：`class-ur-ai-schema-line-customers.php`、`class-ur-ai-schema-line-messages.php`。
+- 模組 `includes/modules/line-bot/`：module、settings、signature、client、
+  customer-repository、message-repository、answer-service、conversation-service、
+  event-router、webhook-controller。
+- `admin/pages/line-bot-page.php`。
+
+三、修改檔案
+
+- autoloader 註冊上述類別；module-manager 註冊 `line_bot` 模組；
+  schema-manager 加入兩張表、DB 版本 1.4.0→1.5.0；admin-menu 新增「LINE 客服」
+  子選單；OpenAI client 新增 `chat_with_system()`。
+
+四、資料表變更
+
+新增 `ur_ai_line_customers`（客戶 bot/human 模式）與 `ur_ai_line_messages`
+（對話紀錄）。DB 版本 1.5.0，啟用／升級時自動建立。
+
+五、範圍（本階段）
+
+P1 僅處理 1:1 的文字訊息與加好友事件。群組 @、AI 多供應商備援、後台
+「LINE 對話／專人模式」管理頁屬後續階段。圖片／語音辨識不納入。
+
+六、測試結果
+
+獨立 PHP harness（注入假 repository／回答服務／client，不需連 LINE 或
+資料庫）共 27 項檢查全通過：簽章正確／竄改／錯誤 secret／空值；一般回答、
+關鍵字轉人、專人模式靜默、12 小時自動恢復、AI 判斷轉人、系統錯誤轉人、
+每小時限流、過長訊息、管理員 #恢復（管理員生效／非管理員無效）、加好友
+歡迎詞。`php -l` 確認所有新增與修改檔案語法正確。
+
+七、是否建議上正式站
+
+此版預設關閉，純新增、不影響既有功能，可安全隨版本更新上線；但 LINE
+客服要「真正運作」需另外：申請官方帳號與 Messaging API、填入 Channel
+憑證、把 Webhook URL 設到 LINE 後台並開啟 webhook、關閉內建自動回應，
+並於 OpenAI 後台設每月花費上限。建議先以測試官方帳號走過一輪再對外。
