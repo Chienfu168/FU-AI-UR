@@ -24,12 +24,45 @@ class UR_AI_Line_Customer_Repository {
     private $table_name;
 
     /**
+     * 本次請求是否已檢查過資料表結構。
+     *
+     * @var bool
+     */
+    private static $schema_ready = false;
+
+    /**
      * 建構子。
      */
     public function __construct() {
         $this->table_name = class_exists('UR_AI_Schema_Line_Customers')
             ? UR_AI_Schema_Line_Customers::get_table_name()
             : $GLOBALS['wpdb']->prefix . 'ur_ai_line_customers';
+    }
+
+    /**
+     * 自我修復：資料表不存在就建立（繞過 dbDelta 在部分主機未建表的問題）。
+     *
+     * @return void
+     */
+    private function ensure_schema() {
+        global $wpdb;
+
+        if (self::$schema_ready) {
+            return;
+        }
+
+        self::$schema_ready = true;
+
+        $table  = $this->table_name;
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+
+        if ($exists !== $table && class_exists('UR_AI_Schema_Line_Customers')) {
+            if (!function_exists('dbDelta')) {
+                require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            }
+
+            dbDelta(UR_AI_Schema_Line_Customers::get_sql());
+        }
     }
 
     /**
@@ -47,6 +80,8 @@ class UR_AI_Line_Customer_Repository {
         if ('' === $line_user_id) {
             return null;
         }
+
+        $this->ensure_schema();
 
         $existing = $this->find_by_line_user_id($line_user_id);
 
@@ -130,6 +165,8 @@ class UR_AI_Line_Customer_Repository {
             $args,
             array('mode' => '', 'search' => '', 'limit' => 20, 'offset' => 0)
         );
+
+        $this->ensure_schema();
 
         $where  = array('1=1');
         $values = array();
