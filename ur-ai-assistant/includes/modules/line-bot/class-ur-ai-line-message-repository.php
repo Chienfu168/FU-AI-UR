@@ -25,12 +25,64 @@ class UR_AI_Line_Message_Repository {
     private $table_name;
 
     /**
+     * 本次請求是否已檢查過資料表結構。
+     *
+     * @var bool
+     */
+    private static $schema_ready = false;
+
+    /**
      * 建構子。
      */
     public function __construct() {
         $this->table_name = class_exists('UR_AI_Schema_Line_Messages')
             ? UR_AI_Schema_Line_Messages::get_table_name()
             : $GLOBALS['wpdb']->prefix . 'ur_ai_line_messages';
+    }
+
+    /**
+     * 自我修復資料表結構：資料表不存在就建立、缺 source 欄位就補上。
+     *
+     * 背景：dbDelta() 在部分主機環境可能沒把資料表或新欄位正確建立／
+     * 升級（本專案 Schema_Manager 已有相同註記），一旦缺 source 欄位，
+     * 寫入（含 source）會整筆失敗，造成「機器人有回覆、但對話完全沒
+     * 記錄」。這裡在第一次讀寫時直接檢查並以 ALTER 補欄位，繞過 dbDelta
+     * 的相容性問題，每個請求只檢查一次。
+     *
+     * @return void
+     */
+    private function ensure_schema() {
+        global $wpdb;
+
+        if (self::$schema_ready) {
+            return;
+        }
+
+        self::$schema_ready = true;
+
+        $table = $this->table_name;
+
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+
+        if ($exists !== $table) {
+            if (class_exists('UR_AI_Schema_Line_Messages')) {
+                if (!function_exists('dbDelta')) {
+                    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+                }
+
+                dbDelta(UR_AI_Schema_Line_Messages::get_sql());
+            }
+
+            // 新建立的資料表已含 source 欄位，無須再補。
+            return;
+        }
+
+        $has_source = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM `{$table}` LIKE %s", 'source'));
+
+        if (empty($has_source)) {
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- 表名為內部常數，無使用者輸入。
+            $wpdb->query("ALTER TABLE `{$table}` ADD COLUMN source VARCHAR(20) NOT NULL DEFAULT '' AFTER role");
+        }
     }
 
     /**
@@ -51,6 +103,8 @@ class UR_AI_Line_Message_Repository {
         if ('' === trim($content)) {
             return 0;
         }
+
+        $this->ensure_schema();
 
         $ok = $wpdb->insert(
             $this->table_name,
@@ -128,9 +182,13 @@ class UR_AI_Line_Message_Repository {
             return array();
         }
 
+        $this->ensure_schema();
+
+        // 用 SELECT * 以免某欄位（如升級未完成的 source）不存在時整句失敗；
+        // 顯示端以 isset() 容錯。
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT role, source, content, created_at FROM {$this->table_name} WHERE chat_id = %s ORDER BY id ASC LIMIT %d",
+                "SELECT * FROM {$this->table_name} WHERE chat_id = %s ORDER BY id ASC LIMIT %d",
                 $chat_id,
                 $limit
             )
