@@ -34,6 +34,7 @@ class UR_AI_Shortcode {
                 'placeholder'     => '',
                 'show_kb_browse'  => '1',
                 'kb_browse_limit' => '',
+                'max_width'       => '',
             ),
             is_array($atts) ? $atts : array(),
             'ur_ai_assistant'
@@ -144,6 +145,14 @@ class UR_AI_Shortcode {
             $kb_browse_categories = $faq_service->get_active_categories();
         }
 
+        // 寬度（max_width）：僅接受「數字＋單位」的安全 CSS 長度，
+        // 例如 720px、100%、60rem、80vw；不合法一律忽略（避免 style 注入）。
+        $max_width = isset($atts['max_width']) ? trim((string) $atts['max_width']) : '';
+
+        if ('' !== $max_width && !preg_match('/^\d{1,4}(px|%|rem|em|vw)$/', $max_width)) {
+            $max_width = '';
+        }
+
         return array(
             'title'                => $title,
             'subtitle'             => $subtitle,
@@ -155,6 +164,7 @@ class UR_AI_Shortcode {
             'kb_browse_enabled'    => $kb_browse_enabled,
             'kb_browse_categories' => $kb_browse_categories,
             'kb_browse_per_page'   => $kb_browse_per_page,
+            'max_width'            => $max_width,
         );
     }
 

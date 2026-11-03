@@ -24,6 +24,7 @@ $placeholder        = isset($args['placeholder']) && '' !== trim((string) $args[
 $kb_browse_enabled    = !empty($args['kb_browse_enabled']);
 $kb_browse_categories = isset($args['kb_browse_categories']) && is_array($args['kb_browse_categories']) ? $args['kb_browse_categories'] : array();
 $kb_browse_per_page   = isset($args['kb_browse_per_page']) ? absint($args['kb_browse_per_page']) : 10;
+$max_width            = isset($args['max_width']) ? (string) $args['max_width'] : '';
 
 if ('' === trim($title)) {
     $title = class_exists('UR_AI_Settings') ? UR_AI_Settings::get_frontend_title() : __('都更 AI 助理', 'ur-ai-assistant');
@@ -45,6 +46,7 @@ $instance_id = 'ur-ai-assistant-' . wp_rand(1000, 999999);
     id="<?php echo esc_attr($instance_id); ?>"
     class="ur-ai-assistant"
     data-max-question-length="<?php echo esc_attr($max_question_length); ?>"
+    <?php if ('' !== $max_width) : ?>style="max-width:<?php echo esc_attr($max_width); ?>"<?php endif; ?>
 >
     <div class="ur-ai-container">
 
