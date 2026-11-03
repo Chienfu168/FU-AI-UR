@@ -5627,3 +5627,41 @@ v1.44.0 新增的 `source` 欄位正確建立／升級（本專案 Schema_Manage
 資料表變更：無（僅在缺漏時自動補回既有結構）。獨立 harness 14 項全通過
 （自我修復在結構正常時不動作、add 寫入 source、list 以 SELECT * 回傳 source）。
 `php -l` 無誤。
+
+---
+
+## v1.46.0
+
+更新日期
+2026-11-03
+
+版本定位
+
+前台 `[ur_ai_assistant]` 新增**可調整寬度**的 shortcode 參數 `max_width`。
+預設不變（維持 max-width 1180px 置中），不影響既有頁面。
+
+一、主要新增
+
+- `[ur_ai_assistant max_width="720px"]`：覆寫前台助理外框的最大寬度。
+  支援 `px`／`%`／`rem`／`em`／`vw`（例如 `720px`、`100%`、`60rem`、`80vw`）。
+  以 inline style 作用在 `.ur-ai-assistant` 外框上。
+- 安全性：`max_width` 只接受「數字＋單位」格式（正則驗證），不合法一律
+  忽略，再加 `esc_attr()` 輸出逸出，避免 style 注入。
+
+二、修改檔案
+
+- `class-ur-ai-shortcode.php`：shortcode 屬性新增 `max_width` 與驗證。
+- `public/views/assistant-view.php`：外框依 `max_width` 加上 inline style。
+
+三、資料表變更
+
+無。
+
+四、測試結果
+
+`px/%/rem/em/vw` 合法值全部通過；`720`（缺單位）、`calc()`、含分號／
+`!important`／`url()`／`expression()` 等注入嘗試全部被擋。`php -l` 無誤。
+
+五、是否建議上正式站
+
+純新增、預設行為不變、非破壞性，可安全隨版本更新上線。
