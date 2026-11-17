@@ -95,6 +95,10 @@ class UR_AI_Line_Settings {
             'channel_access_token' => '',
             'welcome_message'      => '您好，我是 AI 客服助理，可協助回答都更危老的常見問題。本對話由 AI 協助處理並保存紀錄；需要專人服務時，請輸入「我要找真人」。',
             'reply_signature'      => "—\n更多都更危老資訊：\nwww.ur-promoter.com\nwww.fudawang.com",
+            // 在回覆最前面標示來源（讓讀者分辨知識庫／AI）。
+            'show_source_label'    => 1,
+            'label_faq'            => '📘 知識庫',
+            'label_ai'             => '🤖 AI 整理（僅供參考）',
             'transfer_keywords'    => '真人,專人,客服人員,人工',
             'admin_notify_email'   => '',
             'admin_line_ids'       => '',
@@ -149,6 +153,28 @@ class UR_AI_Line_Settings {
     public static function credentials_from_constant() {
         return (defined('UR_AI_LINE_CHANNEL_SECRET') && '' !== trim((string) UR_AI_LINE_CHANNEL_SECRET))
             || (defined('UR_AI_LINE_CHANNEL_ACCESS_TOKEN') && '' !== trim((string) UR_AI_LINE_CHANNEL_ACCESS_TOKEN));
+    }
+
+    /**
+     * 取得某來源的回覆標示（未啟用或無對應標示時回空字串）。
+     *
+     * @param string $source faq｜ai。
+     * @return string
+     */
+    public static function get_source_label($source) {
+        if ((int) self::get('show_source_label', 1) !== 1) {
+            return '';
+        }
+
+        if ('faq' === $source) {
+            return trim((string) self::get('label_faq', ''));
+        }
+
+        if ('ai' === $source) {
+            return trim((string) self::get('label_ai', ''));
+        }
+
+        return '';
     }
 
     /**
@@ -255,6 +281,13 @@ class UR_AI_Line_Settings {
             case 'welcome_message':
             case 'reply_signature':
                 return sanitize_textarea_field((string) $value);
+
+            case 'show_source_label':
+                return !empty($value) ? 1 : 0;
+
+            case 'label_faq':
+            case 'label_ai':
+                return sanitize_text_field((string) $value);
 
             case 'transfer_keywords':
                 return sanitize_text_field((string) $value);

@@ -28,6 +28,9 @@ if (
             'channel_access_token' => isset($_POST['channel_access_token']) ? wp_unslash($_POST['channel_access_token']) : '',
             'welcome_message'      => isset($_POST['welcome_message']) ? wp_unslash($_POST['welcome_message']) : '',
             'reply_signature'      => isset($_POST['reply_signature']) ? wp_unslash($_POST['reply_signature']) : '',
+            'show_source_label'    => !empty($_POST['show_source_label']) ? 1 : 0,
+            'label_faq'            => isset($_POST['label_faq']) ? wp_unslash($_POST['label_faq']) : '',
+            'label_ai'             => isset($_POST['label_ai']) ? wp_unslash($_POST['label_ai']) : '',
             'transfer_keywords'    => isset($_POST['transfer_keywords']) ? wp_unslash($_POST['transfer_keywords']) : '',
             'admin_notify_email'   => isset($_POST['admin_notify_email']) ? wp_unslash($_POST['admin_notify_email']) : '',
             'admin_line_ids'       => isset($_POST['admin_line_ids']) ? wp_unslash($_POST['admin_line_ids']) : '',
@@ -48,6 +51,9 @@ $channel_secret_db    = (string) UR_AI_Line_Settings::get('channel_secret', '');
 $channel_token_db     = (string) UR_AI_Line_Settings::get('channel_access_token', '');
 $welcome_message      = (string) UR_AI_Line_Settings::get('welcome_message', '');
 $reply_signature      = (string) UR_AI_Line_Settings::get('reply_signature', '');
+$show_source_label    = (int) UR_AI_Line_Settings::get('show_source_label', 1) === 1;
+$label_faq            = (string) UR_AI_Line_Settings::get('label_faq', '');
+$label_ai             = (string) UR_AI_Line_Settings::get('label_ai', '');
 $transfer_keywords    = (string) UR_AI_Line_Settings::get('transfer_keywords', '');
 $admin_notify_email   = (string) UR_AI_Line_Settings::get('admin_notify_email', '');
 $admin_line_ids       = (string) UR_AI_Line_Settings::get('admin_line_ids', '');
@@ -112,6 +118,25 @@ $webhook_url = rest_url('ur-ai/v1/line/webhook');
                 <th scope="row"><label for="reply_signature"><?php echo esc_html__('回覆署名（推廣）', 'ur-ai-assistant'); ?></label></th>
                 <td><textarea id="reply_signature" name="reply_signature" rows="4" class="large-text"><?php echo esc_textarea($reply_signature); ?></textarea>
                     <p class="description"><?php echo esc_html__('會附加在每則「AI／FAQ 回答」的最後（轉接、系統訊息不加）。可放官網網址推廣；留空則不附加。', 'ur-ai-assistant'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php echo esc_html__('標示回覆來源', 'ur-ai-assistant'); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="show_source_label" value="1" <?php checked($show_source_label); ?>>
+                        <?php echo esc_html__('在每則回答最前面標示是「知識庫」還是「AI」，讓讀者分辨。', 'ur-ai-assistant'); ?>
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="label_faq"><?php echo esc_html__('知識庫回答標示', 'ur-ai-assistant'); ?></label></th>
+                <td><input type="text" id="label_faq" name="label_faq" value="<?php echo esc_attr($label_faq); ?>" class="regular-text" placeholder="📘 知識庫"></td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="label_ai"><?php echo esc_html__('AI 回答標示', 'ur-ai-assistant'); ?></label></th>
+                <td><input type="text" id="label_ai" name="label_ai" value="<?php echo esc_attr($label_ai); ?>" class="regular-text" placeholder="🤖 AI 整理（僅供參考）">
+                    <p class="description"><?php echo esc_html__('命中知識庫（FAQ）的回答會冠上「知識庫」標示、由 AI 產生的回答會冠上「AI」標示。', 'ur-ai-assistant'); ?></p>
                 </td>
             </tr>
         </table>
