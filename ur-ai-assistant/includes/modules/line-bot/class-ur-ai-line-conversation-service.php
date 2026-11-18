@@ -167,9 +167,13 @@ class UR_AI_Line_Conversation_Service {
         if ('answer' === $type && '' !== trim((string) $result['text'])) {
             $this->increment_hourly($line_user_id);
             $source = isset($result['source']) ? (string) $result['source'] : 'ai';
-            // 紀錄存原始答案（乾淨，利於日後轉 FAQ）；回覆才附上推廣署名。
+            // 紀錄存原始答案（乾淨，利於日後轉 FAQ）；回覆才加上來源標示與署名。
             $this->record($chat_id, $line_user_id, 'assistant', $result['text'], $source);
-            $this->reply($reply_token, $this->append_signature($result['text']));
+
+            $label = class_exists('UR_AI_Line_Settings') ? UR_AI_Line_Settings::get_source_label($source) : '';
+            $body  = ('' !== $label) ? $label . "\n\n" . $result['text'] : $result['text'];
+
+            $this->reply($reply_token, $this->append_signature($body));
 
             $resumed = isset($result['resumed']) && $result['resumed'];
             return $resumed ? 'auto_resumed_answer' : 'answer';
