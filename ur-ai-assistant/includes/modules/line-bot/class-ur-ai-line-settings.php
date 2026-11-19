@@ -99,6 +99,10 @@ class UR_AI_Line_Settings {
             'show_source_label'    => 1,
             'label_faq'            => '📘 知識庫',
             'label_ai'             => '🤖 AI 整理（僅供參考）',
+            'label_article'        => '📄 網站文章',
+            // FAQ 未命中時，先搜尋站內已發佈文章再決定是否用 AI。
+            'article_search_enabled' => 1,
+            'article_post_types'   => '', // 逗號分隔；空＝post,page。
             'transfer_keywords'    => '真人,專人,客服人員,人工',
             'admin_notify_email'   => '',
             'admin_line_ids'       => '',
@@ -174,7 +178,20 @@ class UR_AI_Line_Settings {
             return trim((string) self::get('label_ai', ''));
         }
 
+        if ('article' === $source) {
+            return trim((string) self::get('label_article', ''));
+        }
+
         return '';
+    }
+
+    /**
+     * 是否啟用「FAQ 未命中先搜網站文章」。
+     *
+     * @return bool
+     */
+    public static function is_article_search_enabled() {
+        return (int) self::get('article_search_enabled', 1) === 1;
     }
 
     /**
@@ -287,7 +304,12 @@ class UR_AI_Line_Settings {
 
             case 'label_faq':
             case 'label_ai':
+            case 'label_article':
+            case 'article_post_types':
                 return sanitize_text_field((string) $value);
+
+            case 'article_search_enabled':
+                return !empty($value) ? 1 : 0;
 
             case 'transfer_keywords':
                 return sanitize_text_field((string) $value);

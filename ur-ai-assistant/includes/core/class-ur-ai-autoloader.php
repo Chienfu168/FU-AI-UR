@@ -219,6 +219,7 @@ class UR_AI_Autoloader {
             'UR_AI_Line_Customer_Repository'    => 'includes/modules/line-bot/class-ur-ai-line-customer-repository.php',
             'UR_AI_Line_Message_Repository'     => 'includes/modules/line-bot/class-ur-ai-line-message-repository.php',
             'UR_AI_Line_Answer_Service'         => 'includes/modules/line-bot/class-ur-ai-line-answer-service.php',
+            'UR_AI_Line_Article_Search'         => 'includes/modules/line-bot/class-ur-ai-line-article-search.php',
             'UR_AI_Line_Conversation_Service'   => 'includes/modules/line-bot/class-ur-ai-line-conversation-service.php',
             'UR_AI_Line_Event_Router'           => 'includes/modules/line-bot/class-ur-ai-line-event-router.php',
             'UR_AI_Line_Webhook_Controller'     => 'includes/modules/line-bot/class-ur-ai-line-webhook-controller.php',

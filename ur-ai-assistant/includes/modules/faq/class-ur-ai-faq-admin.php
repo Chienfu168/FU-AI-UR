@@ -447,6 +447,7 @@ class UR_AI_FAQ_Admin {
             'question'   => array('標準問題', '問題', 'question'),
             'answer'     => array('固定回答', '回答', 'answer'),
             'keywords'   => array('關鍵字', 'keywords'),
+            'link_url'   => array('相關連結', '連結', 'link', 'link_url', 'url'),
             'status'     => array('狀態', 'status'),
             'sort_order' => array('排序', 'sort_order', 'sort'),
         );
@@ -572,6 +573,7 @@ class UR_AI_FAQ_Admin {
             'question'      => isset($_POST['question']) ? wp_unslash($_POST['question']) : '',
             'answer'        => isset($_POST['answer']) ? wp_unslash($_POST['answer']) : '',
             'keywords'      => isset($_POST['keywords']) ? wp_unslash($_POST['keywords']) : '',
+            'link_url'      => isset($_POST['link_url']) ? wp_unslash($_POST['link_url']) : '',
             'status'        => isset($_POST['status']) ? wp_unslash($_POST['status']) : 'inactive',
             'source'        => isset($_POST['source']) ? wp_unslash($_POST['source']) : 'manual',
             'source_log_id' => isset($_POST['source_log_id']) ? absint($_POST['source_log_id']) : 0,

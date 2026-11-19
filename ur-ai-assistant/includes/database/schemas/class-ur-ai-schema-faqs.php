@@ -45,6 +45,7 @@ class UR_AI_Schema_FAQs {
             question TEXT NOT NULL,
             answer LONGTEXT NOT NULL,
             keywords TEXT NULL,
+            link_url VARCHAR(500) NOT NULL DEFAULT '',
 
             status VARCHAR(30) DEFAULT 'inactive',
             source VARCHAR(30) DEFAULT 'manual',
@@ -91,6 +92,7 @@ class UR_AI_Schema_FAQs {
             'question'                   => "TEXT NOT NULL",
             'answer'                     => "LONGTEXT NOT NULL",
             'keywords'                   => "TEXT NULL",
+            'link_url'                   => "VARCHAR(500) NOT NULL DEFAULT ''",
 
             'status'                     => "VARCHAR(30) DEFAULT 'inactive'",
             'source'                     => "VARCHAR(30) DEFAULT 'manual'",
@@ -191,6 +193,7 @@ class UR_AI_Schema_FAQs {
             'question'                    => __('標準問題', 'ur-ai-assistant'),
             'answer'                      => __('固定回答', 'ur-ai-assistant'),
             'keywords'                    => __('關鍵字', 'ur-ai-assistant'),
+            'link_url'                    => __('相關連結', 'ur-ai-assistant'),
             'status'                      => __('狀態', 'ur-ai-assistant'),
             'source'                      => __('來源', 'ur-ai-assistant'),
             'source_log_id'               => __('來源問答紀錄 ID', 'ur-ai-assistant'),

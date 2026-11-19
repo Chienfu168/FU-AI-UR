@@ -71,6 +71,20 @@ class UR_AI_Line_Answer_Service {
             return array('type' => 'answer', 'text' => $faq_answer, 'source' => 'faq');
         }
 
+        // 1.5 網站文章搜尋：FAQ 未命中時，先找站上已發佈的文章，命中就回
+        //     「摘要＋連結」，仍不呼叫 AI（把既有內容變成客服答案來源）。
+        if (
+            class_exists('UR_AI_Line_Settings') && UR_AI_Line_Settings::is_article_search_enabled()
+            && class_exists('UR_AI_Line_Article_Search')
+        ) {
+            $search  = new UR_AI_Line_Article_Search();
+            $article = $search->find($question);
+
+            if (is_array($article) && isset($article['text']) && '' !== trim((string) $article['text'])) {
+                return array('type' => 'answer', 'text' => (string) $article['text'], 'source' => 'article');
+            }
+        }
+
         // 2. 未命中 → AI。先確認服務可用與全站額度未滿。
         if (!$this->api_client instanceof UR_AI_OpenAI_Client || !method_exists($this->api_client, 'chat_with_system')) {
             return array('type' => 'error', 'text' => '', 'source' => '');
@@ -131,7 +145,19 @@ class UR_AI_Line_Answer_Service {
 
         $answer = trim($answer);
 
-        return '' !== $answer ? $answer : null;
+        if ('' === $answer) {
+            return null;
+        }
+
+        // FAQ 若有設定「相關連結」，附在答案後面。
+        $link = is_object($faq) && isset($faq->link_url) ? trim((string) $faq->link_url)
+            : (is_array($faq) && isset($faq['link_url']) ? trim((string) $faq['link_url']) : '');
+
+        if ('' !== $link) {
+            $answer .= "\n\n👉 " . $link;
+        }
+
+        return $answer;
     }
 
     /**

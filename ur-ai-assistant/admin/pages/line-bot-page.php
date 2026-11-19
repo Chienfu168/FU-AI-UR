@@ -31,6 +31,9 @@ if (
             'show_source_label'    => !empty($_POST['show_source_label']) ? 1 : 0,
             'label_faq'            => isset($_POST['label_faq']) ? wp_unslash($_POST['label_faq']) : '',
             'label_ai'             => isset($_POST['label_ai']) ? wp_unslash($_POST['label_ai']) : '',
+            'label_article'        => isset($_POST['label_article']) ? wp_unslash($_POST['label_article']) : '',
+            'article_search_enabled' => !empty($_POST['article_search_enabled']) ? 1 : 0,
+            'article_post_types'   => isset($_POST['article_post_types']) ? wp_unslash($_POST['article_post_types']) : '',
             'transfer_keywords'    => isset($_POST['transfer_keywords']) ? wp_unslash($_POST['transfer_keywords']) : '',
             'admin_notify_email'   => isset($_POST['admin_notify_email']) ? wp_unslash($_POST['admin_notify_email']) : '',
             'admin_line_ids'       => isset($_POST['admin_line_ids']) ? wp_unslash($_POST['admin_line_ids']) : '',
@@ -54,6 +57,9 @@ $reply_signature      = (string) UR_AI_Line_Settings::get('reply_signature', '')
 $show_source_label    = (int) UR_AI_Line_Settings::get('show_source_label', 1) === 1;
 $label_faq            = (string) UR_AI_Line_Settings::get('label_faq', '');
 $label_ai             = (string) UR_AI_Line_Settings::get('label_ai', '');
+$label_article        = (string) UR_AI_Line_Settings::get('label_article', '');
+$article_search_on    = UR_AI_Line_Settings::is_article_search_enabled();
+$article_post_types   = (string) UR_AI_Line_Settings::get('article_post_types', '');
 $transfer_keywords    = (string) UR_AI_Line_Settings::get('transfer_keywords', '');
 $admin_notify_email   = (string) UR_AI_Line_Settings::get('admin_notify_email', '');
 $admin_line_ids       = (string) UR_AI_Line_Settings::get('admin_line_ids', '');
@@ -137,6 +143,29 @@ $webhook_url = rest_url('ur-ai/v1/line/webhook');
                 <th scope="row"><label for="label_ai"><?php echo esc_html__('AI 回答標示', 'ur-ai-assistant'); ?></label></th>
                 <td><input type="text" id="label_ai" name="label_ai" value="<?php echo esc_attr($label_ai); ?>" class="regular-text" placeholder="🤖 AI 整理（僅供參考）">
                     <p class="description"><?php echo esc_html__('命中知識庫（FAQ）的回答會冠上「知識庫」標示、由 AI 產生的回答會冠上「AI」標示。', 'ur-ai-assistant'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="label_article"><?php echo esc_html__('網站文章標示', 'ur-ai-assistant'); ?></label></th>
+                <td><input type="text" id="label_article" name="label_article" value="<?php echo esc_attr($label_article); ?>" class="regular-text" placeholder="📄 網站文章"></td>
+            </tr>
+        </table>
+
+        <h2><?php echo esc_html__('網站文章搜尋', 'ur-ai-assistant'); ?></h2>
+        <table class="form-table">
+            <tr>
+                <th scope="row"><?php echo esc_html__('啟用文章搜尋', 'ur-ai-assistant'); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="article_search_enabled" value="1" <?php checked($article_search_on); ?>>
+                        <?php echo esc_html__('FAQ 未命中時，先搜尋站內已發佈的文章；命中就回「摘要＋文章連結」，再不行才用 AI。', 'ur-ai-assistant'); ?>
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="article_post_types"><?php echo esc_html__('搜尋的內容類型', 'ur-ai-assistant'); ?></label></th>
+                <td><input type="text" id="article_post_types" name="article_post_types" value="<?php echo esc_attr($article_post_types); ?>" class="regular-text" placeholder="post, page">
+                    <p class="description"><?php echo esc_html__('以逗號分隔的 post type；留空＝文章(post)與頁面(page)。', 'ur-ai-assistant'); ?></p>
                 </td>
             </tr>
         </table>

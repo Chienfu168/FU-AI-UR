@@ -5762,3 +5762,55 @@ FAQ 回答冠知識庫標示、關閉標示時無前綴)。`php -l` 無誤。
 六、是否建議上正式站
 
 純調整與新增設定、非破壞性,可安全隨版本更新上線。
+
+---
+
+## v1.49.0
+
+更新日期
+2026-11-19
+
+版本定位
+
+讓 LINE 客服真正用到「網站既有內容」:(B) FAQ 未命中時**自動搜尋站內
+文章**並回「摘要＋連結」;(C) FAQ 新增**相關連結**欄位,命中時附上連結。
+
+一、主要新增
+
+1. **(B) 網站文章搜尋**(`UR_AI_Line_Article_Search`):回答順序改為
+   **FAQ → 網站文章 → AI**。FAQ 未命中時,先從問題萃取主題詞(去掉
+   「是什麼／的規定／如何」等疑問詞綴),用 WP_Query 搜尋已發佈的文章
+   /頁面;命中(標題或摘要含主題詞)就回「文章標題＋摘要＋連結」,
+   來源標為「📄 網站文章」,**不呼叫 AI**;找不到才用 AI。門檻偏嚴,
+   寧可讓 AI 接手也不回不相關文章。可於設定頁開關、指定搜尋的 post type。
+2. **(C) FAQ 相關連結**:FAQ 知識庫新增 `link_url` 欄位與後台「相關連結
+   (選填)」欄位;命中該 FAQ 時,LINE 回覆會在答案後附上此連結。CSV
+   匯入/匯出支援「相關連結」欄(匯入表頭別名:相關連結/連結/link/url)。
+
+二、修改檔案
+
+- schema `faqs`:新增 `link_url`;`Schema_Manager` DB 版本 1.6.0→1.7.0。
+- `faq-repository`:insert/update/sanitize 處理 link_url,並自我修復欄位
+  (SHOW COLUMNS/ALTER,繞過 dbDelta 在部分主機未升欄位的問題)。
+- `faq-admin`/`faq-page`:後台表單與 CSV 表頭別名新增相關連結。
+- `line-answer-service`:FAQ 命中附連結;新增文章搜尋步驟。
+- `line-settings`/`line-bot-page`:新增文章搜尋開關、post type、網站文章
+  標示文字,與 `is_article_search_enabled()`、來源標示支援 article。
+- autoloader 註冊 `UR_AI_Line_Article_Search`。
+
+三、資料表變更
+
+`faqs` 新增 `link_url VARCHAR(500)`。DB 1.6.0→1.7.0(dbDelta 自動補,
+另有 repository 自我修復保險)。
+
+四、測試結果
+
+獨立 harness 11 項全通過:搜尋詞萃取(多種疑問句型)、標題命中、摘要
+命中、都不含詞→null(讓 AI 接手)、無結果→null、過籠統→不搜。`php -l`
+全數無誤。
+
+五、是否建議上正式站
+
+非破壞性(新增欄位與設定、預設啟用文章搜尋但門檻嚴格),可安全隨版本
+更新上線。建議搭配:在 FAQ 填上對應文章連結、確認網站文章標題含主題詞
+(利於被搜到)。
