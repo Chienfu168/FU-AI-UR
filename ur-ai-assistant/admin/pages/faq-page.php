@@ -114,6 +114,7 @@ $form_values = array(
     'question'      => $editing_faq ? (string) $editing_faq->question : '',
     'answer'        => $editing_faq ? (string) $editing_faq->answer : '',
     'keywords'      => $editing_faq ? (string) $editing_faq->keywords : '',
+    'link_url'      => ($editing_faq && isset($editing_faq->link_url)) ? (string) $editing_faq->link_url : '',
     'status'        => $editing_faq ? (string) $editing_faq->status : 'inactive',
     'sort_order'    => $editing_faq ? absint($editing_faq->sort_order) : 100,
     'admin_note'    => $editing_faq ? (string) $editing_faq->admin_note : '',
@@ -309,6 +310,20 @@ $base_url = admin_url('admin.php?page=ur-ai-assistant-faqs');
                     >
                     <p class="ur-ai-form-help">
                         <?php echo esc_html__('多個關鍵字請用逗號分隔。關鍵字越具體，FAQ 命中越穩定。', 'ur-ai-assistant'); ?>
+                    </p>
+                </div>
+
+                <div class="ur-ai-form-row">
+                    <label for="faq_link_url"><?php echo esc_html__('相關連結（選填）', 'ur-ai-assistant'); ?></label>
+                    <input
+                        type="url"
+                        id="faq_link_url"
+                        name="link_url"
+                        value="<?php echo esc_attr($form_values['link_url']); ?>"
+                        placeholder="https://www.example.com/article"
+                    >
+                    <p class="ur-ai-form-help">
+                        <?php echo esc_html__('填入對應的網站文章或頁面網址；命中此 FAQ 時，LINE 客服回覆會附上這個連結。', 'ur-ai-assistant'); ?>
                     </p>
                 </div>
 

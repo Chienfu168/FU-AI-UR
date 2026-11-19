@@ -42,6 +42,43 @@ class UR_AI_FAQ_Repository {
     }
 
     /**
+     * 本次請求是否已檢查過 link_url 欄位。
+     *
+     * @var bool
+     */
+    private static $link_column_checked = false;
+
+    /**
+     * 自我修復：確保 link_url 欄位存在（dbDelta 在部分主機未能升級欄位時的
+     * 保險，繞過其相容性問題，每個請求只檢查一次）。
+     *
+     * @return void
+     */
+    private function ensure_link_column() {
+        global $wpdb;
+
+        if (self::$link_column_checked) {
+            return;
+        }
+
+        self::$link_column_checked = true;
+
+        $table = $this->table_name;
+
+        // 資料表不存在就不處理（交由 Schema_Manager 建立）。
+        if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) !== $table) {
+            return;
+        }
+
+        $has = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM `{$table}` LIKE %s", 'link_url'));
+
+        if (empty($has)) {
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- 表名為內部常數，無使用者輸入。
+            $wpdb->query("ALTER TABLE `{$table}` ADD COLUMN link_url VARCHAR(500) NOT NULL DEFAULT '' AFTER keywords");
+        }
+    }
+
+    /**
      * 新增 FAQ。
      *
      * @param array $data FAQ 資料。
@@ -58,11 +95,14 @@ class UR_AI_FAQ_Repository {
 
         $now = current_time('mysql');
 
+        $this->ensure_link_column();
+
         $insert_data = array(
             'category'      => $data['category'],
             'question'      => $data['question'],
             'answer'        => $data['answer'],
             'keywords'      => $data['keywords'],
+            'link_url'      => $data['link_url'],
             'status'        => $data['status'],
             'source'        => $data['source'],
             'source_log_id' => $data['source_log_id'],
@@ -80,6 +120,7 @@ class UR_AI_FAQ_Repository {
             $this->table_name,
             $insert_data,
             array(
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -123,11 +164,14 @@ class UR_AI_FAQ_Repository {
 
         $data = $this->sanitize_data($data, 'update');
 
+        $this->ensure_link_column();
+
         $update_data = array(
             'category'      => $data['category'],
             'question'      => $data['question'],
             'answer'        => $data['answer'],
             'keywords'      => $data['keywords'],
+            'link_url'      => $data['link_url'],
             'status'        => $data['status'],
             'review_status' => $data['review_status'],
             'sort_order'    => $data['sort_order'],
@@ -143,6 +187,7 @@ class UR_AI_FAQ_Repository {
                 'id' => $id,
             ),
             array(
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -627,6 +672,7 @@ class UR_AI_FAQ_Repository {
         $question = isset($data['question']) ? $data['question'] : '';
         $answer   = isset($data['answer']) ? $data['answer'] : '';
         $keywords = isset($data['keywords']) ? $data['keywords'] : '';
+        $link_url = isset($data['link_url']) ? esc_url_raw(trim((string) $data['link_url'])) : '';
 
         if (class_exists('UR_AI_Security')) {
             $category = UR_AI_Security::sanitize_category($category);
@@ -663,6 +709,7 @@ class UR_AI_FAQ_Repository {
             'question'      => $question,
             'answer'        => $answer,
             'keywords'      => $keywords,
+            'link_url'      => $link_url,
             'status'        => $status,
             'source'        => $source,
             'source_log_id' => isset($data['source_log_id']) ? absint($data['source_log_id']) : 0,
