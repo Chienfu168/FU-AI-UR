@@ -1056,7 +1056,9 @@
 
 /* 新版前台主容器：避免舊版 .ur-ai-box 限定導致樣式未套用 */
 .ur-ai-assistant {
-    max-width: 1180px;
+    /* 預設滿版：填滿所在內容區（彈性 100%）。個別頁面仍可用
+       短碼參數 max_width="1180px" 之類覆蓋成固定寬度。 */
+    max-width: 100%;
     margin: 48px auto 64px;
     padding: 0 20px;
     color: #0f172a;
