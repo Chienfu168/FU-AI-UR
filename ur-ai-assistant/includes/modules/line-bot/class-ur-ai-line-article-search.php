@@ -24,6 +24,12 @@ class UR_AI_Line_Article_Search {
     /**
      * 依使用者問題找出最相關的站內文章。
      *
+     * 策略（為了讓「台北的海砂屋獎勵」這類多概念問句也能命中）：
+     * 1. 先從問題中抽出「都更危老領域關鍵詞」（如 海砂屋、容積獎勵、危老…），
+     *    以這些關鍵詞分別搜尋並合併，再要求命中文章的標題或摘要「確實含有
+     *    其中一個關鍵詞」才回覆（長詞優先、標題優先），避免亂命中。
+     * 2. 問題若完全不含領域關鍵詞，退回舊版「整句（去疑問詞）嚴格比對」。
+     *
      * @param string $question 使用者問題。
      * @return array|null array{title, url, text} 命中；否則 null。
      */
@@ -32,6 +38,83 @@ class UR_AI_Line_Article_Search {
             return null;
         }
 
+        $keywords = $this->extract_keywords($question);
+
+        if (!empty($keywords)) {
+            // 有領域關鍵詞：用關鍵詞搜尋＋比對。找不到就交給 AI（不硬湊）。
+            return $this->find_by_keywords($keywords);
+        }
+
+        // 後援：無領域關鍵詞時，用整句（去疑問詞）嚴格比對。
+        return $this->find_by_phrase($question);
+    }
+
+    /**
+     * 以領域關鍵詞搜尋並挑出最相關文章。
+     *
+     * @param array $keywords 關鍵詞（由長到短）。
+     * @return array|null
+     */
+    private function find_by_keywords($keywords) {
+        $search = new UR_AI_Post_Search();
+
+        $post_types = $this->get_post_types();
+        if (!empty($post_types)) {
+            $search->set_post_types($post_types);
+        }
+
+        // 以最具代表性的前幾個關鍵詞各搜一次，合併去重（長詞在前，較精準）。
+        $items = array();
+        $seen  = array();
+
+        foreach (array_slice($keywords, 0, 3) as $kw) {
+            $found = $search->search($kw, 6);
+
+            if (empty($found) || !is_array($found)) {
+                continue;
+            }
+
+            foreach ($found as $it) {
+                $url = $this->get($it, 'url');
+                $key = '' !== $url ? $url : md5(wp_json_encode($it));
+
+                if (isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $items[]    = $it;
+            }
+
+            if (count($items) >= 12) {
+                break;
+            }
+        }
+
+        if (empty($items)) {
+            return null;
+        }
+
+        $best = $this->pick_best_by_keywords($items, $keywords);
+
+        if (null === $best) {
+            return null;
+        }
+
+        return array(
+            'title' => $this->get($best, 'title'),
+            'url'   => $this->get($best, 'url'),
+            'text'  => $this->format_reply($best),
+        );
+    }
+
+    /**
+     * 後援：整句（去疑問詞）嚴格比對（舊版行為）。
+     *
+     * @param string $question 使用者問題。
+     * @return array|null
+     */
+    private function find_by_phrase($question) {
         $term = $this->derive_search_term($question);
 
         // 太短／太籠統就不搜（交給 AI），避免亂命中。
@@ -59,10 +142,90 @@ class UR_AI_Line_Article_Search {
         }
 
         return array(
-            'title' => $best['title'],
-            'url'   => $best['url'],
+            'title' => $this->get($best, 'title'),
+            'url'   => $this->get($best, 'url'),
             'text'  => $this->format_reply($best),
         );
+    }
+
+    /**
+     * 從問題中抽出「都更危老領域關鍵詞」（依長度由長到短）。
+     *
+     * 以一份領域關鍵詞字典比對問題字串，命中者即為搜尋關鍵詞。長詞優先，
+     * 例如「容積獎勵」優先於「容積」「獎勵」。字典可用
+     * `ur_ai_line_article_keywords` 篩選器擴充。
+     *
+     * @param string $question 問題。
+     * @return array 關鍵詞陣列（長→短）；無則空陣列。
+     */
+    private function extract_keywords($question) {
+        $q = trim((string) $question);
+
+        if ('' === $q) {
+            return array();
+        }
+
+        $found = array();
+
+        foreach ($this->keyword_dictionary() as $kw) {
+            if ('' === $kw) {
+                continue;
+            }
+
+            if ($this->contains($q, $kw)) {
+                $found[$kw] = $this->strlen($kw);
+            }
+        }
+
+        if (empty($found)) {
+            return array();
+        }
+
+        // 依長度由長到短（長詞較具代表性，優先搜尋與比對）。
+        arsort($found);
+
+        return array_keys($found);
+    }
+
+    /**
+     * 都更危老領域關鍵詞字典（刻意不含地名，避免只因提到縣市就誤命中）。
+     *
+     * @return array
+     */
+    private function keyword_dictionary() {
+        $default = array(
+            '都市更新', '都更', '危老重建', '危老', '老屋重建', '老屋',
+            '海砂屋', '海砂', '輻射屋', '氯離子', '危險建築', '列管',
+            '容積獎勵', '容積移轉', '容積', '獎勵', '補助款', '補助',
+            '重建', '整建維護', '拉皮', '防災都更', '防災',
+            '權利變換', '協議合建', '合建', '自主更新', '公辦都更',
+            '事業計畫', '更新單元', '更新會', '都更會', '實施者',
+            '同意比例', '同意書', '門檻', '迅行劃定', '公展', '聽證', '審議',
+            '耐震評估', '耐震', '結構安全', '分回', '坪效', '坪數',
+            '稅捐減免', '地價稅', '房屋稅', '契稅', '貸款', '融資', '信託',
+            '地主', '建商', '營造', '騎樓', '法定空地',
+        );
+
+        if (function_exists('apply_filters')) {
+            $filtered = apply_filters('ur_ai_line_article_keywords', $default);
+
+            if (is_array($filtered) && !empty($filtered)) {
+                $default = $filtered;
+            }
+        }
+
+        // 正規化：去空白、去重。
+        $out = array();
+
+        foreach ($default as $kw) {
+            $kw = trim((string) $kw);
+
+            if ('' !== $kw && !in_array($kw, $out, true)) {
+                $out[] = $kw;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -100,6 +263,36 @@ class UR_AI_Line_Article_Search {
         $term = preg_replace('/[\s，,。！？!?；;：「」『』（）()【】\[\]、~～\-]+/u', '', $term);
 
         return trim($term);
+    }
+
+    /**
+     * 以關鍵詞挑出最相關的一篇：依關鍵詞由長到短，優先「標題命中」，
+     * 其次「摘要命中」。長詞先、標題先，確保回的是真正相關的文章。
+     *
+     * @param array $items    搜尋結果。
+     * @param array $keywords 關鍵詞（已由長到短）。
+     * @return array|null
+     */
+    private function pick_best_by_keywords($items, $keywords) {
+        // 第一輪：標題命中（長詞優先）。
+        foreach ($keywords as $kw) {
+            foreach ($items as $item) {
+                if ($this->contains($this->get($item, 'title'), $kw)) {
+                    return $item;
+                }
+            }
+        }
+
+        // 第二輪：摘要命中（長詞優先）。
+        foreach ($keywords as $kw) {
+            foreach ($items as $item) {
+                if ($this->contains($this->get($item, 'description'), $kw)) {
+                    return $item;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
