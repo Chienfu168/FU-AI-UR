@@ -191,6 +191,38 @@ class UR_AI_FAQ_Matcher {
         }
 
         /**
+         * 命中「特定主題關鍵詞」(非泛用詞) 加權。
+         *
+         * 作者為每則 FAQ 設定的專屬關鍵詞(如 海砂屋、容積獎勵、權利變換、
+         * 耐震評估)一旦出現在使用者問句中，幾乎可確定問的就是該題。原本
+         * 單一短主題詞(如 3 字的「海砂屋」)只給 10 分，常達不到門檻而被
+         * 丟給 AI；在此對「特定主題詞命中」加權，讓常見問法也能由知識庫
+         * 回答，減少不必要的 AI 呼叫。泛用詞(都更、危老、重建…)不在此列，
+         * 仍受下方泛用詞懲罰規則約束，不會因此誤判。
+         */
+        $specific = array();
+
+        foreach (array_unique($matched_keywords) as $mk) {
+            $n = $this->normalize_text((string) $mk);
+
+            if ('' !== $n && !in_array($n, $this->generic_terms(), true)) {
+                $specific[$n] = $this->strlen($n);
+            }
+        }
+
+        $specific_count = count($specific);
+
+        if ($specific_count >= 2) {
+            // 兩個以上專屬主題詞命中：強訊號。
+            $score += 25;
+            $reasons[] = 'specific_keywords';
+        } elseif (1 === $specific_count && max($specific) >= 3) {
+            // 單一且較長(≥3 字)的專屬主題詞命中：明確主題。
+            $score += 16;
+            $reasons[] = 'specific_keyword';
+        }
+
+        /**
          * 若問題太短，只命中單一泛用詞，降低誤判。
          */
         if ($this->strlen($question) <= 6 && count(array_unique($matched_keywords)) <= 1 && $score < 75) {
@@ -234,6 +266,24 @@ class UR_AI_FAQ_Matcher {
     }
 
     /**
+     * 泛用關鍵字清單（命中這些不足以判定主題，需配合特定詞）。
+     *
+     * @return array
+     */
+    private function generic_terms() {
+        return array(
+            '都更',
+            '都市更新',
+            '危老',
+            '危老重建',
+            '重建',
+            '房子',
+            '房屋',
+            '老屋',
+        );
+    }
+
+    /**
      * 判斷是否只命中泛用關鍵字。
      *
      * @param array $matched_keywords 命中關鍵字。
@@ -244,16 +294,7 @@ class UR_AI_FAQ_Matcher {
             return false;
         }
 
-        $generic = array(
-            '都更',
-            '都市更新',
-            '危老',
-            '危老重建',
-            '重建',
-            '房子',
-            '房屋',
-            '老屋',
-        );
+        $generic = $this->generic_terms();
 
         $matched_keywords = array_values(array_unique(array_filter(array_map(array($this, 'normalize_text'), $matched_keywords))));
 
